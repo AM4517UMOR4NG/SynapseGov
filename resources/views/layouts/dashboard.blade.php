@@ -164,6 +164,10 @@
             box-sizing: border-box;
         }
 
+        a {
+            text-decoration: none !important;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
             background-color: var(--bg-canvas);
@@ -189,14 +193,13 @@
             background: var(--navbar-bg) !important;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--card-border);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            border-bottom: none !important;
+            box-shadow: none !important;
             padding: 0.65rem 1.25rem;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1030;
             z-index: 1030;
             transition: all 0.3s ease;
         }
@@ -241,13 +244,32 @@
             opacity: 1;
         }
 
-        .navbar-brand, .navbar-brand:hover, .navbar-brand:focus {
+        .navbar-brand, 
+        .navbar-brand:hover, 
+        .navbar-brand:focus,
+        .navbar-brand:active,
+        .navbar-brand:visited,
+        .navbar-brand *,
+        .navbar-brand:hover * {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             text-decoration: none !important;
+            text-decoration-line: none !important;
+            border-bottom: none !important;
             color: var(--text-main) !important;
             padding: 0;
+        }
+
+        .brand-logo-icon,
+        .brand-logo-text,
+        .brand-name,
+        .brand-glow,
+        .brand-live-badge,
+        .brand-live-badge * {
+            text-decoration: none !important;
+            text-decoration-line: none !important;
+            border-bottom: none !important;
         }
 
         .brand-logo-icon {
@@ -429,13 +451,13 @@
 
         .sidebar {
             background: var(--sidebar-bg);
-            border-right: 1px solid var(--card-border);
+            border-right: none !important;
             position: sticky;
             top: 64px;
             height: calc(100vh - 64px);
             overflow-y: auto;
             z-index: 1020;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+            box-shadow: none !important;
             padding: 1rem 0;
             display: flex;
             flex-direction: column;
@@ -1077,16 +1099,7 @@
         <!-- Top Navigation Bar -->
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
-                <!-- Luxury Brand Logo -->
-                <a class="navbar-brand" href="{{ route('home') }}" title="SynapseGov">
-                    <div class="brand-logo-icon">
-                        <i class="fas fa-bolt-lightning"></i>
-                    </div>
-                    <div class="brand-logo-text">
-                        <span class="brand-name">Synapse<span class="brand-glow">Gov</span></span>
-                        <span class="brand-live-badge"><span class="live-dot"></span> e-Gov Live</span>
-                    </div>
-                </a>
+
 
                 <!-- Mobile Hamburger Button -->
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#topbarNav">

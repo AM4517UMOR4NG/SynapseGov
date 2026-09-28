@@ -18,3 +18,5 @@ yarn-error.log
 /.idea
 /.vscode
 PROPOSAL_IT_DAYS_2026.md
+*.sqlite
+*.sqlite-journal

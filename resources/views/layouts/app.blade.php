@@ -49,7 +49,11 @@
             padding: 0.75rem 1.5rem;
         }
 
-        .navbar-brand {
+        .navbar-brand,
+        .navbar-brand:hover,
+        .navbar-brand:focus,
+        .navbar-brand:active,
+        .navbar-brand * {
             font-weight: 800;
             font-size: 1.25rem;
             color: var(--text-main) !important;
@@ -57,6 +61,9 @@
             align-items: center;
             gap: 0.6rem;
             letter-spacing: -0.02em;
+            text-decoration: none !important;
+            text-decoration-line: none !important;
+            border-bottom: none !important;
         }
 
         .brand-icon-box {
@@ -117,11 +124,11 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                    <a class="navbar-brand" href="{{ route('home') }}" title="SynapseGov">
-                        <div class="brand-icon-box">
-                            <i class="fas fa-bolt-lightning"></i>
+                    <a class="navbar-brand text-decoration-none" href="{{ route('home') }}" title="SynapseGov" style="text-decoration: none !important;">
+                        <div class="brand-icon-box" style="text-decoration: none !important;">
+                            <i class="fas fa-bolt-lightning" style="text-decoration: none !important;"></i>
                         </div>
-                        <span>Synapse<span style="background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gov</span></span>
+                        <span style="text-decoration: none !important;">Synapse<span style="background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none !important;">Gov</span></span>
                     </a>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
