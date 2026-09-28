@@ -13,32 +13,44 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // Statistik umum
+        // Statistik umum - dioptimalkan via aggregate queries
+        $repStat = Report::selectRaw('
+            COUNT(*) as total_reports,
+            COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
+            COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
+            COALESCE(SUM(CASE WHEN status IN ("in_progress", "assigned", "verified") THEN 1 ELSE 0 END), 0) as in_progress_reports,
+            COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
+            COALESCE(SUM(CASE WHEN assigned_to IS NULL AND status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_assignments,
+            COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
+            COALESCE(SUM(CASE WHEN sla_due_at < datetime("now") AND status NOT IN ("resolved", "closed") THEN 1 ELSE 0 END), 0) as sla_breached,
+            COALESCE(SUM(CASE WHEN sla_due_at >= datetime("now") AND sla_due_at <= datetime("now", "+24 hours") AND status NOT IN ("resolved", "closed") THEN 1 ELSE 0 END), 0) as due_soon
+        ')->first();
+
+        $compStat = Complaint::selectRaw('
+            COUNT(*) as total_complaints,
+            COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
+            COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
+        ')->first();
+
         $stats = [
             'total_users' => User::count(),
-            'total_reports' => Report::count(),
-            'total_complaints' => Complaint::count(),
+            'total_reports' => (int) ($repStat->total_reports ?? 0),
+            'total_complaints' => (int) ($compStat->total_complaints ?? 0),
             'total_departments' => Department::count(),
-            'pending_reports' => Report::whereIn('status', ['submitted', 'pending'])->count(),
-            'pending_complaints' => Complaint::whereIn('status', ['submitted', 'pending'])->count(),
-            'resolved_reports' => Report::where('status', 'resolved')->count(),
-            'resolved_complaints' => Complaint::where('status', 'resolved')->count(),
-            'in_progress_reports' => Report::whereIn('status', ['in_progress', 'assigned', 'verified'])->count(),
-            'today_reports' => Report::whereDate('created_at', today())->count(),
-            'pending_assignments' => Report::whereNull('assigned_to')->whereIn('status', ['submitted', 'pending'])->count(),
-            'completed_today' => Report::whereDate('resolved_at', today())->count(),
-            'sla_breached' => Report::where('sla_due_at', '<', now())->whereNotIn('status', ['resolved', 'closed'])->count(),
-            'due_soon' => Report::whereBetween('sla_due_at', [now(), now()->addHours(24)])->whereNotIn('status', ['resolved', 'closed'])->count(),
+            'pending_reports' => (int) ($repStat->pending_reports ?? 0),
+            'pending_complaints' => (int) ($compStat->pending_complaints ?? 0),
+            'resolved_reports' => (int) ($repStat->resolved_reports ?? 0),
+            'resolved_complaints' => (int) ($compStat->resolved_complaints ?? 0),
+            'in_progress_reports' => (int) ($repStat->in_progress_reports ?? 0),
+            'today_reports' => (int) ($repStat->today_reports ?? 0),
+            'pending_assignments' => (int) ($repStat->pending_assignments ?? 0),
+            'completed_today' => (int) ($repStat->completed_today ?? 0),
+            'sla_breached' => (int) ($repStat->sla_breached ?? 0),
+            'due_soon' => (int) ($repStat->due_soon ?? 0),
         ];
 
-        // Statistik berdasarkan departemen
-        $departmentStats = Department::withCount(['reports', 'complaints', 'users'])
-            ->with(['reports' => function ($query) {
-                $query->whereIn('status', ['submitted', 'pending']);
-            }, 'complaints' => function ($query) {
-                $query->whereIn('status', ['submitted', 'pending']);
-            }])
-            ->get();
+        // Statistik berdasarkan departemen (dioptimalkan tanpa hydrasi relasi berat yang tidak ditampilkan)
+        $departmentStats = Department::withCount(['reports', 'complaints', 'users'])->get();
 
         // Laporan terbaru
         $recentReports = Report::with(['user', 'department', 'assignedUser'])
