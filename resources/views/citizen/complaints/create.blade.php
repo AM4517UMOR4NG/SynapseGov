@@ -3,45 +3,6 @@
 @section('title', 'Ajukan Keluhan')
 
 @section('content')
-<style>
-    body { background: #f8f9fa; padding-top: 80px !important; }
-    .page-header-modern {
-        background: linear-gradient(135deg, #003d6b 0%, #004a7f 50%, #00527a 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 61, 107, 0.5);
-    }
-    .page-header-modern h1 { color: white; margin: 0; font-size: 1.875rem; font-weight: 700; }
-    .btn-back {
-        background: white;
-        color: #003d6b;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-    .btn-back:hover { background: #f0f9ff; color: #003d6b; transform: translateY(-2px); }
-    .card-modern {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #f0f0f0;
-        overflow: hidden;
-    }
-    .card-header-modern {
-        background: linear-gradient(135deg, #004a7f 0%, #00527a 100%);
-        padding: 1.25rem;
-        color: white;
-    }
-    .card-header-modern h6 { margin: 0; color: white; font-weight: 600; font-size: 1.1rem; }
-</style>
 <div class="row">
     <div class="col-12">
         <div class="page-header-modern d-flex justify-content-between align-items-center">

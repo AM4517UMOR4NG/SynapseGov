@@ -4,39 +4,6 @@
 
 @section('content')
 <style>
-    .dept-header {
-        background: linear-gradient(135deg, #003d6b 0%, #004a7f 50%, #00527a 100%);
-        color: white;
-        padding: 2.5rem;
-        border-radius: 16px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 61, 107, 0.5);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .dept-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
-    .dept-header::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -5%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-
     .header-content {
         display: flex;
         justify-content: space-between;
@@ -57,44 +24,48 @@
     }
 
     .user-avatar-large {
-        width: 90px;
-        height: 90px;
+        width: 84px;
+        height: 84px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
-        font-weight: 700;
+        font-size: 1.85rem;
+        font-weight: 800;
         color: white;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         flex-shrink: 0;
         object-fit: cover;
     }
 
     .user-info h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.8rem;
-        font-weight: 700;
+        margin: 0 0 0.35rem 0;
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
         line-height: 1.2;
+        color: #ffffff;
     }
 
     .role-badge {
         display: inline-flex;
         align-items: center;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 0.35rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin: 0.5rem 0;
+        background: rgba(255, 255, 255, 0.18);
+        padding: 0.35rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin: 0.35rem 0;
         backdrop-filter: blur(10px);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
     }
 
     .user-info .description {
-        margin: 0.75rem 0 0 0;
-        opacity: 0.95;
-        font-size: 0.95rem;
+        margin: 0.5rem 0 0 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.92rem;
         line-height: 1.5;
     }
 
@@ -105,178 +76,157 @@
     .info-cards {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.65rem;
     }
 
     .info-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        padding: 0.75rem 1.25rem;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+        padding: 0.65rem 1.15rem;
         border-radius: 12px;
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.85rem;
         min-width: 200px;
         border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
     }
 
     .info-card i {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         opacity: 0.9;
     }
 
     .info-card small {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         opacity: 0.8;
-        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .info-card strong {
         display: block;
-        font-size: 0.95rem;
-        font-weight: 600;
+        font-size: 0.92rem;
+        font-weight: 700;
     }
 
-    @media (max-width: 992px) {
-        .header-content {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .header-right {
-            width: 100%;
-        }
-
-        .info-cards {
-            flex-direction: row;
-            flex-wrap: wrap;
-        }
-
-        .info-card {
-            flex: 1;
-            min-width: 150px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .user-profile-section {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .user-info h1 {
-            font-size: 1.5rem;
-        }
-
-        .info-cards {
-            flex-direction: column;
-        }
-
-        .info-card {
-            width: 100%;
-        }
-    }
-
+    /* Modern Department KPI Cards */
     .stat-card {
-        background: white;
-        border-radius: 12px;
+        background: var(--card-bg);
+        border-radius: 16px;
         padding: 1.5rem;
-        border-left: 4px solid #004a7f;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-ambient);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         height: 100%;
+        position: relative;
+        overflow: hidden;
     }
 
     .stat-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-elevated);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--brand-gradient);
     }
 
     .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        margin-bottom: 0.85rem;
     }
 
     .report-icon {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
+        background: rgba(37, 99, 235, 0.12);
+        color: #2563eb;
     }
 
     .complaint-icon {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        color: white;
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
     }
 
     .gov-icon {
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        color: white;
+        background: rgba(99, 102, 241, 0.12);
+        color: #6366f1;
     }
 
     .user-icon {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
     }
 
     .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #004a7f;
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
         margin-bottom: 0.25rem;
     }
 
     .stat-label {
-        color: #6b7280;
-        font-size: 0.9rem;
-        font-weight: 500;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
+    /* Modern Feature Cards */
     .feature-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-ambient);
         overflow: hidden;
         margin-bottom: 1.5rem;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-card:hover {
+        box-shadow: var(--shadow-elevated);
     }
 
     .feature-header {
-        background: linear-gradient(135deg, #004a7f 0%, #00527a 100%);
-        padding: 1.5rem;
-        color: white;
+        background: var(--brand-gradient-subtle);
+        border-bottom: 1px solid var(--card-border);
+        padding: 1.35rem 1.5rem;
     }
 
     .feature-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        color: white !important;
-    }
-
-    .feature-title i {
-        color: white !important;
+        gap: 0.65rem;
+        color: var(--text-main) !important;
     }
 
     .feature-description {
-        font-size: 0.9rem;
-        opacity: 0.95;
-        color: white !important;
-    }
-    
-    .feature-header * {
-        color: white !important;
+        font-size: 0.88rem;
+        color: var(--text-muted) !important;
+        margin-bottom: 0;
     }
 
     .feature-body {
         padding: 1.5rem;
+        color: var(--text-main);
     }
 
     .feature-actions {
@@ -288,14 +238,22 @@
 
     .feature-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
         gap: 1.5rem;
     }
 
+    @media (max-width: 992px) {
+        .header-content { flex-direction: column; align-items: flex-start; }
+        .header-right { width: 100%; }
+        .info-cards { flex-direction: row; flex-wrap: wrap; }
+        .info-card { flex: 1; min-width: 150px; }
+        .feature-grid { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 768px) {
-        .feature-grid {
-            grid-template-columns: 1fr;
-        }
+        .user-profile-section { flex-direction: column; text-align: center; }
+        .info-cards { flex-direction: column; }
+        .info-card { width: 100%; }
     }
 </style>
 

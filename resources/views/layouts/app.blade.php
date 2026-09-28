@@ -7,125 +7,105 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Government FRC System') }}</title>
+    <title>{{ config('app.name', 'SynapseGov') }}</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Scripts -->
-    <link href="{{ asset('build/assets/app-IgyIM7qE.css') }}" rel="stylesheet">
-    <script src="{{ asset('build/assets/app-CdQXwo7F.js') }}"></script>
-    <style>
-        .modal, .modal-backdrop, .modal-content, .modal-dialog {
-            pointer-events: auto !important;
-            z-index: 99999 !important;
-        }
-    </style>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Hapus semua backdrop jika ada
-        document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
-    });
-    </script>
-    
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --brand-primary: #2563eb;
+            --brand-primary-hover: #1d4ed8;
+            --brand-secondary: #0ea5e9;
+            --brand-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+            --hero-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%);
+            --bg-canvas: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(226, 232, 240, 0.85);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: var(--bg-canvas);
+            color: var(--text-main);
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
         .navbar {
-            background: var(--primary-gradient) !important;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--glass-border);
+            background: var(--card-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.75rem 1.5rem;
         }
 
         .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: white !important;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--text-main) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-icon-box {
+            width: 36px;
+            height: 36px;
+            background: var(--brand-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
         }
 
         .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            color: var(--text-muted) !important;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
         }
 
         .nav-link:hover {
-            color: white !important;
-            transform: translateY(-1px);
-        }
-
-        .dropdown-menu {
-            border-radius: 10px;
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .dropdown-item {
-            color: #333;
-            transition: all 0.3s ease;
-        }
-
-        .dropdown-item:hover {
-            background: var(--primary-gradient);
-            color: white;
-            transform: translateX(5px);
+            color: var(--brand-primary) !important;
+            background: rgba(37, 99, 235, 0.05);
         }
 
         .btn-primary {
-            background: var(--primary-gradient);
+            background: var(--brand-gradient) !important;
             border: none;
             border-radius: 10px;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            padding: 0.6rem 1.25rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transition: all 0.2s ease;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert {
-            border-radius: 15px;
-            border: none;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
         }
     </style>
 </head>
@@ -137,8 +117,11 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                    <a class="navbar-brand" href="{{ route('home') }}" title="{{ config('app.name', 'Government FRC System') }}">
-                        <i class="fas fa-building"></i>
+                    <a class="navbar-brand" href="{{ route('home') }}" title="SynapseGov">
+                        <div class="brand-icon-box">
+                            <i class="fas fa-bolt-lightning"></i>
+                        </div>
+                        <span>Synapse<span style="background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gov</span></span>
                     </a>
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">

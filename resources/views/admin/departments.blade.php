@@ -3,68 +3,6 @@
 @section('title', 'Manajemen Departemen')
 
 @section('content')
-<style>
-    .departments-header {
-        background: linear-gradient(135deg, #003d6b 0%, #004a7f 50%, #00527a 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 61, 107, 0.3);
-    }
-
-    .departments-header h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 2rem;
-        font-weight: 700;
-    }
-
-    .departments-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid #f0f0f0;
-        overflow: hidden;
-    }
-
-    .departments-card-header {
-        background: linear-gradient(135deg, #004a7f 0%, #00527a 100%);
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        color: white;
-    }
-
-    .departments-card-header h3 {
-        margin: 0;
-        color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    .table thead th {
-        background: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-        padding: 1rem;
-        font-weight: 600;
-        color: #004a7f;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .table tbody td {
-        padding: 1rem;
-        border-bottom: 1px solid #f0f0f0;
-        vertical-align: middle;
-    }
-
-    .table tbody tr:hover {
-        background: #f8fafc;
-    }
-</style>
-
 <!-- Header -->
 <div class="departments-header">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">

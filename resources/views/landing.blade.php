@@ -3,31 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Government Report System - Laporkan, Kami Tangani</title>
+    <title>SynapseGov — Platform e-Government Pengaduan & Aspirasi Masyarakat</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Top Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="logo-icon"><i class="fas fa-bolt-lightning"></i></div>
                 <div class="logo-text">
-                    <span class="logo-main">GovReport</span>
-                    <span class="logo-sub">System</span>
+                    <span class="logo-main">Synapse<span class="logo-accent">Gov</span></span>
+                    <span class="logo-sub">e-Government Civic System</span>
                 </div>
             </div>
             <div class="nav-links">
-                <a href="#home" class="nav-link active">Home</a>
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#how-it-works" class="nav-link">How It Works</a>
-                <a href="#stats" class="nav-link">Statistics</a>
+                <a href="#home" class="nav-link active">Beranda</a>
+                <a href="#features" class="nav-link">Keunggulan</a>
+                <a href="#how-it-works" class="nav-link">Alur Kerja</a>
+                <a href="#stats" class="nav-link">Statistik</a>
             </div>
             <div class="nav-actions">
-                <a href="{{ route('login') }}" class="btn-login">Login</a>
-                <a href="{{ route('register') }}" class="btn-register">Get Started</a>
+                <a href="{{ route('login') }}" class="btn-login">Masuk</a>
+                <a href="{{ route('register') }}" class="btn-register">Mulai Lapor <i class="fas fa-arrow-right"></i></a>
             </div>
         </div>
     </nav>
@@ -42,69 +48,74 @@
         <div class="hero-container">
             <div class="hero-content">
                 <div class="hero-badge">
-                    <i class="fas fa-star"></i>
-                    <span>Trusted by 10,000+ Citizens</span>
+                    <span class="pulse-dot"></span>
+                    <span>Platform e-Government Terintegrasi SPBE</span>
                 </div>
                 <h1 class="hero-title">
-                    Laporkan Masalah,<br>
-                    <span class="gradient-text">Kami Tangani Solusi</span>
+                    Aspirasi Rakyat,<br>
+                    <span class="gradient-text">Aksi Cepat Birokrasi</span>
                 </h1>
                 <p class="hero-description">
-                    Platform pelaporan dan pengaduan masyarakat yang aman, cepat, dan terpercaya. 
-                    Sampaikan aspirasi Anda dan pantau progress penanganan secara real-time.
+                    Jembatan digital modern penghubung suara masyarakat dengan Organisasi Perangkat Daerah (OPD). 
+                    Dilengkapi penegakan batas waktu penanganan otomatis (SLA), audit log forensik, dan pelacakan tiket transparan.
                 </p>
                 <div class="hero-actions">
                     <a href="{{ route('register') }}" class="btn-hero-primary">
-                        <span>Mulai Sekarang</span>
+                        <span>Buat Laporan Sekarang</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
                     <a href="#how-it-works" class="btn-hero-secondary">
                         <i class="fas fa-play-circle"></i>
-                        <span>Lihat Demo</span>
+                        <span>Pelajari Alur Disposisi</span>
                     </a>
                 </div>
                 <div class="hero-stats">
                     <div class="stat-item">
-                        <div class="stat-number">50K+</div>
-                        <div class="stat-label">Laporan Selesai</div>
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">SLA Enforced</div>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <div class="stat-number">95%</div>
-                        <div class="stat-label">Kepuasan User</div>
+                        <div class="stat-number">Multi-OPD</div>
+                        <div class="stat-label">Boundary Guard</div>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
                         <div class="stat-number">24/7</div>
-                        <div class="stat-label">Support Online</div>
+                        <div class="stat-label">Tracking Real-time</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Hero Interactive Visual Cards -->
             <div class="hero-image">
                 <div class="floating-card card-1">
-                    <i class="fas fa-check-circle"></i>
+                    <div class="card-icon-wrap blue"><i class="fas fa-clipboard-check"></i></div>
                     <div class="card-content">
-                        <div class="card-title">Laporan Diterima</div>
-                        <div class="card-desc">Ticket #12345</div>
+                        <div class="card-title">Tiket Terverifikasi</div>
+                        <div class="card-desc">Disposisi ke Dinas PUPR</div>
                     </div>
+                    <span class="badge-status-pill success">Verified</span>
                 </div>
                 <div class="floating-card card-2">
-                    <i class="fas fa-clock"></i>
+                    <div class="card-icon-wrap amber"><i class="fas fa-stopwatch"></i></div>
                     <div class="card-content">
-                        <div class="card-title">Sedang Diproses</div>
-                        <div class="card-desc">2 hari lagi</div>
+                        <div class="card-title">Target SLA Terpantau</div>
+                        <div class="card-desc">Sisa Waktu: 18 Jam</div>
                     </div>
+                    <span class="badge-status-pill warning">Active</span>
                 </div>
                 <div class="floating-card card-3">
-                    <i class="fas fa-trophy"></i>
+                    <div class="card-icon-wrap purple"><i class="fas fa-user-shield"></i></div>
                     <div class="card-content">
-                        <div class="card-title">Selesai</div>
-                        <div class="card-desc">5 menit lalu</div>
+                        <div class="card-title">Privasi Terisolasi</div>
+                        <div class="card-desc">Catatan Internal Terlindungi</div>
                     </div>
+                    <span class="badge-status-pill secure"><i class="fas fa-lock"></i> Protected</span>
                 </div>
                 <div class="hero-illustration">
                     <div class="illustration-bg"></div>
-                    <i class="fas fa-file-alt illustration-icon"></i>
+                    <i class="fas fa-building-columns illustration-icon"></i>
                 </div>
             </div>
         </div>
@@ -114,40 +125,40 @@
     <section class="features" id="features">
         <div class="section-container">
             <div class="section-header">
-                <span class="section-badge">Features</span>
-                <h2 class="section-title">Mengapa Memilih Platform Kami?</h2>
-                <p class="section-description">Sistem pelaporan modern dengan fitur lengkap untuk kemudahan Anda</p>
+                <span class="section-badge">Arsitektur & Inovasi</span>
+                <h2 class="section-title">Fitur Mutakhir Berstandar Tata Kelola Digital</h2>
+                <p class="section-description">Dirancang sesuai standar SPBE Nasional dengan keunggulan logika otomasi dan keamanan berlapis</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon blue"><i class="fas fa-shield-check"></i></div>
-                    <h3 class="feature-title">Keamanan Terjamin</h3>
-                    <p class="feature-description">Data Anda terenkripsi dengan standar keamanan tinggi</p>
+                    <div class="feature-icon blue"><i class="fas fa-stopwatch-20"></i></div>
+                    <h3 class="feature-title">Automated SLA Engine</h3>
+                    <p class="feature-description">Deteksi keterlambatan penanganan secara otomatis. Tiket melewati batas langsung memicu eskalasi ke pimpinan.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon green"><i class="fas fa-bolt"></i></div>
-                    <h3 class="feature-title">Respon Cepat</h3>
-                    <p class="feature-description">Laporan direspon maksimal 24 jam oleh tim kompeten</p>
+                    <div class="feature-icon purple"><i class="fas fa-sitemap"></i></div>
+                    <h3 class="feature-title">Multi-Tenant OPD Boundary</h3>
+                    <p class="feature-description">Isolasi data ketat antar dinas. Staf suatu dinas tidak dapat melihat atau memanipulasi aduan dinas lain.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon purple"><i class="fas fa-chart-line"></i></div>
-                    <h3 class="feature-title">Tracking Real-time</h3>
-                    <p class="feature-description">Pantau progress laporan dengan sistem tracking real-time</p>
+                    <div class="feature-icon green"><i class="fas fa-user-lock"></i></div>
+                    <h3 class="feature-title">Dual-Channel Comment</h3>
+                    <p class="feature-description">Pemisahan catatan rahasia koordinasi teknis dinas dari jawaban publik warga demi menjaga kerahasiaan operasional.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon orange"><i class="fas fa-mobile-alt"></i></div>
-                    <h3 class="feature-title">Mobile Friendly</h3>
-                    <p class="feature-description">Akses dari mana saja melalui smartphone atau komputer</p>
+                    <div class="feature-icon orange"><i class="fas fa-shield-virus"></i></div>
+                    <h3 class="feature-title">Anti-Malware Upload Guard</h3>
+                    <p class="feature-description">Validasi MIME Type dan pemblokiran ekstensi berbahaya (.php, .sh) dengan proteksi double-extension.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon red"><i class="fas fa-bell"></i></div>
-                    <h3 class="feature-title">Notifikasi Instant</h3>
-                    <p class="feature-description">Update langsung setiap ada perubahan status laporan</p>
+                    <div class="feature-icon red"><i class="fas fa-clock-rotate-left"></i></div>
+                    <h3 class="feature-title">Immutable Audit Trail</h3>
+                    <p class="feature-description">Pencatatan forensik setiap mutasi status, disposisi, dan aktor penanggung jawab tanpa celah manipulasi.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon cyan"><i class="fas fa-file-download"></i></div>
-                    <h3 class="feature-title">Export Report</h3>
-                    <p class="feature-description">Download laporan dalam format PDF atau Excel</p>
+                    <div class="feature-icon cyan"><i class="fas fa-file-invoice"></i></div>
+                    <h3 class="feature-title">Official PDF & CSV Export</h3>
+                    <p class="feature-description">Cetak berkas bukti laporan resmi berstempel digital dan ekspor data kuantitatif CSV siap analisis pimpinan.</p>
                 </div>
             </div>
         </div>
@@ -157,37 +168,37 @@
     <section class="how-it-works" id="how-it-works">
         <div class="section-container">
             <div class="section-header">
-                <span class="section-badge">Process</span>
-                <h2 class="section-title">Cara Kerja Sistem</h2>
-                <p class="section-description">Proses mudah dalam 4 langkah sederhana</p>
+                <span class="section-badge">Alur Disposisi</span>
+                <h2 class="section-title">4 Tahap Penanganan Transparan</h2>
+                <p class="section-description">Setiap langkah diikat oleh sistem status mesin yang transparan dan dapat dipantau langsung</p>
             </div>
             <div class="steps-container">
                 <div class="step-item">
                     <div class="step-number">01</div>
-                    <div class="step-icon"><i class="fas fa-user-plus"></i></div>
-                    <h3 class="step-title">Daftar Akun</h3>
-                    <p class="step-description">Buat akun gratis dengan mengisi data diri Anda</p>
+                    <div class="step-icon"><i class="fas fa-pen-nib"></i></div>
+                    <h3 class="step-title">Pengajuan Laporan</h3>
+                    <p class="step-description">Warga mengisi formulir laporan atau keluhan lengkap dengan lampiran bukti.</p>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step-item">
                     <div class="step-number">02</div>
-                    <div class="step-icon"><i class="fas fa-edit"></i></div>
-                    <h3 class="step-title">Buat Laporan</h3>
-                    <p class="step-description">Isi form laporan dengan detail dan lampiran foto</p>
+                    <div class="step-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <h3 class="step-title">Verifikasi Admin</h3>
+                    <p class="step-description">Admin utama memvalidasi kelayakan berkas dan mendisposisikan ke dinas (OPD) terkait.</p>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step-item">
                     <div class="step-number">03</div>
-                    <div class="step-icon"><i class="fas fa-cogs"></i></div>
-                    <h3 class="step-title">Proses Verifikasi</h3>
-                    <p class="step-description">Tim kami akan verifikasi dan menindaklanjuti</p>
+                    <div class="step-icon"><i class="fas fa-user-gear"></i></div>
+                    <h3 class="step-title">Penanganan Lapangan</h3>
+                    <p class="step-description">Kepala dinas menugaskan staf teknis untuk menindaklanjuti dan mengunggah bukti pengerjaan.</p>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step-item">
                     <div class="step-number">04</div>
-                    <div class="step-icon"><i class="fas fa-check-double"></i></div>
-                    <h3 class="step-title">Selesai</h3>
-                    <p class="step-description">Dapatkan notifikasi dan hasil penyelesaian</p>
+                    <div class="step-icon"><i class="fas fa-circle-check"></i></div>
+                    <h3 class="step-title">Penyelesaian & Arsip</h3>
+                    <p class="step-description">Hasil dikonfirmasi oleh pimpinan, tiket ditutup, dan warga menerima pemberitahuan resmi.</p>
                 </div>
             </div>
         </div>
@@ -199,39 +210,40 @@
         <div class="section-container">
             <div class="stats-content">
                 <div class="stats-left">
-                    <h2 class="stats-title">Dipercaya oleh Ribuan Masyarakat</h2>
-                    <p class="stats-description">Platform kami telah membantu menyelesaikan puluhan ribu laporan dengan tingkat kepuasan tinggi.</p>
+                    <span class="section-badge light">Komitmen Layanan</span>
+                    <h2 class="stats-title">Transformasi Digital Nyata Pelayanan Publik</h2>
+                    <p class="stats-description">Menghapus stigma birokrasi lambat dengan sistem yang mengikat kepastian waktu dan keterbukaan informasi publik.</p>
                     <a href="{{ route('register') }}" class="btn-stats">
-                        Bergabung Sekarang <i class="fas fa-arrow-right"></i>
+                        Mulai Bergabung <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
                 <div class="stats-right">
                     <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-icon"><i class="fas fa-users-viewfinder"></i></div>
                         <div class="stat-content">
-                            <div class="stat-value">10,000+</div>
-                            <div class="stat-text">Pengguna Aktif</div>
+                            <div class="stat-value">4 Peran</div>
+                            <div class="stat-text">Hierarki Hak Akses Terpisah</div>
                         </div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                        <div class="stat-icon"><i class="fas fa-gauge-high"></i></div>
                         <div class="stat-content">
-                            <div class="stat-value">50,000+</div>
-                            <div class="stat-text">Laporan Selesai</div>
+                            <div class="stat-value">&lt; 24 Jam</div>
+                            <div class="stat-text">Standar Respon Awal</div>
                         </div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-star"></i></div>
+                        <div class="stat-icon"><i class="fas fa-shield-halved"></i></div>
                         <div class="stat-content">
-                            <div class="stat-value">95%</div>
-                            <div class="stat-text">Tingkat Kepuasan</div>
+                            <div class="stat-value">100%</div>
+                            <div class="stat-text">OWASP Security Compliance</div>
                         </div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-icon"><i class="fas fa-award"></i></div>
                         <div class="stat-content">
-                            <div class="stat-value">24 Jam</div>
-                            <div class="stat-text">Avg. Response Time</div>
+                            <div class="stat-value">IT Days '26</div>
+                            <div class="stat-text">Web Development Project</div>
                         </div>
                     </div>
                 </div>
@@ -244,13 +256,13 @@
         <div class="section-container">
             <div class="cta-card">
                 <div class="cta-content">
-                    <h2 class="cta-title">Siap Menyampaikan Aspirasi Anda?</h2>
-                    <p class="cta-description">Bergabunglah dengan ribuan masyarakat yang telah mempercayai platform kami</p>
+                    <h2 class="cta-title">Siap Bersinergi Membangun Daerah?</h2>
+                    <p class="cta-description">Sampaikan laporan permasalahan di sekitar Anda dan kawal proses penyelesaiannya secara terbuka.</p>
                     <div class="cta-actions">
                         <a href="{{ route('register') }}" class="btn-cta-primary">
-                            Daftar Gratis <i class="fas fa-arrow-right"></i>
+                            Daftar Sekarang <i class="fas fa-arrow-right"></i>
                         </a>
-                        <a href="{{ route('login') }}" class="btn-cta-secondary">Sudah Punya Akun?</a>
+                        <a href="{{ route('login') }}" class="btn-cta-secondary">Masuk ke Akun Anda</a>
                     </div>
                 </div>
             </div>
@@ -261,34 +273,36 @@
     <footer class="footer">
         <div class="section-container">
             <div class="footer-content">
-                <div class="footer-col">
+                <div class="footer-col brand-col">
                     <div class="footer-logo">
-                        <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="logo-icon"><i class="fas fa-bolt-lightning"></i></div>
                         <div class="logo-text">
-                            <span class="logo-main">GovReport</span>
-                            <span class="logo-sub">System</span>
+                            <span class="logo-main">Synapse<span class="logo-accent">Gov</span></span>
+                            <span class="logo-sub">e-Government Civic System</span>
                         </div>
                     </div>
-                    <p class="footer-desc">Platform pelaporan dan pengaduan masyarakat yang aman, cepat, dan terpercaya.</p>
+                    <p class="footer-desc">Platform tata kelola penanganan laporan dan pengaduan publik yang akuntabel, terikat SLA, dan berorientasi pada kepuasan masyarakat.</p>
                 </div>
                 <div class="footer-col">
-                    <h4 class="footer-title">Menu</h4>
+                    <h4 class="footer-title">Navigasi</h4>
                     <ul class="footer-links">
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#home">Beranda</a></li>
+                        <li><a href="#features">Keunggulan Sistem</a></li>
+                        <li><a href="#how-it-works">Alur Penanganan</a></li>
+                        <li><a href="#stats">Metrik Kinerja</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4 class="footer-title">Contact</h4>
+                    <h4 class="footer-title">Kontak & Dukungan</h4>
                     <ul class="footer-contact">
-                        <li><i class="fas fa-envelope"></i> <span>support@govreport.id</span></li>
-                        <li><i class="fas fa-phone"></i> <span>+62 21 1234 5678</span></li>
+                        <li><i class="fas fa-envelope text-primary"></i> <span>support@synapsegov.id</span></li>
+                        <li><i class="fas fa-building text-primary"></i> <span>Layanan Aspirasi Pemerintah Terpadu</span></li>
+                        <li><i class="fas fa-shield-alt text-primary"></i> <span>IT Days 2026 Universitas Sanata Dharma</span></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 GovReport System. All rights reserved.</p>
+                <p>&copy; 2026 <strong>SynapseGov</strong>. Hak Cipta Dilindungi Undang-Undang. Dikembangkan untuk IT Days 2026.</p>
             </div>
         </div>
     </footer>
