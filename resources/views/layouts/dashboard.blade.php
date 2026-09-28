@@ -89,17 +89,17 @@
 
             /* Light Canvas Variables */
             --bg-canvas: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.94);
-            --card-border: rgba(226, 232, 240, 0.85);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --text-subtle: #94a3b8;
-            --shadow-ambient: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-            --shadow-elevated: 0 12px 32px -4px rgba(37, 99, 235, 0.1), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
-            --navbar-bg: rgba(255, 255, 255, 0.88);
-            --sidebar-bg: #ffffff;
+            --card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 100%);
+            --card-border: rgba(255, 255, 255, 0.9);
+            --text-main: #000000;
+            --text-muted: #334155;
+            --text-subtle: #475569;
+            --shadow-ambient: 0 20px 40px -20px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 30px 60px -20px rgba(37, 99, 235, 0.15);
+            --navbar-bg: rgba(255, 255, 255, 0.75);
+            --sidebar-bg: rgba(255, 255, 255, 0.75);
             --table-hover: rgba(37, 99, 235, 0.03);
-            --input-bg: #ffffff;
+            --input-bg: rgba(255, 255, 255, 0.9);
             --input-border: #e2e8f0;
 
             /* Legacy compatibility mapping */
@@ -172,14 +172,16 @@
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
             background-color: var(--bg-canvas);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.04) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(167, 139, 250, 0.08) 0px, transparent 50%);
             background-attachment: fixed;
             min-height: 100vh;
             color: var(--text-main);
             padding-top: 64px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            font-weight: 500;
         }
 
         .dark body {
@@ -451,13 +453,15 @@
 
         .sidebar {
             background: var(--sidebar-bg);
-            border-right: none !important;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid var(--card-border) !important;
             position: sticky;
             top: 64px;
             height: calc(100vh - 64px);
             overflow-y: auto;
             z-index: 1020;
-            box-shadow: none !important;
+            box-shadow: 10px 0 30px -10px rgba(0,0,0,0.02) !important;
             padding: 1rem 0;
             display: flex;
             flex-direction: column;
@@ -532,18 +536,30 @@
         /* Cards & Glassmorphism */
         .card {
             background: var(--card-bg) !important;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--card-border) !important;
-            border-radius: 16px !important;
+            border-radius: 24px !important;
             box-shadow: var(--shadow-ambient) !important;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             overflow: hidden;
             margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: 22px;
+            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: -1;
         }
 
         .card:hover {
             box-shadow: var(--shadow-elevated) !important;
+            transform: translateY(-5px);
         }
 
         .card-header {

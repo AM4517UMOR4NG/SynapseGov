@@ -14,8 +14,8 @@
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
             --border-color: #e2e8f0;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-main: #000000;
+            --text-muted: #334155;
             --accent-glow: rgba(37, 99, 235, 0.05);
             --font-main: 'Plus Jakarta Sans', sans-serif;
             --accent: #2563eb;
@@ -34,19 +34,30 @@
             line-height: 1.5;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            font-weight: 500;
         }
 
-        /* Abstract Background Elements */
+        /* Mesh Gradient Background */
         .ambient-light {
             position: fixed;
-            top: -20vh;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80vw;
-            height: 50vh;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 70%);
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(167, 139, 250, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
+            filter: blur(40px);
+            animation: pulse-ambient 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-ambient {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
         }
 
         /* Navbar */
@@ -158,12 +169,21 @@
         }
 
         .hero h1 {
-            font-size: clamp(3rem, 6vw, 5.5rem);
-            font-weight: 700;
+            font-size: clamp(3.5rem, 7vw, 6.5rem);
+            font-weight: 800;
             letter-spacing: -0.04em;
             line-height: 1.1;
             margin-bottom: 1.5rem;
             max-width: 900px;
+            background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideUp 1s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .hero p {
@@ -199,21 +219,25 @@
         }
 
         .bento-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 24px;
             padding: 2.5rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: border-color 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         }
 
         .bento-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+            border-color: rgba(37, 99, 235, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.15);
+            transform: translateY(-8px) scale(1.02);
         }
 
         .bento-card::before {
@@ -233,9 +257,10 @@
 
         .bento-card h3 {
             font-size: 1.5rem;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: -0.02em;
             margin-bottom: 0.5rem;
+            color: var(--text-main);
         }
 
         .bento-card p {
@@ -243,6 +268,7 @@
             font-size: 0.95rem;
             line-height: 1.6;
             max-width: 80%;
+            font-weight: 500;
         }
 
         .bento-visual {
@@ -260,6 +286,24 @@
             line-height: 1;
         }
 
+        @media (max-width: 900px) {
+            nav { padding: 1.5rem 2rem; }
+            .nav-links { display: none; }
+            .bento-section { padding: 4rem 2rem; }
+            .bento-grid { 
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+            .bento-large, .bento-full { grid-column: span 1 !important; }
+            .bento-card { min-height: 280px; }
+            footer {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 2rem;
+                text-align: center;
+            }
+        }
+
         /* Minimal Footer */
         footer {
             border-top: 1px solid var(--border-color);
@@ -269,24 +313,8 @@
             align-items: center;
             color: var(--text-muted);
             font-size: 0.85rem;
-        }
-
-        @media (max-width: 900px) {
-            nav { padding: 1.5rem 2rem; }
-            .nav-links { display: none; }
-            .bento-section { padding: 4rem 2rem; }
-            .bento-grid { 
-                grid-template-columns: 1fr;
-                grid-template-rows: auto;
-            }
-            .bento-large { grid-column: span 1; }
-            .bento-card { min-height: 280px; }
-            footer {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 2rem;
-                text-align: center;
-            }
+            max-width: 1400px;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -324,9 +352,9 @@
                     <p>Sistem secara mandiri memantau durasi penanganan (SLA) dan mengaktifkan protokol eskalasi jika tenggat terlewati.</p>
                 </div>
                 <div class="bento-visual">
-                    <!-- Abstract representation instead of stickers -->
-                    <div style="width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 2rem; position: relative;">
-                        <div style="position: absolute; top: 0; left: 0; height: 100%; width: 60%; background: #fff;"></div>
+                    <!-- Abstract representation -->
+                    <div style="width: 100%; height: 2px; background: rgba(0,0,0,0.1); margin-top: 2rem; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; height: 100%; width: 60%; background: var(--accent);"></div>
                     </div>
                 </div>
             </div>
@@ -337,7 +365,7 @@
                     <p>Batas privasi antar Organisasi Perangkat Daerah dijaga ketat tanpa intervensi data silang.</p>
                 </div>
                 <div class="bento-visual">
-                    <div style="width: 40px; height: 40px; border: 1px solid #fff; border-radius: 8px;"></div>
+                    <div style="width: 40px; height: 40px; border: 2px solid var(--accent); border-radius: 8px;"></div>
                 </div>
             </div>
 
@@ -347,10 +375,10 @@
                     <p>Setiap mutasi laporan direkam mutlak. Audit transparan meminimalkan manipulasi data.</p>
                 </div>
                 <div class="bento-visual">
-                    <div style="display: flex; gap: 0.5rem;">
-                        <div style="width: 4px; height: 16px; background: rgba(255,255,255,0.2);"></div>
-                        <div style="width: 4px; height: 32px; background: rgba(255,255,255,0.5);"></div>
-                        <div style="width: 4px; height: 24px; background: #fff;"></div>
+                    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                        <div style="width: 6px; height: 16px; background: rgba(37,99,235,0.2); border-radius: 2px;"></div>
+                        <div style="width: 6px; height: 32px; background: rgba(37,99,235,0.5); border-radius: 2px;"></div>
+                        <div style="width: 6px; height: 24px; background: var(--accent); border-radius: 2px;"></div>
                     </div>
                 </div>
             </div>
@@ -363,6 +391,47 @@
                 <div class="bento-visual" style="align-items: flex-start; justify-content: flex-end;">
                     <div class="metric-value">100%</div>
                     <div style="color: var(--text-muted); font-size: 0.9rem;">Sistem terlindungi</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bento-section" id="features" style="padding-top: 4rem;">
+        <h2 class="section-title">Kenapa Memilih Kami?</h2>
+        
+        <div class="bento-grid">
+            <div class="bento-card bento-large">
+                <div>
+                    <h3 style="color: var(--text-main);">Respon Instan</h3>
+                    <p>Laporan langsung didistribusikan ke dinas terkait dalam hitungan detik secara otomatis menggunakan sistem routing pintar tanpa jeda birokrasi.</p>
+                </div>
+                <div class="bento-visual" style="align-items: flex-end;">
+                    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: flex-end;">
+                        <div style="height: 4px; width: 40%; background: rgba(0,0,0,0.1); border-radius: 2px;"></div>
+                        <div style="height: 4px; width: 80%; background: var(--text-main); border-radius: 2px;"></div>
+                        <div style="height: 4px; width: 20%; background: rgba(0,0,0,0.4); border-radius: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bento-card">
+                <div>
+                    <h3 style="color: var(--text-main);">Transparansi Penuh</h3>
+                    <p>Pantau setiap pergerakan dan mutasi laporan Anda secara real-time. Tidak ada yang disembunyikan.</p>
+                </div>
+                <div class="bento-visual">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; border: 4px dashed var(--text-main); opacity: 0.8;"></div>
+                </div>
+            </div>
+
+            <div class="bento-card bento-full" style="grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h3 style="color: var(--text-main);">Akurasi Data</h3>
+                    <p>Validasi ketat dengan integrasi NIK memastikan integritas pelapor, menjaga sistem dari spamming dan meningkatkan kualitas penanganan masalah.</p>
+                </div>
+                <div class="bento-visual" style="align-items: center; justify-content: center; flex-direction: row; gap: 1rem;">
+                    <div style="width: 24px; height: 24px; background: var(--text-main); border-radius: 4px;"></div>
+                    <div style="width: 100px; height: 8px; background: rgba(0, 0, 0, 0.1); border-radius: 4px;"></div>
                 </div>
             </div>
         </div>

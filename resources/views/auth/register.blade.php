@@ -7,8 +7,8 @@
         --bg-main: #f8fafc;
         --surface: #ffffff;
         --border-light: #e2e8f0;
-        --text-pure: #0f172a;
-        --text-dim: #64748b;
+        --text-pure: #000000;
+        --text-dim: #334155;
         --accent: #2563eb;
         --accent-hover: #1d4ed8;
         --error: #ef4444;
