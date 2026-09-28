@@ -128,20 +128,20 @@
         }
 
         .dark {
-            /* Dark Canvas Variables (OLED Deep Navy Slate) */
-            --bg-canvas: #070b14;
-            --card-bg: rgba(15, 23, 42, 0.78);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
+            /* Dark Canvas Variables (Modern Slate) */
+            --bg-canvas: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f1f5f9;
             --text-muted: #94a3b8;
             --text-subtle: #64748b;
-            --shadow-ambient: 0 4px 24px -2px rgba(0, 0, 0, 0.6);
-            --shadow-elevated: 0 14px 36px -4px rgba(0, 0, 0, 0.75), 0 0 20px rgba(59, 130, 246, 0.15);
-            --navbar-bg: rgba(11, 18, 32, 0.88);
-            --sidebar-bg: #0b1220;
-            --table-hover: rgba(59, 130, 246, 0.06);
-            --input-bg: #0f172a;
-            --input-border: #1e293b;
+            --shadow-ambient: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+            --shadow-elevated: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.1);
+            --navbar-bg: rgba(15, 23, 42, 0.88);
+            --sidebar-bg: #0f172a;
+            --table-hover: rgba(59, 130, 246, 0.08);
+            --input-bg: #1e293b;
+            --input-border: #334155;
 
             /* Legacy compatibility mapping */
             --primary-color: #3b82f6;
@@ -197,14 +197,55 @@
             left: 0;
             right: 0;
             z-index: 1030;
+            z-index: 1030;
             transition: all 0.3s ease;
         }
 
-        .navbar-brand {
+        /* Custom Dropdown Styling */
+        .dropdown-menu {
+            background: var(--card-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border) !important;
+            border-radius: 14px;
+            box-shadow: var(--shadow-elevated) !important;
+            padding: 0.5rem;
+            min-width: 240px;
+            margin-top: 0.75rem !important;
+            z-index: 1050;
+        }
+
+        .dropdown-header {
+            padding: 0.5rem 1rem;
+            color: var(--text-main);
+        }
+
+        .dropdown-item {
+            color: var(--text-main) !important;
+            border-radius: 8px;
+            padding: 0.65rem 1rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            margin-bottom: 0.15rem;
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background: rgba(37, 99, 235, 0.08) !important;
+            color: var(--brand-primary) !important;
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid var(--card-border);
+            margin: 0.5rem 0;
+            opacity: 1;
+        }
+
+        .navbar-brand, .navbar-brand:hover, .navbar-brand:focus {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            text-decoration: none;
+            text-decoration: none !important;
             color: var(--text-main) !important;
             padding: 0;
         }
@@ -378,9 +419,12 @@
             .sidebar:hover { 
                 width: 260px; 
             }
-            .sidebar:not(:hover) .side-link span { display: none; }
+            .sidebar:not(:hover) .side-link span,
+            .sidebar:not(:hover) .sidebar-bottom-actions span { display: none; }
             .sidebar:not(:hover) .side-link { justify-content: center; padding: 0.7rem 0; }
             .sidebar:not(:hover) .section-title { opacity: 0; }
+            .sidebar:not(:hover) .sidebar-bottom-actions .btn { padding: 0.5rem; justify-content: center; }
+            .sidebar:not(:hover) .sidebar-bottom-actions .btn i { margin: 0 !important; }
         }
 
         .sidebar {
@@ -1085,7 +1129,7 @@
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li class="dropdown-header">
-                                        <div class="fw-bold text-dark text-truncate">{{ auth()->user()->name }}</div>
+                                        <div class="fw-bold text-truncate" style="color: var(--text-main);">{{ auth()->user()->name }}</div>
                                         <div class="text-muted small text-truncate">{{ auth()->user()->email }}</div>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
@@ -1143,13 +1187,13 @@
                 </nav>
                 
                 @if(auth()->check() && auth()->user()->role === 'citizen')
-                <div class="mt-auto px-3 pb-3">
+                <div class="mt-auto px-3 pb-3 sidebar-bottom-actions">
                     <div class="section-title px-0 mb-2">Aksi Cepat</div>
-                    <a href="{{ route('citizen.reports.create') }}" class="btn btn-primary w-100 mb-2 py-2" style="font-size:0.82rem;">
-                        <i class="fas fa-plus"></i> Laporan Baru
+                    <a href="{{ route('citizen.reports.create') }}" class="btn btn-primary w-100 mb-2 py-2 d-flex align-items-center" style="font-size:0.82rem;">
+                        <i class="fas fa-plus me-2"></i> <span>Laporan Baru</span>
                     </a>
-                    <a href="{{ route('citizen.complaints.create') }}" class="btn btn-warning w-100 py-2" style="font-size:0.82rem;">
-                        <i class="fas fa-bullhorn"></i> Keluhan Baru
+                    <a href="{{ route('citizen.complaints.create') }}" class="btn btn-warning w-100 py-2 d-flex align-items-center" style="font-size:0.82rem;">
+                        <i class="fas fa-bullhorn me-2"></i> <span>Keluhan Baru</span>
                     </a>
                 </div>
                 @endif
@@ -1178,8 +1222,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap 5 loaded via Vite (app.js) -->
 
     <!-- Theme & Interactivity Script -->
     <script>
