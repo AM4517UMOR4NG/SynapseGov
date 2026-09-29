@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assignment;
 use App\Models\Complaint;
 use App\Models\Department;
 use App\Models\Report;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -159,12 +161,12 @@ class CitizenDashboardController extends Controller
         ]);
 
         // Auto-assign complaint to first admin so it directly enters admin queue
-        $firstAdmin = \App\Models\User::where('role', 'admin')->orderBy('id')->first();
+        $firstAdmin = User::where('role', 'admin')->orderBy('id')->first();
         if ($firstAdmin) {
             // Save assignment record for audit trail consistency
-            \App\Models\Assignment::create([
+            Assignment::create([
                 'assignable_id' => $complaint->id,
-                'assignable_type' => \App\Models\Complaint::class,
+                'assignable_type' => Complaint::class,
                 'assigned_to' => $firstAdmin->id,
                 'assigned_by' => Auth::id(),
                 'notes' => 'Auto-assigned to first admin on submission',
@@ -181,20 +183,22 @@ class CitizenDashboardController extends Controller
 
     public function myReports()
     {
+        $perPage = Auth::user()->getSettings('items_per_page', 15);
         $reports = Report::with(['department', 'assignedUser'])
             ->where('user_id', Auth::id())
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('citizen.reports.index', compact('reports'));
     }
 
     public function myComplaints()
     {
+        $perPage = Auth::user()->getSettings('items_per_page', 15);
         $complaints = Complaint::with(['department', 'assignedUser'])
             ->where('user_id', Auth::id())
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('citizen.complaints.index', compact('complaints'));
     }

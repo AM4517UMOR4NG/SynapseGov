@@ -144,7 +144,7 @@
                                 <div class="attachment-name">{{ basename($file) }}</div>
                                 <small class="text-muted">File lampiran</small>
                             </div>
-                            <a class="btn btn-sm btn-primary" href="{{ asset('storage/' . $file) }}" target="_blank" title="Download">
+                            <a class="btn btn-sm btn-primary" href="{{ route('files.download', ['type' => 'report', 'id' => $report->id, 'filename' => basename($file)]) }}" title="Download">
                                 <i class="fas fa-download"></i>
                             </a>
                         </div>
