@@ -113,6 +113,11 @@ class User extends Authenticatable
         return $this->hasMany(Complaint::class, 'assigned_to');
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class, 'assigned_to');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
