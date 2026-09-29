@@ -232,10 +232,16 @@ class FileController extends Controller
     private function getFilePath($reportable, $filename)
     {
         $attachments = $reportable->attachments ?? [];
+        $cleanFilename = basename(str_replace(['../', '..\\'], '', (string) $filename));
 
         foreach ($attachments as $file) {
-            if (basename($file) === $filename) {
-                return 'public/'.$file;
+            $normalized = str_replace('\\', '/', (string) $file);
+            if (str_contains($normalized, '..')) {
+                continue;
+            }
+
+            if (basename($normalized) === $cleanFilename) {
+                return str_starts_with($normalized, 'public/') ? $normalized : 'public/'.$normalized;
             }
         }
 

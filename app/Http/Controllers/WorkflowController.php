@@ -200,8 +200,8 @@ class WorkflowController extends Controller
         $attachments = [];
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('public/attachments/comments');
-                $attachments[] = str_replace('public/', '', $path);
+                $path = $file->store('attachments/comments', 'public');
+                $attachments[] = $path;
             }
         }
 
@@ -213,7 +213,7 @@ class WorkflowController extends Controller
             $attachments
         );
 
-        return redirect()->back()->with('success', 'Comment added successfully.');
+        return redirect()->back()->with('success', 'Komentar berhasil ditambahkan.');
     }
 
     /**
