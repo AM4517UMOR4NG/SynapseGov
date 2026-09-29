@@ -1,16 +1,16 @@
 @extends('layouts.dashboard')
 
-@section('title', 'View Files - ' . $reportable->ticket_no)
+@section('title', 'Lampiran - ' . $reportable->ticket_no)
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header file-list-heading">
                     <h3 class="card-title">
                         <i class="fas fa-file-alt"></i>
-                        Files for {{ ucfirst($type) }}: {{ $reportable->ticket_no }}
+                        Lampiran {{ $type === 'report' ? 'Laporan' : 'Keluhan' }}: {{ $reportable->ticket_no }}
                     </h3>
                     <div class="card-tools">
                         @php

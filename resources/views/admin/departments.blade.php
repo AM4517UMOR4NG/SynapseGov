@@ -45,100 +45,100 @@
 @endif
 
 <!-- Departments Table -->
-<div class="departments-card">
-    <div class="departments-card-header">
+<div class="card border-0 shadow-sm rounded-4 mb-4" style="overflow: visible !important;">
+    <div class="card-header bg-white py-4 px-4 d-flex justify-content-between align-items-center border-bottom-0 rounded-top-4">
         <div class="d-flex align-items-center gap-2">
-            <i class="fas fa-list"></i>
-            <h3>Daftar Departemen ({{ $departments->count() }} Total)</h3>
+            <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list me-2 text-muted"></i>Daftar Departemen</h5>
         </div>
-        <span class="badge bg-white text-primary fw-bold">
-            {{ $departments->where('is_active', true)->count() }} Aktif
-        </span>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                {{ $departments->where('is_active', true)->count() }} Aktif
+            </span>
+            <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-semibold">
+                {{ $departments->count() }} Total
+            </span>
+        </div>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body p-0 bg-light rounded-bottom-4">
         <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
+            <table class="table table-hover align-middle mb-0" style="border-collapse: separate; border-spacing: 0 8px; padding: 0 1rem;">
+                <thead class="bg-light">
                     <tr>
-                        <th style="width: 60px;">ID</th>
-                        <th>Departemen & Kode</th>
-                        <th>Kepala Departemen</th>
-                        <th>Kontak & Alamat</th>
-                        <th>Status</th>
-                        <th class="text-center">Staf</th>
-                        <th class="text-center">Laporan</th>
-                        <th class="text-center">Keluhan</th>
-                        <th class="text-end" style="min-width: 140px;">Aksi</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px; width: 60px;">ID</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">Departemen</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">Kepala</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px;">Kontak</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px; text-align: center;">Status</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0" style="font-size: 0.75rem; letter-spacing: 0.5px; text-align: center;">Statistik</th>
+                        <th class="text-uppercase text-secondary fw-semibold border-0 text-end" style="font-size: 0.75rem; letter-spacing: 0.5px; min-width: 140px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($departments as $department)
-                    <tr>
-                        <td class="text-muted fw-bold">#{{ $department->id }}</td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
+                    <tr class="bg-white shadow-sm" style="border-radius: 12px; transition: all 0.2s ease;">
+                        <td class="border-0 rounded-start-3 text-muted fw-bold ps-3">#{{ $department->id }}</td>
+                        <td class="border-0">
+                            <div class="d-flex align-items-center gap-3 py-2">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold;">
+                                    {{ substr($department->name, 0, 1) }}
+                                </div>
                                 <div>
-                                    <strong class="text-dark">{{ $department->name }}</strong>
-                                    <span class="badge bg-secondary ms-1">{{ $department->code }}</span>
-                                    @if($department->description)
-                                    <div class="text-muted small text-truncate" style="max-width: 250px;">
-                                        {{ $department->description }}
+                                    <strong class="text-dark d-block mb-1">{{ $department->name }}</strong>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-light text-secondary border border-secondary-subtle" style="font-family: monospace;">{{ $department->code }}</span>
                                     </div>
-                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="border-0">
                             @if($department->head)
-                                <span class="fw-semibold text-primary"><i class="fas fa-user-tie me-1"></i>{{ $department->head->name }}</span>
-                                <div class="text-muted small">{{ $department->head->email }}</div>
+                                <div class="fw-semibold text-dark"><i class="fas fa-user-tie text-primary opacity-50 me-2"></i>{{ $department->head->name }}</div>
+                                <div class="text-muted small ms-4">{{ $department->head->email }}</div>
                             @else
-                                <span class="text-muted fst-italic"><i class="fas fa-user-slash me-1"></i>Belum ditunjuk</span>
+                                <span class="text-muted fst-italic small"><i class="fas fa-user-slash me-2 opacity-50"></i>Belum ditunjuk</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="border-0">
                             @if($department->email)
-                                <div class="small"><i class="fas fa-envelope text-muted me-1"></i>{{ $department->email }}</div>
+                                <div class="small text-secondary mb-1"><i class="fas fa-envelope text-primary opacity-50 me-2"></i>{{ $department->email }}</div>
                             @endif
                             @if($department->phone)
-                                <div class="small"><i class="fas fa-phone text-muted me-1"></i>{{ $department->phone }}</div>
+                                <div class="small text-secondary"><i class="fas fa-phone text-primary opacity-50 me-2"></i>{{ $department->phone }}</div>
                             @endif
                             @if(!$department->email && !$department->phone)
                                 <span class="text-muted small">-</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="border-0 text-center">
                             <form action="{{ route('admin.departments.toggle_status', $department->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Klik untuk mengubah status">
-                                    <span class="badge bg-{{ $department->is_active ? 'success' : 'danger' }} cursor-pointer">
-                                        {{ $department->is_active ? 'Aktif' : 'Nonaktif' }}
+                                    <span class="badge bg-{{ $department->is_active ? 'success' : 'danger' }} bg-opacity-10 text-{{ $department->is_active ? 'success' : 'danger' }} border border-{{ $department->is_active ? 'success' : 'danger' }}-subtle rounded-pill px-3 py-2 cursor-pointer transition-all hover-translate-y">
+                                        <i class="fas fa-{{ $department->is_active ? 'check-circle' : 'times-circle' }} me-1"></i> {{ $department->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </button>
                             </form>
                         </td>
-                        <td class="text-center">
-                            <span class="badge bg-info text-dark">{{ $department->users_count }}</span>
+                        <td class="border-0 text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <span class="badge bg-light text-secondary border shadow-sm" title="Total Staf"><i class="fas fa-users text-info opacity-75 me-1"></i>{{ $department->users_count }}</span>
+                                <span class="badge bg-light text-secondary border shadow-sm" title="Laporan Masuk"><i class="fas fa-file-alt text-primary opacity-75 me-1"></i>{{ $department->reports_count }}</span>
+                                <span class="badge bg-light text-secondary border shadow-sm" title="Keluhan Masuk"><i class="fas fa-exclamation-triangle text-warning opacity-75 me-1"></i>{{ $department->complaints_count }}</span>
+                            </div>
                         </td>
-                        <td class="text-center">
-                            <span class="badge bg-primary">{{ $department->reports_count }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-warning text-dark">{{ $department->complaints_count }}</span>
-                        </td>
-                        <td class="text-end">
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewDepartmentModal{{ $department->id }}" title="Lihat Detail">
-                                    <i class="fas fa-eye"></i>
+                        <td class="border-0 rounded-end-3 text-end pe-3">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm btn-light text-primary border shadow-sm btn-hover-elevate rounded-circle" data-bs-toggle="modal" data-bs-target="#viewDepartmentModal{{ $department->id }}" title="Detail" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-eye opacity-75"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editDepartmentModal{{ $department->id }}" title="Edit Departemen">
-                                    <i class="fas fa-edit"></i>
+                                <button type="button" class="btn btn-sm btn-light text-warning border shadow-sm btn-hover-elevate rounded-circle" data-bs-toggle="modal" data-bs-target="#editDepartmentModal{{ $department->id }}" title="Edit" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-edit opacity-75 text-dark"></i>
                                 </button>
                                 <form action="{{ route('admin.departments.destroy', $department->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus departemen {{ $department->name }}?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Departemen">
-                                        <i class="fas fa-trash-alt"></i>
+                                    <button type="submit" class="btn btn-sm btn-light text-danger border shadow-sm btn-hover-elevate rounded-circle" title="Hapus" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-trash-alt opacity-75"></i>
                                     </button>
                                 </form>
                             </div>
@@ -146,9 +146,12 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">
-                            <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
-                            Belum ada departemen yang terdaftar.
+                        <td colspan="7" class="text-center py-5 text-muted bg-white rounded-3 shadow-sm">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="fas fa-sitemap fa-3x mb-3 text-secondary opacity-50"></i>
+                                <h5>Belum Ada Departemen</h5>
+                                <p class="text-muted mb-0">Silakan tambahkan departemen baru melalui tombol di atas.</p>
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -192,6 +195,7 @@
                                 <option value="">-- Belum Ditentukan --</option>
                                 @if(isset($potentialHeads))
                                     @foreach($potentialHeads as $potentialHead)
+                                        @continue($potentialHead->department_id !== null)
                                         <option value="{{ $potentialHead->id }}">{{ $potentialHead->name }} ({{ ucfirst($potentialHead->role) }})</option>
                                     @endforeach
                                 @endif
@@ -331,6 +335,7 @@
                                 <option value="">-- Belum Ditentukan --</option>
                                 @if(isset($potentialHeads))
                                     @foreach($potentialHeads as $potentialHead)
+                                        @continue($potentialHead->department_id !== null && (int) $potentialHead->department_id !== (int) $department->id)
                                         <option value="{{ $potentialHead->id }}" {{ $department->head_id == $potentialHead->id ? 'selected' : '' }}>
                                             {{ $potentialHead->name }} ({{ ucfirst($potentialHead->role) }})
                                         </option>
