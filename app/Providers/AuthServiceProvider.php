@@ -14,6 +14,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         \App\Models\Report::class => \App\Policies\ReportPolicy::class,
+        \App\Models\Complaint::class => \App\Policies\ComplaintPolicy::class,
     ];
 
     /**
@@ -25,6 +26,10 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('view', function ($user, $reportable) {
             if ($reportable instanceof \App\Models\Report) {
                 return app(\App\Policies\ReportPolicy::class)->view($user, $reportable);
+            }
+
+            if ($reportable instanceof \App\Models\Complaint) {
+                return app(\App\Policies\ComplaintPolicy::class)->view($user, $reportable);
             }
 
             return app(\App\Policies\FilePolicy::class)->view($user, $reportable);
