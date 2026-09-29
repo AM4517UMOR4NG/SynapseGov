@@ -14,9 +14,13 @@ class DownloadController extends Controller
     {
         $report = Report::with(['user', 'department', 'assignedUser'])->findOrFail($id);
 
-        // Check permissions: admin, assigned staff, department head, or report owner
+        // Check permissions: admin, assigned staff, department head, department staff, or report owner
         $user = Auth::user();
-        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+        $isOwner = (int) $report->user_id === (int) $user->id;
+        $isAssigned = (int) $report->assigned_to === (int) $user->id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+
+        if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -46,9 +50,13 @@ class DownloadController extends Controller
     {
         $report = Report::with(['user', 'department', 'assignedUser'])->findOrFail($id);
 
-        // Check permissions: admin, assigned staff, department head, or report owner
+        // Check permissions: admin, assigned staff, department head, department staff, or report owner
         $user = Auth::user();
-        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+        $isOwner = (int) $report->user_id === (int) $user->id;
+        $isAssigned = (int) $report->assigned_to === (int) $user->id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+
+        if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -84,9 +92,13 @@ class DownloadController extends Controller
     {
         $report = Report::findOrFail($id);
 
-        // Check permissions: admin, assigned staff, department head, or report owner
+        // Check permissions: admin, assigned staff, department head, department staff, or report owner
         $user = Auth::user();
-        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+        $isOwner = (int) $report->user_id === (int) $user->id;
+        $isAssigned = (int) $report->assigned_to === (int) $user->id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+
+        if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
         }
 

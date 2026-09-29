@@ -254,4 +254,150 @@ class EndToEndPdfWorkflowTest extends TestCase
             ->getJson(route('files.download', ['report', $report->id, $pdfFilename]));
         $unauthorizedDownloadJson->assertStatus(403);
     }
+
+    public function test_admin_direct_assign_to_head_reject_and_revision_cycle(): void
+    {
+        $fakePdf = UploadedFile::fake()->create('dokumen_revisi.pdf', 300, 'application/pdf');
+
+        $this->actingAs($this->citizen)->post(route('citizen.reports.store'), [
+            'title' => 'Laporan Butuh Pengawasan Kepala Dinas',
+            'description' => 'Dokumen terlampir untuk kepala dinas.',
+            'category' => 'Infrastruktur',
+            'department_id' => $this->department->id,
+            'priority' => 'urgent',
+            'attachments' => [$fakePdf],
+        ]);
+
+        /** @var Report $report */
+        $report = Report::where('user_id', $this->citizen->id)->latest()->first();
+        $pdfFilename = basename($report->attachments[0]);
+
+        // 1. Admin assigns directly to Department Head
+        $assignHeadResponse = $this->actingAs($this->admin)
+            ->post(route('workflow.reports.admin_assign_head', $report->id));
+        $assignHeadResponse->assertSessionHasNoErrors();
+        $report->refresh();
+        $this->assertEquals($this->departmentHead->id, $report->assigned_to);
+
+        // 2. Head reviews and returns to Staff
+        $headReviewResponse = $this->actingAs($this->departmentHead)
+            ->post(route('workflow.reports.head_review_return', $report->id), [
+                'assigned_to' => $this->staff->id,
+                'notes' => 'Tolong staff periksa detail PDF dokumen teknis.',
+            ]);
+        $headReviewResponse->assertSessionHasNoErrors();
+        $report->refresh();
+        $this->assertEquals('reviewed', $report->status);
+        $this->assertEquals($this->staff->id, $report->assigned_to);
+
+        // 3. Staff confirms completion to Admin
+        $staffCompleteResponse = $this->actingAs($this->staff)
+            ->post(route('workflow.reports.staff_confirm_admin', $report->id), [
+                'completion_notes' => 'Sudah diperiksa dan dilaksanakan.',
+            ]);
+        $staffCompleteResponse->assertSessionHasNoErrors();
+        $report->refresh();
+        $this->assertEquals('awaiting_admin_approval', $report->status);
+
+        // 4. Admin rejects back to Staff for revision
+        $adminRejectResponse = $this->actingAs($this->admin)
+            ->post(route('workflow.reports.admin_reject_staff', $report->id), [
+                'assigned_to' => $this->staff->id,
+                'rejection_reason' => 'Masih ada data yang kurang pada PDF pendukung.',
+            ]);
+        $adminRejectResponse->assertSessionHasNoErrors();
+        $report->refresh();
+        $this->assertEquals('needs_revision', $report->status);
+        $this->assertEquals($this->staff->id, $report->assigned_to);
+
+        // 5. Staff re-confirms and forwards to Head
+        $staffReForwardResponse = $this->actingAs($this->staff)
+            ->post(route('workflow.reports.staff_confirm_forward', $report->id));
+        $staffReForwardResponse->assertSessionHasNoErrors();
+        $report->refresh();
+        $this->assertEquals($this->departmentHead->id, $report->assigned_to);
+
+        // 6. Verify PDF is still readable by Head
+        $headPreview = $this->actingAs($this->departmentHead)
+            ->get(route('files.preview_image', ['report', $report->id, $pdfFilename]));
+        $headPreview->assertStatus(200);
+    }
+
+    public function test_complaint_pdf_submission_and_role_access(): void
+    {
+        $fakePdf = UploadedFile::fake()->create('keluhan_bukti.pdf', 150, 'application/pdf');
+
+        $submitComplaintResponse = $this->actingAs($this->citizen)
+            ->post(route('citizen.complaints.store'), [
+                'title' => 'Keluhan Pelayanan Kurang Memuaskan',
+                'description' => 'Bukti surat terlampir dalam bentuk PDF.',
+                'category' => 'Pelayanan Publik',
+                'department_id' => $this->department->id,
+                'priority' => 'medium',
+                'attachments' => [$fakePdf],
+            ]);
+
+        $submitComplaintResponse->assertSessionHasNoErrors();
+
+        /** @var \App\Models\Complaint $complaint */
+        $complaint = \App\Models\Complaint::where('user_id', $this->citizen->id)->latest()->first();
+        $this->assertNotNull($complaint);
+        $this->assertNotEmpty($complaint->attachments);
+        $pdfFilename = basename($complaint->attachments[0]);
+
+        // Citizen previews complaint PDF
+        $citizenPreview = $this->actingAs($this->citizen)
+            ->get(route('files.preview_image', ['complaint', $complaint->id, $pdfFilename]));
+        $citizenPreview->assertStatus(200);
+        $citizenPreview->assertHeader('Content-Type', 'application/pdf');
+
+        // Admin assigns complaint to Staff
+        $assignResponse = $this->actingAs($this->admin)
+            ->post(route('admin.complaints.assign', $complaint->id), [
+                'assigned_to' => $this->staff->id,
+                'notes' => 'Tolong investigasi keluhan ini.',
+            ]);
+        $assignResponse->assertSessionHasNoErrors();
+        $complaint->refresh();
+        $this->assertEquals($this->staff->id, $complaint->assigned_to);
+
+        // Staff previews complaint PDF
+        $staffPreview = $this->actingAs($this->staff)
+            ->get(route('files.preview_image', ['complaint', $complaint->id, $pdfFilename]));
+        $staffPreview->assertStatus(200);
+
+        // Unauthorized user cannot preview complaint PDF
+        $unauthPreview = $this->actingAs($this->unauthorizedCitizen)
+            ->get(route('files.preview_image', ['complaint', $complaint->id, $pdfFilename]));
+        $this->assertEquals(403, $unauthPreview->getStatusCode());
+    }
+
+    public function test_csv_and_administration_report_zip_download(): void
+    {
+        $fakePdf = UploadedFile::fake()->create('laporan_berkas.pdf', 100, 'application/pdf');
+
+        $this->actingAs($this->citizen)->post(route('citizen.reports.store'), [
+            'title' => 'Laporan Ekspor Dokumen',
+            'description' => 'Pengujian ekspor berkas dan data.',
+            'category' => 'Infrastruktur',
+            'department_id' => $this->department->id,
+            'priority' => 'low',
+            'attachments' => [$fakePdf],
+        ]);
+
+        /** @var Report $report */
+        $report = Report::where('user_id', $this->citizen->id)->latest()->first();
+
+        // CSV Download by Admin
+        $csvResponse = $this->actingAs($this->admin)
+            ->get(route('reports.download_csv', $report->id));
+        $csvResponse->assertStatus(200);
+        $csvResponse->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString($report->ticket_no, $csvResponse->getContent() ?: '');
+
+        // Administration Download ZIP by Staff
+        $zipResponse = $this->actingAs($this->staff)
+            ->get(route('administration.reports.download', $report->id));
+        $zipResponse->assertStatus(200);
+    }
 }
