@@ -103,12 +103,21 @@ class Report extends Model
     public static function nextQueueNo(): string
     {
         $date = now()->format('Ymd');
-        $countToday = static::whereDate('created_at', now()->toDateString())
-            ->whereNotNull('queue_no')
-            ->count();
-        $seq = str_pad((string) ($countToday + 1), 4, '0', STR_PAD_LEFT);
+        $prefix = 'Q-'.$date.'-';
 
-        return 'Q-'.$date.'-'.$seq;
+        $latest = static::where('queue_no', 'like', $prefix.'%')
+            ->orderBy('queue_no', 'desc')
+            ->lockForUpdate()
+            ->value('queue_no');
+
+        if ($latest) {
+            $lastSeq = (int) substr($latest, strlen($prefix));
+            $seq = str_pad((string) ($lastSeq + 1), 4, '0', STR_PAD_LEFT);
+        } else {
+            $seq = '0001';
+        }
+
+        return $prefix.$seq;
     }
 
     public function user()

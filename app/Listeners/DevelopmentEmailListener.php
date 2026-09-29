@@ -29,7 +29,7 @@ class DevelopmentEmailListener implements ShouldQueue
 
         Log::info("Email Event: {$eventName}", $eventData);
 
-        $this->info("Email would be sent for event: {$eventName}");
+        Log::info("Email would be sent for event: {$eventName}");
     }
 
     /**
