@@ -311,9 +311,9 @@ class ReportController extends Controller
             $sheet->setCellValue('D'.$row, $report->category);
             $sheet->setCellValue('E'.$row, ucfirst($report->priority));
             $sheet->setCellValue('F'.$row, ucfirst(str_replace('_', ' ', $report->status)));
-            $sheet->setCellValue('G'.$row, $report->department->name ?? 'N/A');
-            $sheet->setCellValue('H'.$row, $report->assignedUser->name ?? 'N/A');
-            $sheet->setCellValue('I'.$row, $report->user->name);
+            $sheet->setCellValue('G'.$row, $report->department?->name ?? 'N/A');
+            $sheet->setCellValue('H'.$row, $report->assignedUser?->name ?? 'N/A');
+            $sheet->setCellValue('I'.$row, $report->user?->name ?? 'N/A');
             $sheet->setCellValue('J'.$row, $report->created_at->format('Y-m-d H:i:s'));
             $sheet->setCellValue('K'.$row, $report->resolved_at ? $report->resolved_at->format('Y-m-d H:i:s') : 'N/A');
             $sheet->setCellValue('L'.$row, $report->sla_due_at ? $report->sla_due_at->format('Y-m-d H:i:s') : 'N/A');

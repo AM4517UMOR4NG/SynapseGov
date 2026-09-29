@@ -62,7 +62,7 @@ class WorkflowController extends Controller
             abort(403, 'Akses ditolak. Hanya admin atau kepala departemen terkait yang dapat memverifikasi laporan.');
         }
 
-        if (! in_array($report->status, ['submitted', 'pending'])) {
+        if (! in_array($report->status, ['submitted', 'pending', 'awaiting_info'])) {
             return redirect()->back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat diverifikasi kembali.');
         }
 
@@ -91,7 +91,7 @@ class WorkflowController extends Controller
             abort(403, 'Akses ditolak. Hanya admin atau kepala departemen terkait yang dapat menolak laporan.');
         }
 
-        if (! in_array($report->status, ['submitted', 'pending', 'verified'])) {
+        if (! in_array($report->status, ['submitted', 'pending', 'verified', 'awaiting_info'])) {
             return redirect()->back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat ditolak.');
         }
 
@@ -152,8 +152,11 @@ class WorkflowController extends Controller
         $report = Report::findOrFail($id);
         $user = $this->user();
 
-        // Check if user is assigned to this report
-        if ((int) $report->assigned_to !== (int) $user->id && ! $user->isAdmin()) {
+        $isAssignedStaff = (int) $report->assigned_to === (int) $user->id;
+        $isInDeptStaff = $user->isStaff() && ((int) $report->department_id === (int) $user->department_id);
+
+        // Check if user is assigned to this report or is staff in the same department
+        if (! $isAssignedStaff && ! $isInDeptStaff && ! $user->isAdmin()) {
             abort(403, 'Akses ditolak. Anda tidak ditugaskan untuk laporan ini.');
         }
 
@@ -161,9 +164,13 @@ class WorkflowController extends Controller
             return redirect()->back()->with('error', 'Pengerjaan tidak dapat dimulai untuk laporan berstatus "'.$report->status.'".');
         }
 
+        if (! $report->assigned_to && $isInDeptStaff) {
+            $report->update(['assigned_to' => $user->id]);
+        }
+
         $this->workflowService->startWork($report, $user);
 
-        return redirect()->back()->with('success', 'Started working on report.');
+        return redirect()->back()->with('success', 'Pengerjaan laporan berhasil dimulai.');
     }
 
     /**
@@ -229,7 +236,7 @@ class WorkflowController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        if (! in_array($report->status, ['in_progress', 'assigned'])) {
+        if (! in_array($report->status, ['submitted', 'pending', 'in_progress', 'assigned'])) {
             return redirect()->back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat menunggu informasi.');
         }
 
@@ -438,5 +445,65 @@ class WorkflowController extends Controller
             'comments' => $comments,
             'assignments' => $assignments,
         ]);
+    }
+
+    /**
+     * Citizen provides additional information for awaiting_info report, returning it to admin verification
+     */
+    public function provideAdditionalInfo(Request $request, $id): RedirectResponse
+    {
+        $user = $this->user();
+        $report = Report::findOrFail($id);
+
+        if ((int) $report->user_id !== (int) $user->id) {
+            abort(403, 'Akses ditolak. Anda bukan pemilik laporan ini.');
+        }
+
+        if ($report->status !== 'awaiting_info') {
+            return redirect()->back()->with('error', 'Laporan saat ini tidak dalam status menunggu informasi.');
+        }
+
+        $request->validate([
+            'information' => 'required|string|max:2000',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip|max:5120',
+        ]);
+
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('public/attachments/reports');
+                $attachments[] = str_replace('public/', '', $path);
+            }
+        }
+
+        $this->workflowService->citizenProvideInfo($report, $user, (string) $request->input('information'), $attachments);
+
+        return redirect()->back()->with('success', 'Data tambahan berhasil dikirim ke Admin untuk diverifikasi kembali.');
+    }
+
+    /**
+     * Citizen confirms resolution as complete ("Selesai" -> closed)
+     */
+    public function citizenConfirmResolved(Request $request, $id): RedirectResponse
+    {
+        $user = $this->user();
+        $report = Report::findOrFail($id);
+
+        if ((int) $report->user_id !== (int) $user->id) {
+            abort(403, 'Akses ditolak. Anda bukan pemilik laporan ini.');
+        }
+
+        if ($report->status !== 'resolved') {
+            return redirect()->back()->with('error', 'Hanya laporan yang berstatus selesai yang dapat dikonfirmasi.');
+        }
+
+        $request->validate([
+            'feedback' => 'nullable|string|max:1000',
+        ]);
+
+        $this->workflowService->citizenConfirmClosed($report, $user, $request->input('feedback'));
+
+        return redirect()->back()->with('success', 'Terima kasih! Laporan telah dikonfirmasi selesai dan resmi diarsipkan.');
     }
 }
