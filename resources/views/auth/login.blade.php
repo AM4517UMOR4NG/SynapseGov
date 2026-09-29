@@ -9,8 +9,8 @@
         --border-light: #e2e8f0;
         --text-pure: #000000;
         --text-dim: #334155;
-        --accent: #2563eb;
-        --accent-hover: #1d4ed8;
+        --accent: #b71c1c;
+        --accent-hover: #991b1b;
         --error: #ef4444;
     }
 
@@ -42,7 +42,7 @@
         position: absolute;
         width: 600px;
         height: 600px;
-        background: radial-gradient(circle at center, rgba(37, 99, 235, 0.05) 0%, transparent 60%);
+        background: radial-gradient(circle at center, rgba(183, 28, 28, 0.05) 0%, transparent 60%);
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
@@ -52,14 +52,93 @@
 
     .auth-card {
         width: 100%;
-        max-width: 420px;
+        max-width: 900px;
         background: var(--surface);
         border: 1px solid var(--border-light);
         border-radius: 24px;
-        padding: 3rem 2.5rem;
+        display: flex;
+        overflow: hidden;
         position: relative;
         z-index: 1;
-        box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.05);
+        box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.1);
+    }
+
+    .auth-left {
+        flex: 1;
+        background: var(--accent);
+        color: #ffffff;
+        padding: 3rem 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .back-btn {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+        transform: translateX(-4px);
+    }
+
+    .auth-left-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .auth-left-title::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background-color: #eab308;
+        margin: 0.5rem auto 0;
+        border-radius: 2px;
+    }
+
+    .auth-left-subtitle {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        opacity: 0.9;
+        max-width: 80%;
+    }
+
+    .auth-right {
+        flex: 1.1;
+        padding: 3.5rem 3rem;
+        background: var(--surface);
+    }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            flex-direction: column;
+            max-width: 420px;
+        }
+        .auth-left {
+            padding: 3rem 2rem;
+        }
+        .auth-right {
+            padding: 2.5rem;
+        }
     }
 
     .auth-brand {
@@ -109,11 +188,7 @@
     }
 
     .form-label {
-        display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text-pure);
-        margin-bottom: 0.5rem;
+        display: none; /* Hide label to mimic placeholder-only design */
     }
 
     .form-control {
@@ -121,7 +196,7 @@
         background: #f1f5f9;
         border: 1px solid transparent;
         border-radius: 12px;
-        padding: 0.85rem 1rem;
+        padding: 0.9rem 1.2rem;
         color: var(--text-pure);
         font-size: 0.95rem;
         transition: all 0.3s ease;
@@ -132,7 +207,7 @@
     .form-control:focus {
         background: #ffffff;
         border-color: var(--accent);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 4px rgba(183, 28, 28, 0.15);
     }
 
     .form-control::placeholder {
@@ -288,21 +363,37 @@
     <div class="ambient-glow"></div>
     
     <div class="auth-card">
-        <div class="auth-brand">
-            <a href="{{ route('landing') }}">SynapseGov</a>
+        <div class="auth-left">
+            <a href="{{ route('landing') }}" class="back-btn" title="Kembali ke Halaman Awal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            <!-- Logo Icon Representation -->
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            <h2 class="auth-left-title">Selamat Datang</h2>
+            <p class="auth-left-subtitle">Silakan login untuk mengakses sistem layanan publik dan aspirasi masyarakat.</p>
         </div>
+        
+        <div class="auth-right">
+            <div class="auth-brand" style="text-align: left; margin-bottom: 2rem;">
+                <h1 class="auth-title" style="color: var(--accent); margin-bottom: 0.5rem; position: relative; display: inline-block;">
+                    Masuk Akun
+                    <div style="position: absolute; bottom: -4px; left: 0; width: 40px; height: 3px; background-color: #eab308; border-radius: 2px;"></div>
+                </h1>
+            </div>
 
-        <div class="auth-header">
-            <h1 class="auth-title">Selamat Datang</h1>
-            <p class="auth-subtitle">Masuk untuk melanjutkan ke sistem.</p>
-        </div>
-
-        <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}">
             @csrf
 
             <div class="form-group">
                 <label for="email" class="form-label">Alamat Email</label>
-                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="nama@email.com">
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Alamat Email">
                 @error('email')
                     <span class="invalid-feedback">{{ $message }}</span>
                 @enderror
@@ -311,7 +402,7 @@
             <div class="form-group">
                 <label for="password" class="form-label">Kata Sandi</label>
                 <div class="password-wrapper">
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Kata Sandi">
                     <button type="button" class="toggle-password" onclick="togglePassword()">Tampilkan</button>
                 </div>
                 @error('password')
@@ -344,11 +435,15 @@
             </div>
         </div>
 
-        <div class="auth-footer">
-            Belum memiliki akun? <a href="{{ route('register') }}">Buat sekarang</a>
+            <div class="auth-footer" style="margin-top: 1.5rem; margin-bottom: 2rem;">
+                Belum memiliki akun? <a href="{{ route('register') }}">Buat sekarang</a>
+            </div>
+            
+            <div style="text-align: center; font-size: 0.75rem; color: var(--text-dim); margin-top: 2rem;">
+                &copy; {{ date('Y') }} SynapseGov. Hak cipta dilindungi.
+            </div>
         </div>
     </div>
-</div>
 
 <script>
     function togglePassword() {
