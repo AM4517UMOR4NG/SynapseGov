@@ -27,17 +27,29 @@ class SendReportAssignedNotification implements ShouldQueue
         $report = $event->report;
         $assignedTo = $event->assignedTo;
 
-        // Send notification to assigned user
-        $assignedTo->notify(new \App\Notifications\ReportAssignedNotification($report));
-
-        // Send email notification (with error handling)
-        try {
-            Mail::to($assignedTo->email)->send(new \App\Mail\ReportAssignedMail($report, $assignedTo));
-        } catch (\Exception $e) {
-            \Log::warning('Failed to send assignment email: '.$e->getMessage());
+        if (! $assignedTo) {
+            return;
         }
 
-        // Send notification to original user
-        $report->user?->notify(new \App\Notifications\ReportAssignedToStaffNotification($report, $assignedTo));
+        // Send notification to assigned user if settings allow
+        if ($assignedTo->getSettings('notifications.assignments', true) && $assignedTo->getSettings('notifications.status', true)) {
+            $assignedTo->notify(new \App\Notifications\ReportAssignedNotification($report));
+        }
+
+        // Send email notification (with error handling and settings check)
+        if ($assignedTo->getSettings('notifications.email', true)) {
+            try {
+                Mail::to($assignedTo->email)->send(new \App\Mail\ReportAssignedMail($report, $assignedTo));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send assignment email: '.$e->getMessage());
+            }
+        }
+
+        // Send notification to original user if settings allow and not the same user
+        if ($report->user && (int) $report->user->id !== (int) $assignedTo->id) {
+            if ($report->user->getSettings('notifications.status', true)) {
+                $report->user->notify(new \App\Notifications\ReportAssignedToStaffNotification($report, $assignedTo));
+            }
+        }
     }
 }

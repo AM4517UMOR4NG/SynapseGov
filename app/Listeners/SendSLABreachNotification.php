@@ -6,6 +6,7 @@ use App\Events\SLABreached;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SendSLABreachNotification implements ShouldQueue
@@ -30,7 +31,9 @@ class SendSLABreachNotification implements ShouldQueue
         // Notify admin users
         $adminUsers = User::where('role', 'admin')->get();
         foreach ($adminUsers as $admin) {
-            $admin->notify(new \App\Notifications\SLABreachNotification($report));
+            if ($admin->getSettings('notifications.status', true)) {
+                $admin->notify(new \App\Notifications\SLABreachNotification($report));
+            }
         }
 
         // Notify department head
@@ -39,19 +42,27 @@ class SendSLABreachNotification implements ShouldQueue
                 ->where('department_id', $report->department_id)
                 ->first();
 
-            if ($departmentHead) {
+            if ($departmentHead && $departmentHead->getSettings('notifications.status', true)) {
                 $departmentHead->notify(new \App\Notifications\SLABreachNotification($report));
             }
         }
 
         // Notify assigned staff
         if ($report->assigned_to && $report->assignedUser) {
-            $report->assignedUser->notify(new \App\Notifications\SLABreachNotification($report));
+            if ($report->assignedUser->getSettings('notifications.status', true)) {
+                $report->assignedUser->notify(new \App\Notifications\SLABreachNotification($report));
+            }
         }
 
-        // Send email notifications
+        // Send email notifications with try-catch and settings check
         foreach ($adminUsers as $admin) {
-            Mail::to($admin->email)->send(new \App\Mail\SLABreachMail($report));
+            if ($admin->getSettings('notifications.email', true)) {
+                try {
+                    Mail::to($admin->email)->send(new \App\Mail\SLABreachMail($report));
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to send SLA breach email to admin {$admin->id}: ".$e->getMessage());
+                }
+            }
         }
     }
 }
