@@ -43,7 +43,7 @@
                                 <td>
                                     <strong>{{ $complaint->title }}</strong>
                                     <br>
-                                    <small class="text-muted">{{ Str::limit($complaint->description, 50) }}</small>
+                                    <small class="text-muted">{{ $complaint->description }}</small>
                                 </td>
                                 <td>{{ $complaint->user ? $complaint->user->name : 'N/A' }}</td>
                                 <td>{{ $complaint->department ? $complaint->department->name : 'N/A' }}</td>

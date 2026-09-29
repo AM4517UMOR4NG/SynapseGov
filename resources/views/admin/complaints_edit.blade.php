@@ -93,10 +93,13 @@
                             <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select class="form-select @error('status') is-invalid @enderror" 
                                     id="status" name="status" required>
-                                <option value="pending" {{ old('status', $complaint->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="confirmed" {{ old('status', $complaint->status) == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                <option value="investigating" {{ old('status', $complaint->status) == 'investigating' ? 'selected' : '' }}>Investigating</option>
-                                <option value="resolved" {{ old('status', $complaint->status) == 'resolved' ? 'selected' : '' }}>Resolved</option>
+                                <option value="submitted" @selected(old('status', $complaint->status) === 'submitted')>Baru masuk</option>
+                                <option value="pending" @selected(old('status', $complaint->status) === 'pending')>Menunggu verifikasi</option>
+                                <option value="investigating" @selected(old('status', $complaint->status) === 'investigating')>Dalam investigasi</option>
+                                <option value="in_progress" @selected(old('status', $complaint->status) === 'in_progress')>Dalam pengerjaan</option>
+                                <option value="resolved" @selected(old('status', $complaint->status) === 'resolved')>Selesai</option>
+                                <option value="closed" @selected(old('status', $complaint->status) === 'closed')>Ditutup</option>
+                                <option value="rejected" @selected(old('status', $complaint->status) === 'rejected')>Ditolak</option>
                             </select>
                             @error('status')
                                 <div class="invalid-feedback">{{ $message }}</div>
