@@ -110,13 +110,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports', [App\Http\Controllers\CitizenDashboardController::class, 'myReports'])->name('reports.index');
         Route::get('/reports/create', [App\Http\Controllers\CitizenDashboardController::class, 'createReport'])->name('reports.create');
         Route::post('/reports', [App\Http\Controllers\CitizenDashboardController::class, 'storeReport'])
-            ->middleware('throttle:10,1')
+            ->middleware(['throttle:10,1', 'validate_upload'])
             ->name('reports.store');
         Route::get('/reports/{id}', [App\Http\Controllers\CitizenDashboardController::class, 'showReport'])->name('reports.show');
         Route::get('/complaints', [App\Http\Controllers\CitizenDashboardController::class, 'myComplaints'])->name('complaints.index');
         Route::get('/complaints/create', [App\Http\Controllers\CitizenDashboardController::class, 'createComplaint'])->name('complaints.create');
         Route::post('/complaints', [App\Http\Controllers\CitizenDashboardController::class, 'storeComplaint'])
-            ->middleware('throttle:10,1')
+            ->middleware(['throttle:10,1', 'validate_upload'])
             ->name('complaints.store');
         Route::get('/complaints/{id}', [App\Http\Controllers\CitizenDashboardController::class, 'showComplaint'])->name('complaints.show');
     });
@@ -124,7 +124,9 @@ Route::middleware(['auth'])->group(function () {
     // Profile Routes (untuk semua authenticated users)
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])
+        ->middleware(['validate_upload'])
+        ->name('profile.update');
     Route::get('/profile/settings', [App\Http\Controllers\ProfileController::class, 'settings'])->name('profile.settings');
     Route::put('/profile/settings', [App\Http\Controllers\ProfileController::class, 'updateSettings'])->name('profile.settings.update');
     Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'changePassword'])
@@ -162,18 +164,33 @@ Route::middleware(['auth'])->group(function () {
 
 // Workflow Routes
 Route::middleware(['auth'])->group(function () {
-    // Report workflow routes
-    Route::post('/workflow/reports/{id}/verify', [App\Http\Controllers\WorkflowController::class, 'verifyReport'])->name('workflow.reports.verify');
-    Route::post('/workflow/reports/{id}/reject', [App\Http\Controllers\WorkflowController::class, 'rejectReport'])->name('workflow.reports.reject');
-    Route::post('/workflow/reports/{id}/assign', [App\Http\Controllers\WorkflowController::class, 'assignReport'])->name('workflow.reports.assign');
-    Route::post('/workflow/reports/{id}/start-work', [App\Http\Controllers\WorkflowController::class, 'startWork'])->name('workflow.reports.start_work');
-    Route::post('/workflow/reports/{id}/comment', [App\Http\Controllers\WorkflowController::class, 'addComment'])->name('workflow.reports.comment');
-    Route::post('/workflow/reports/{id}/awaiting-info', [App\Http\Controllers\WorkflowController::class, 'setAwaitingInfo'])->name('workflow.reports.awaiting_info');
-    Route::post('/workflow/reports/{id}/resolve', [App\Http\Controllers\WorkflowController::class, 'resolveReport'])->name('workflow.reports.resolve');
-    Route::post('/workflow/reports/{id}/approve', [App\Http\Controllers\WorkflowController::class, 'approveReport'])->name('workflow.reports.approve');
-    Route::post('/workflow/reports/{id}/reopen', [App\Http\Controllers\WorkflowController::class, 'reopenReport'])->name('workflow.reports.reopen');
-    Route::post('/workflow/reports/{id}/reassign', [App\Http\Controllers\WorkflowController::class, 'reassignReport'])->name('workflow.reports.reassign');
-    Route::get('/workflow/reports/{id}/history', [App\Http\Controllers\WorkflowController::class, 'getWorkflowHistory'])->name('workflow.reports.history');
+    // General workflow routes accessible to report participants
+    Route::post('/workflow/reports/{id}/comment', [App\Http\Controllers\WorkflowController::class, 'addComment'])
+        ->middleware(['validate_upload'])
+        ->name('workflow.reports.comment');
+    Route::post('/workflow/reports/{id}/reopen', [App\Http\Controllers\WorkflowController::class, 'reopenReport'])
+        ->name('workflow.reports.reopen');
+    Route::post('/workflow/reports/{id}/provide-info', [App\Http\Controllers\WorkflowController::class, 'provideAdditionalInfo'])
+        ->middleware(['validate_upload'])
+        ->name('workflow.reports.provide_info');
+    Route::post('/workflow/reports/{id}/citizen-close', [App\Http\Controllers\WorkflowController::class, 'citizenConfirmResolved'])
+        ->name('workflow.reports.citizen_close');
+    Route::get('/workflow/reports/{id}/history', [App\Http\Controllers\WorkflowController::class, 'getWorkflowHistory'])
+        ->name('workflow.reports.history');
+
+    // Administrative report workflow routes (defense-in-depth: restricted to Staff, Department Head, and Admin)
+    Route::middleware(['administration_access'])->group(function () {
+        Route::post('/workflow/reports/{id}/verify', [App\Http\Controllers\WorkflowController::class, 'verifyReport'])->name('workflow.reports.verify');
+        Route::post('/workflow/reports/{id}/reject', [App\Http\Controllers\WorkflowController::class, 'rejectReport'])->name('workflow.reports.reject');
+        Route::post('/workflow/reports/{id}/assign', [App\Http\Controllers\WorkflowController::class, 'assignReport'])->name('workflow.reports.assign');
+        Route::post('/workflow/reports/{id}/start-work', [App\Http\Controllers\WorkflowController::class, 'startWork'])->name('workflow.reports.start_work');
+        Route::post('/workflow/reports/{id}/awaiting-info', [App\Http\Controllers\WorkflowController::class, 'setAwaitingInfo'])->name('workflow.reports.awaiting_info');
+        Route::post('/workflow/reports/{id}/resolve', [App\Http\Controllers\WorkflowController::class, 'resolveReport'])
+            ->middleware(['validate_upload'])
+            ->name('workflow.reports.resolve');
+        Route::post('/workflow/reports/{id}/approve', [App\Http\Controllers\WorkflowController::class, 'approveReport'])->name('workflow.reports.approve');
+        Route::post('/workflow/reports/{id}/reassign', [App\Http\Controllers\WorkflowController::class, 'reassignReport'])->name('workflow.reports.reassign');
+    });
 
     // Admin-only workflow management routes
     Route::middleware(['admin'])->group(function () {

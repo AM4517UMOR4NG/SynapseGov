@@ -70,35 +70,39 @@ class WorkflowService
     public function verifyReport(Report $report, User $admin, array $data = []): Report
     {
         return DB::transaction(function () use ($report, $admin, $data) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
+
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
 
             $updateData = array_merge([
                 'status' => 'verified',
             ], $data);
 
             // Recalculate SLA if priority changed
-            if (isset($data['priority']) && $data['priority'] !== $report->priority) {
-                $report->priority = $data['priority'];
-                $updateData['sla_due_at'] = $report->calculateSLADueDate();
+            if (isset($data['priority']) && $data['priority'] !== $lockedReport->priority) {
+                $lockedReport->priority = $data['priority'];
+                $updateData['sla_due_at'] = $lockedReport->calculateSLADueDate();
             }
 
-            $report->update($updateData);
+            $lockedReport->update($updateData);
 
             // Assign queue number on first verification
-            if (empty($report->queue_no)) {
-                $report->update([
+            if (empty($lockedReport->queue_no)) {
+                $lockedReport->update([
                     'queue_no' => Report::nextQueueNo(),
                 ]);
             }
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'verified', $oldData, $report->toArray(), $admin);
+            $this->logAudit($lockedReport, 'verified', $oldData, $lockedReport->toArray(), $admin);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'verified', $admin));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'verified', $admin));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -108,48 +112,60 @@ class WorkflowService
     public function rejectReport(Report $report, User $admin, ?string $reason = null): Report
     {
         return DB::transaction(function () use ($report, $admin, $reason) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'rejected',
+                'rejection_reason' => $reason,
                 'resolution_notes' => $reason,
+                'last_activity_at' => now(),
             ]);
 
             // Close active assignment if rejected
-            $report->assignments()->where('status', 'active')->update([
+            $lockedReport->assignments()->where('status', 'active')->update([
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'rejected', $oldData, $report->toArray(), $admin);
+            $this->logAudit($lockedReport, 'rejected', $oldData, $lockedReport->toArray(), $admin);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'rejected', $admin));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'rejected', $admin));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
     /**
-     * Assign a report to staff
+     * Assign a report to staff or department head
      */
-    public function assignReport(Report $report, User $assignedTo, User $assignedBy, ?string $notes = null): Assignment
+    public function assignReport(Report $report, User $assignedTo, User $assignedBy, ?string $notes = null, string $status = 'assigned'): Assignment
     {
-        return DB::transaction(function () use ($report, $assignedTo, $assignedBy, $notes) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+        return DB::transaction(function () use ($report, $assignedTo, $assignedBy, $notes, $status) {
+            // Lock the report row to prevent race conditions during concurrent assignments
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
+
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            // Check if there was any prior assignment to avoid incrementing reassign_count on first assignment
+            $hadPriorAssignment = $lockedReport->assignments()->exists() || ! empty($lockedReport->assigned_to);
 
             // Deactivate any prior active assignments for this report
-            $report->assignments()->where('status', 'active')->update([
+            $lockedReport->assignments()->where('status', 'active')->update([
                 'status' => 'reassigned',
                 'completed_at' => now(),
             ]);
 
             // Create assignment record
             $assignment = Assignment::create([
-                'assignable_id' => $report->id,
+                'assignable_id' => $lockedReport->id,
                 'assignable_type' => Report::class,
                 'assigned_to' => $assignedTo->id,
                 'assigned_by' => $assignedBy->id,
@@ -159,17 +175,24 @@ class WorkflowService
             ]);
 
             // Update report
-            $report->update([
+            $lockedReport->update([
                 'assigned_to' => $assignedTo->id,
-                'status' => 'assigned',
-                'reassign_count' => $report->reassign_count + 1,
+                'status' => $status,
+                'reassign_count' => $hadPriorAssignment ? (($lockedReport->reassign_count ?? 0) + 1) : 0,
+                'last_activity_at' => now(),
             ]);
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'assigned', $oldData, $report->toArray(), $assignedBy);
+            $this->logAudit($lockedReport, 'assigned', $oldData, $lockedReport->toArray(), $assignedBy);
 
             // Fire event
-            event(new ReportAssigned($report, $assignedTo, $assignedBy));
+            event(new ReportAssigned($lockedReport, $assignedTo, $assignedBy));
+
+            if ($oldStatus !== $status) {
+                event(new ReportStatusChanged($lockedReport, $oldStatus, $status, $assignedBy));
+            }
 
             return $assignment;
         });
@@ -181,20 +204,25 @@ class WorkflowService
     public function startWork(Report $report, User $staff): Report
     {
         return DB::transaction(function () use ($report, $staff) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'in_progress',
+                'last_activity_at' => now(),
             ]);
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'started_work', $oldData, $report->toArray(), $staff);
+            $this->logAudit($lockedReport, 'started_work', $oldData, $lockedReport->toArray(), $staff);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'in_progress', $staff));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'in_progress', $staff));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -226,23 +254,29 @@ class WorkflowService
     public function setAwaitingInfo(Report $report, User $staff, string $reason): Report
     {
         return DB::transaction(function () use ($report, $staff, $reason) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'awaiting_info',
+                'rejection_reason' => $reason,
+                'last_activity_at' => now(),
             ]);
 
             // Add comment explaining what information is needed (visible to citizen)
-            $this->addComment($report, $staff, "Information needed: {$reason}", false);
+            $this->addComment($lockedReport, $staff, "Information needed: {$reason}", false);
+
+            $report->refresh();
 
             // Log the change
-            $this->logAudit($report, 'awaiting_info', $oldData, $report->toArray(), $staff);
+            $this->logAudit($lockedReport, 'awaiting_info', $oldData, $lockedReport->toArray(), $staff);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'awaiting_info', $staff));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'awaiting_info', $staff));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -252,33 +286,38 @@ class WorkflowService
     public function resolveReport(Report $report, User $staff, ?string $resolutionNotes = null, array $attachments = []): Report
     {
         return DB::transaction(function () use ($report, $staff, $resolutionNotes, $attachments) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'resolved',
                 'resolution_notes' => $resolutionNotes,
                 'resolved_at' => now(),
+                'last_activity_at' => now(),
             ]);
 
             // Add public comment with resolution details and evidence so citizen can see them
             if ($resolutionNotes) {
-                $this->addComment($report, $staff, "Report resolved: {$resolutionNotes}", false, $attachments);
+                $this->addComment($lockedReport, $staff, "Report resolved: {$resolutionNotes}", false, $attachments);
             }
 
             // Complete assignment
-            $report->assignments()->where('status', 'active')->update([
+            $lockedReport->assignments()->where('status', 'active')->update([
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'resolved', $oldData, $report->toArray(), $staff);
+            $this->logAudit($lockedReport, 'resolved', $oldData, $lockedReport->toArray(), $staff);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'resolved', $staff));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'resolved', $staff));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -288,21 +327,26 @@ class WorkflowService
     public function approveReport(Report $report, User $approver): Report
     {
         return DB::transaction(function () use ($report, $approver) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'closed',
-                'resolved_at' => $report->resolved_at ?? now(),
+                'resolved_at' => $lockedReport->resolved_at ?? now(),
+                'last_activity_at' => now(),
             ]);
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'approved', $oldData, $report->toArray(), $approver);
+            $this->logAudit($lockedReport, 'approved', $oldData, $lockedReport->toArray(), $approver);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'closed', $approver));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'closed', $approver));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -312,23 +356,28 @@ class WorkflowService
     public function requestChanges(Report $report, User $requester, string $reason): Report
     {
         return DB::transaction(function () use ($report, $requester, $reason) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
                 'status' => 'in_progress',
+                'last_activity_at' => now(),
             ]);
 
             // Add comment with change request
-            $this->addComment($report, $requester, "Changes requested: {$reason}", true);
+            $this->addComment($lockedReport, $requester, "Changes requested: {$reason}", true);
+
+            $report->refresh();
 
             // Log the change
-            $this->logAudit($report, 'changes_requested', $oldData, $report->toArray(), $requester);
+            $this->logAudit($lockedReport, 'changes_requested', $oldData, $lockedReport->toArray(), $requester);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'in_progress', $requester));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'in_progress', $requester));
 
-            return $report;
+            return $lockedReport;
         });
     }
 
@@ -342,24 +391,128 @@ class WorkflowService
         }
 
         return DB::transaction(function () use ($report, $user, $reason) {
-            $oldStatus = $report->status;
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
 
-            $report->update([
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            // Re-activate assignment for the staff who worked on this report if unassigned
+            $assignedStaffId = $lockedReport->assigned_to;
+            if (! $assignedStaffId) {
+                $lastAssignment = $lockedReport->assignments()->where('status', 'completed')->latest('id')->first();
+                if ($lastAssignment) {
+                    $assignedStaffId = $lastAssignment->assigned_to;
+                }
+            }
+
+            if ($assignedStaffId) {
+                // Deactivate any active assignments
+                $lockedReport->assignments()->where('status', 'active')->update([
+                    'status' => 'reassigned',
+                    'completed_at' => now(),
+                ]);
+
+                Assignment::create([
+                    'assignable_id' => $lockedReport->id,
+                    'assignable_type' => Report::class,
+                    'assigned_to' => $assignedStaffId,
+                    'assigned_by' => $user->id,
+                    'notes' => 'Laporan dibuka kembali (Masalah belum selesai): ' . $reason,
+                    'assigned_at' => now(),
+                    'status' => 'active',
+                ]);
+            }
+
+            $lockedReport->update([
                 'status' => 'in_progress',
+                'assigned_to' => $assignedStaffId,
                 'resolved_at' => null,
+                'last_activity_at' => now(),
             ]);
 
             // Add comment with reopen reason
-            $this->addComment($report, $user, "Report reopened: {$reason}", false);
+            $this->addComment($lockedReport, $user, "Laporan dibuka kembali oleh pelapor (Masalah belum selesai): {$reason}", false);
+
+            $report->refresh();
 
             // Log the change
-            $this->logAudit($report, 'reopened', $oldData, $report->toArray(), $user);
+            $this->logAudit($lockedReport, 'reopened', $oldData, $lockedReport->toArray(), $user);
 
             // Fire event
-            event(new ReportStatusChanged($report, $oldStatus, 'in_progress', $user));
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'in_progress', $user));
 
-            return $report;
+            return $lockedReport;
+        });
+    }
+
+    /**
+     * Citizen provides requested information for awaiting_info report, returning it to admin verification
+     */
+    public function citizenProvideInfo(Report $report, User $citizen, string $infoText, array $attachments = []): Report
+    {
+        return DB::transaction(function () use ($report, $citizen, $infoText, $attachments) {
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
+
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            // Merge new attachments
+            $currentAttachments = $lockedReport->attachments ?? [];
+            if (! empty($attachments)) {
+                $currentAttachments = array_merge($currentAttachments, $attachments);
+            }
+
+            $lockedReport->update([
+                'status' => 'submitted',
+                'attachments' => $currentAttachments ?: null,
+                'last_activity_at' => now(),
+            ]);
+
+            // Add public comment
+            $this->addComment($lockedReport, $citizen, "Data tambahan dari pelapor: {$infoText}", false, $attachments);
+
+            $report->refresh();
+
+            // Log the change
+            $this->logAudit($lockedReport, 'info_provided', $oldData, $lockedReport->toArray(), $citizen);
+
+            // Fire event to notify admin
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'submitted', $citizen));
+
+            return $lockedReport;
+        });
+    }
+
+    /**
+     * Citizen confirms report resolution as complete ("Selesai" -> closed)
+     */
+    public function citizenConfirmClosed(Report $report, User $citizen, ?string $feedback = null): Report
+    {
+        return DB::transaction(function () use ($report, $citizen, $feedback) {
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
+
+            $oldStatus = $lockedReport->status;
+            $oldData = $lockedReport->toArray();
+
+            $lockedReport->update([
+                'status' => 'closed',
+                'resolved_at' => $lockedReport->resolved_at ?? now(),
+                'last_activity_at' => now(),
+            ]);
+
+            if ($feedback) {
+                $this->addComment($lockedReport, $citizen, "Konfirmasi penyelesaian oleh pelapor: {$feedback}", false);
+            }
+
+            $report->refresh();
+
+            // Log the change
+            $this->logAudit($lockedReport, 'confirmed_closed_by_citizen', $oldData, $lockedReport->toArray(), $citizen);
+
+            // Fire event
+            event(new ReportStatusChanged($lockedReport, $oldStatus, 'closed', $citizen));
+
+            return $lockedReport;
         });
     }
 
@@ -369,17 +522,18 @@ class WorkflowService
     public function reassignReport(Report $report, User $newAssignee, User $reassigner, ?string $reason = null): Assignment
     {
         return DB::transaction(function () use ($report, $newAssignee, $reassigner, $reason) {
-            $oldData = $report->toArray();
+            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
+            $oldData = $lockedReport->toArray();
 
             // Complete current assignment
-            $report->assignments()->where('status', 'active')->update([
+            $lockedReport->assignments()->where('status', 'active')->update([
                 'status' => 'reassigned',
                 'completed_at' => now(),
             ]);
 
             // Create new assignment
             $assignment = Assignment::create([
-                'assignable_id' => $report->id,
+                'assignable_id' => $lockedReport->id,
                 'assignable_type' => Report::class,
                 'assigned_to' => $newAssignee->id,
                 'assigned_by' => $reassigner->id,
@@ -389,22 +543,25 @@ class WorkflowService
             ]);
 
             // Update report
-            $report->update([
+            $lockedReport->update([
                 'assigned_to' => $newAssignee->id,
                 'status' => 'assigned',
-                'reassign_count' => $report->reassign_count + 1,
+                'reassign_count' => ($lockedReport->reassign_count ?? 0) + 1,
+                'last_activity_at' => now(),
             ]);
 
             // Add comment about reassignment
             if ($reason) {
-                $this->addComment($report, $reassigner, "Report reassigned: {$reason}", true);
+                $this->addComment($lockedReport, $reassigner, "Report reassigned: {$reason}", true);
             }
 
+            $report->refresh();
+
             // Log the change
-            $this->logAudit($report, 'reassigned', $oldData, $report->toArray(), $reassigner);
+            $this->logAudit($lockedReport, 'reassigned', $oldData, $lockedReport->toArray(), $reassigner);
 
             // Fire event
-            event(new ReportAssigned($report, $newAssignee, $reassigner));
+            event(new ReportAssigned($lockedReport, $newAssignee, $reassigner));
 
             return $assignment;
         });
