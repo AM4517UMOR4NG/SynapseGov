@@ -12,7 +12,8 @@
         .urgent-info { background: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0; }
         .ticket-info { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; }
         .footer { background: #34495e; color: white; padding: 15px; text-align: center; font-size: 12px; }
-    </style>
+    body{background:#f6f7f9;color:#243043}.container{max-width:620px}.header{background:#852735;border-radius:12px 12px 0 0;padding:28px}.header h1{font-size:23px}.content{background:#fff;padding:28px;border:1px solid #e5e8ee}.footer{background:#edf0f4;color:#697386;border-radius:0 0 12px 12px}.ticket-info{background:#f6f7f9;border-left:3px solid #9f2434;padding:20px}
+</style>
 </head>
 <body>
     <div class="container">
