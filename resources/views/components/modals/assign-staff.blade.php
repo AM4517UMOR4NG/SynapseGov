@@ -3,10 +3,10 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="assignStaffModalLabel{{ $report->id }}">Assign Laporan ke Staff</h5>
+                <h5 class="modal-title" id="assignStaffModalLabel{{ $report->id }}">Tugaskan laporan kepada staf</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('workflow.reports.admin_assign_staff', $report->id) }}" method="POST">
+            <form action="{{ route(auth()->user()->isDepartmentHead() ? 'administration.reports.assign' : 'workflow.reports.admin_assign_staff', $report->id) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
@@ -15,7 +15,9 @@
                             <option value="">-- Pilih Staff --</option>
                             @php 
                                 // Get all staff directly
-                                $allStaff = \App\Models\User::where('role', 'staff')->with('department')->get();
+                                $allStaff = $staffList ?? \App\Models\User::where('role', 'staff')->where('is_active', true)
+                                    ->when(auth()->user()->isDepartmentHead(), fn ($query) => $query->where('department_id', auth()->user()->department_id))
+                                    ->with('department')->get();
                             @endphp
                             
                             @if($allStaff->count() > 0)
@@ -34,10 +36,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Assign ke Staff</button>
+                    <button type="submit" class="btn btn-primary" @disabled($allStaff->isEmpty())>Simpan penugasan</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
