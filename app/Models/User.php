@@ -207,6 +207,7 @@ class User extends Authenticatable
             'dashboard_layout' => 'comfortable',
             'items_per_page' => 15,
             'language' => 'id',
+            'theme' => 'light',
             'notifications' => [
                 'email' => true,
                 'browser' => true,

@@ -16,9 +16,10 @@ class ComplaintController extends Controller
      */
     public function index()
     {
+        $perPage = auth()->check() ? auth()->user()->getSettings('items_per_page', 20) : 20;
         $complaints = Complaint::with(['user', 'department', 'assignedUser'])
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('admin.complaints', compact('complaints'));
     }
