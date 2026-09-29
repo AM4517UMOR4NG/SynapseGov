@@ -19,9 +19,10 @@ class ReportController extends Controller
      */
     public function index()
     {
+        $perPage = auth()->check() ? auth()->user()->getSettings('items_per_page', 20) : 20;
         $reports = Report::with(['user', 'department', 'assignedUser'])
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('admin.reports', compact('reports'));
     }

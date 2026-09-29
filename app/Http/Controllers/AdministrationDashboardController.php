@@ -124,19 +124,20 @@ class AdministrationDashboardController extends Controller
     public function reports()
     {
         $user = Auth::user();
+        $perPage = $user->getSettings('items_per_page', 15);
 
         // Department Head melihat semua laporan di departemen
         if ($user->role === 'department_head') {
             $reports = Report::with(['user', 'assignedUser'])
                 ->where('department_id', $user->department_id)
                 ->latest()
-                ->paginate(20);
+                ->paginate($perPage);
         } else {
             // Staff melihat semua laporan masyarakat di departemen mereka (termasuk yang ditugaskan dan yang belum)
             $reports = Report::with(['user', 'assignedUser'])
                 ->where('department_id', $user->department_id)
                 ->latest()
-                ->paginate(20);
+                ->paginate($perPage);
         }
 
         // Ambil daftar staff untuk assignment dropdown
@@ -151,10 +152,11 @@ class AdministrationDashboardController extends Controller
     public function complaints()
     {
         $user = Auth::user();
+        $perPage = $user->getSettings('items_per_page', 15);
         $complaints = Complaint::with(['user', 'assignedUser'])
             ->where('department_id', $user->department_id)
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         $staffList = User::where('department_id', $user->department_id)
             ->where('role', 'staff')
@@ -167,9 +169,10 @@ class AdministrationDashboardController extends Controller
     public function staff()
     {
         $user = Auth::user();
+        $perPage = $user->getSettings('items_per_page', 15);
         $staff = User::where('department_id', $user->department_id)
             ->where('role', '!=', 'citizen')
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('administration.staff', compact('staff'));
     }
