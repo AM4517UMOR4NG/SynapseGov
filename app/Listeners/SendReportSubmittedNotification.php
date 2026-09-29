@@ -28,25 +28,27 @@ class SendReportSubmittedNotification implements ShouldQueue
     {
         $report = $event->report;
 
-        // Send notification to admin users
+        // Send notification to admin users if enabled in settings
         $adminUsers = User::where('role', 'admin')->get();
         foreach ($adminUsers as $admin) {
-            $admin->notify(new \App\Notifications\ReportSubmittedNotification($report));
+            if ($admin->getSettings('notifications.reports', true)) {
+                $admin->notify(new \App\Notifications\ReportSubmittedNotification($report));
+            }
         }
 
-        // Send notification to department head if assigned
+        // Send notification to department head if assigned and enabled in settings
         if ($report->department_id) {
             $departmentHead = User::where('role', 'department_head')
                 ->where('department_id', $report->department_id)
                 ->first();
 
-            if ($departmentHead) {
+            if ($departmentHead && $departmentHead->getSettings('notifications.reports', true)) {
                 $departmentHead->notify(new \App\Notifications\ReportSubmittedNotification($report));
             }
         }
 
-        // Skip email in development environment
-        if (! app()->environment('local', 'development')) {
+        // Send email to user if enabled in settings
+        if (! app()->environment('local', 'development') && $report->user && $report->user->email && $report->user->getSettings('notifications.email', true)) {
             try {
                 Mail::to($report->user->email)->send(new \App\Mail\ReportSubmittedMail($report));
             } catch (\Exception $e) {

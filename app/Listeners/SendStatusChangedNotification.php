@@ -27,11 +27,13 @@ class SendStatusChangedNotification implements ShouldQueue
         $report = $event->report;
         $newStatus = $event->newStatus;
 
-        // Send notification to report owner if exists
-        $report->user?->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+        // Send notification to report owner if exists and enabled in settings
+        if ($report->user && $report->user->getSettings('notifications.status', true)) {
+            $report->user->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+        }
 
-        // Send email notification based on status (with error handling)
-        if ($report->user && $report->user->email) {
+        // Send email notification based on status if enabled in settings
+        if ($report->user && $report->user->email && $report->user->getSettings('notifications.email', true)) {
             try {
                 switch ($newStatus) {
                     case 'verified':
@@ -52,9 +54,11 @@ class SendStatusChangedNotification implements ShouldQueue
             }
         }
 
-        // Notify assigned staff if status affects them
+        // Notify assigned staff if status affects them and enabled in settings
         if ($report->assigned_to && $report->assignedUser && in_array($newStatus, ['in_progress', 'awaiting_info', 'resolved'])) {
-            $report->assignedUser->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+            if ($report->assignedUser->getSettings('notifications.status', true)) {
+                $report->assignedUser->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+            }
         }
     }
 }
