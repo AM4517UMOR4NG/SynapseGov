@@ -9,10 +9,10 @@
 
     <title>{{ config('app.name', 'SynapseGov') }}</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans (Optimized) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,21 +21,27 @@
 
     <style>
         :root {
-            --brand-primary: #2563eb;
-            --brand-primary-hover: #1d4ed8;
-            --brand-secondary: #0ea5e9;
-            --brand-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
-            --hero-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0ea5e9 100%);
+            --brand-primary: #b71c1c;
+            --brand-primary-hover: #991b1b;
+            --brand-secondary: #333333;
+            --brand-accent: #f59e0b;
+            --brand-gradient: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+            --hero-gradient: linear-gradient(135deg, #7f1d1d 0%, #b71c1c 50%, #dc2626 100%);
             --bg-canvas: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --card-border: rgba(226, 232, 240, 0.85);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
+            --card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+            --card-border: rgba(0, 0, 0, 0.1);
+            --text-main: #000000;
+            --text-muted: #334155;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-            background: var(--bg-canvas);
+            background-color: var(--bg-canvas);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(183, 28, 28, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(211, 47, 47, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
             color: var(--text-main);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
@@ -76,7 +82,7 @@
             justify-content: center;
             color: white;
             font-size: 1rem;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.35);
         }
 
         .nav-link {
@@ -90,7 +96,7 @@
 
         .nav-link:hover {
             color: var(--brand-primary) !important;
-            background: rgba(37, 99, 235, 0.05);
+            background: rgba(183, 28, 28, 0.05);
         }
 
         .btn-primary {
@@ -99,13 +105,13 @@
             border-radius: 10px;
             font-weight: 600;
             padding: 0.6rem 1.25rem;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.25);
             transition: all 0.2s ease;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 6px 18px rgba(183, 28, 28, 0.4);
         }
 
         .card {
