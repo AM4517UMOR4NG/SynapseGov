@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SynapseGov — Platform Aspirasi Publik</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
             --bg-primary: #f8fafc;
@@ -44,7 +46,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: 
+            background:
                 radial-gradient(at 0% 0%, rgba(183, 28, 28, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(211, 47, 47, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.15) 0px, transparent 50%),
@@ -58,8 +60,15 @@
         }
 
         @keyframes pulse-ambient {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.1); opacity: 1; }
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
         }
 
         /* Navbar */
@@ -116,33 +125,38 @@
 
         .nav-actions {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             align-items: center;
         }
 
         .btn-text {
             color: var(--text-main);
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .btn-text:hover {
+            color: var(--accent);
         }
 
         .btn-primary {
             background: var(--accent);
             color: #ffffff;
-            padding: 0.6rem 1.4rem;
+            padding: 0.75rem 1.75rem;
             border-radius: 100px;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.2);
+            box-shadow: 0 4px 14px rgba(183, 28, 28, 0.25);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
             background: #991b1b;
-            box-shadow: 0 6px 16px rgba(183, 28, 28, 0.3);
+            box-shadow: 0 6px 20px rgba(183, 28, 28, 0.4);
         }
 
         /* Hero Section */
@@ -159,41 +173,64 @@
         }
 
         .hero-badge {
-            display: inline-block;
-            padding: 0.4rem 1rem;
-            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            border: 1px solid rgba(183, 28, 28, 0.2);
             border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 1.25rem;
-            background: var(--accent-glow);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            background: rgba(183, 28, 28, 0.05);
+        }
+
+        .hero-badge::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border-radius: 50%;
         }
 
         .hero h1 {
             font-size: clamp(3.5rem, 7vw, 6.5rem);
             font-weight: 800;
             letter-spacing: -0.04em;
-            line-height: 1.05;
+            line-height: 1.1;
+            padding-bottom: 0.1em;
+            /* Fix text clipping for background clip */
             margin-bottom: 1.5rem;
             max-width: 900px;
             background: linear-gradient(135deg, #0f172a 0%, #b71c1c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            /* standard fallback */
             animation: slideUp 1s ease-out forwards;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hero p {
-            font-size: clamp(1rem, 1.5vw, 1.2rem);
-            color: var(--text-muted);
-            max-width: 600px;
+            font-size: clamp(1rem, 1.5vw, 1.15rem);
+            color: #475569;
+            max-width: 650px;
             margin-bottom: 3rem;
             font-weight: 400;
+            line-height: 1.7;
         }
 
         /* Bento Grid Section */
@@ -288,15 +325,32 @@
         }
 
         @media (max-width: 900px) {
-            nav { padding: 1.5rem 2rem; }
-            .nav-links { display: none; }
-            .bento-section { padding: 4rem 2rem; }
-            .bento-grid { 
+            nav {
+                padding: 1.5rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .bento-section {
+                padding: 4rem 2rem;
+            }
+
+            .bento-grid {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto;
             }
-            .bento-large, .bento-full { grid-column: span 1 !important; }
-            .bento-card { min-height: 280px; }
+
+            .bento-large,
+            .bento-full {
+                grid-column: span 1 !important;
+            }
+
+            .bento-card {
+                min-height: 280px;
+            }
+
             footer {
                 flex-direction: column;
                 gap: 1rem;
@@ -319,6 +373,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="ambient-light"></div>
 
@@ -335,9 +390,9 @@
     </nav>
 
     <section class="hero">
-        <div class="hero-badge">Akselerasi Pelayanan Publik</div>
         <h1>Suara warga.<br>Aksi nyata.</h1>
-        <p>Platform e-Government minimalis yang menghubungkan aspirasi masyarakat dengan Organisasi Perangkat Daerah melalui sistem penanganan yang terukur dan transparan.</p>
+        <p>Platform e-Government minimalis yang menghubungkan aspirasi masyarakat dengan Organisasi Perangkat Daerah
+            melalui sistem penanganan yang terukur dan transparan.</p>
         <div style="display: flex; gap: 1rem;">
             <a href="{{ route('register') }}" class="btn-primary">Buat Laporan</a>
         </div>
@@ -345,17 +400,21 @@
 
     <section class="bento-section" id="platform">
         <h2 class="section-title">Arsitektur Digital Terpadu</h2>
-        
+
         <div class="bento-grid">
             <div class="bento-card bento-large">
                 <div>
                     <h3>Automasi Resolusi</h3>
-                    <p>Sistem secara mandiri memantau durasi penanganan (SLA) dan mengaktifkan protokol eskalasi jika tenggat terlewati.</p>
+                    <p>Sistem secara mandiri memantau durasi penanganan (SLA) dan mengaktifkan protokol eskalasi jika
+                        tenggat terlewati.</p>
                 </div>
                 <div class="bento-visual">
                     <!-- Abstract representation -->
-                    <div style="width: 100%; height: 2px; background: rgba(0,0,0,0.1); margin-top: 2rem; position: relative;">
-                        <div style="position: absolute; top: 0; left: 0; height: 100%; width: 60%; background: var(--accent);"></div>
+                    <div
+                        style="width: 100%; height: 2px; background: rgba(0,0,0,0.1); margin-top: 2rem; position: relative;">
+                        <div
+                            style="position: absolute; top: 0; left: 0; height: 100%; width: 60%; background: var(--accent);">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -377,8 +436,10 @@
                 </div>
                 <div class="bento-visual">
                     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-                        <div style="width: 6px; height: 16px; background: rgba(183,28,28,0.2); border-radius: 2px;"></div>
-                        <div style="width: 6px; height: 32px; background: rgba(183,28,28,0.5); border-radius: 2px;"></div>
+                        <div style="width: 6px; height: 16px; background: rgba(183,28,28,0.2); border-radius: 2px;">
+                        </div>
+                        <div style="width: 6px; height: 32px; background: rgba(183,28,28,0.5); border-radius: 2px;">
+                        </div>
                         <div style="width: 6px; height: 24px; background: var(--accent); border-radius: 2px;"></div>
                     </div>
                 </div>
@@ -387,7 +448,8 @@
             <div class="bento-card bento-large">
                 <div>
                     <h3>Standar Keamanan</h3>
-                    <p>Implementasi protokol OWASP untuk menangkal injeksi berbahaya, divalidasi dengan inspeksi MIME komprehensif.</p>
+                    <p>Implementasi protokol OWASP untuk menangkal injeksi berbahaya, divalidasi dengan inspeksi MIME
+                        komprehensif.</p>
                 </div>
                 <div class="bento-visual" style="align-items: flex-start; justify-content: flex-end;">
                     <div class="metric-value">100%</div>
@@ -399,12 +461,13 @@
 
     <section class="bento-section" id="features" style="padding-top: 4rem;">
         <h2 class="section-title">Kenapa Memilih Kami?</h2>
-        
+
         <div class="bento-grid">
             <div class="bento-card bento-large">
                 <div>
                     <h3 style="color: var(--text-main);">Respon Instan</h3>
-                    <p>Laporan langsung didistribusikan ke dinas terkait dalam hitungan detik secara otomatis menggunakan sistem routing pintar tanpa jeda birokrasi.</p>
+                    <p>Laporan langsung didistribusikan ke dinas terkait dalam hitungan detik secara otomatis
+                        menggunakan sistem routing pintar tanpa jeda birokrasi.</p>
                 </div>
                 <div class="bento-visual" style="align-items: flex-end;">
                     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: flex-end;">
@@ -418,19 +481,25 @@
             <div class="bento-card">
                 <div>
                     <h3 style="color: var(--text-main);">Transparansi Penuh</h3>
-                    <p>Pantau setiap pergerakan dan mutasi laporan Anda secara real-time. Tidak ada yang disembunyikan.</p>
+                    <p>Pantau setiap pergerakan dan mutasi laporan Anda secara real-time. Tidak ada yang disembunyikan.
+                    </p>
                 </div>
                 <div class="bento-visual">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; border: 4px dashed var(--text-main); opacity: 0.8;"></div>
+                    <div
+                        style="width: 48px; height: 48px; border-radius: 50%; border: 4px dashed var(--text-main); opacity: 0.8;">
+                    </div>
                 </div>
             </div>
 
-            <div class="bento-card bento-full" style="grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div class="bento-card bento-full"
+                style="grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                 <div>
                     <h3 style="color: var(--text-main);">Akurasi Data</h3>
-                    <p>Validasi ketat dengan integrasi NIK memastikan integritas pelapor, menjaga sistem dari spamming dan meningkatkan kualitas penanganan masalah.</p>
+                    <p>Validasi ketat dengan integrasi NIK memastikan integritas pelapor, menjaga sistem dari spamming
+                        dan meningkatkan kualitas penanganan masalah.</p>
                 </div>
-                <div class="bento-visual" style="align-items: center; justify-content: center; flex-direction: row; gap: 1rem;">
+                <div class="bento-visual"
+                    style="align-items: center; justify-content: center; flex-direction: row; gap: 1rem;">
                     <div style="width: 24px; height: 24px; background: var(--text-main); border-radius: 4px;"></div>
                     <div style="width: 100px; height: 8px; background: rgba(0, 0, 0, 0.1); border-radius: 4px;"></div>
                 </div>
@@ -443,4 +512,5 @@
         <div>Dikembangkan untuk IT Days 2026.</div>
     </footer>
 </body>
+
 </html>

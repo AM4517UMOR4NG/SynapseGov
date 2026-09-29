@@ -2,6 +2,7 @@
 @php
     $appLang = auth()->check() ? (auth()->user()->getSettings('language', 'id') ?? 'id') : 'id';
     $isDark = auth()->check() ? ((auth()->user()->getSettings('theme', 'light') ?? 'light') === 'dark') : false;
+    $layout = auth()->check() ? (auth()->user()->getSettings('dashboard_layout', 'comfortable') ?? 'comfortable') : 'comfortable';
     $t = function(string $key) use ($appLang) {
         $id = [
             'brand' => 'SynapseGov',
@@ -40,7 +41,7 @@
         return $appLang === 'en' ? ($en[$key] ?? $key) : ($id[$key] ?? $key);
     };
 @endphp
-<html lang="{{ $appLang }}" class="{{ $isDark ? 'dark' : '' }}">
+<html lang="{{ $appLang }}" class="{{ $isDark ? 'dark' : '' }} layout-{{ $layout }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -198,6 +199,32 @@
             background-image: 
                 radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%);
+        }
+
+        /* Global Layout Density Overrides */
+        :root {
+            --layout-card-padding: 1.5rem;
+            --layout-element-spacing: 1.5rem;
+        }
+        .layout-compact {
+            --layout-card-padding: 0.85rem;
+            --layout-element-spacing: 0.75rem;
+        }
+        .layout-compact .card, .layout-compact .card-clean {
+            padding: var(--layout-card-padding);
+        }
+        .layout-compact .card-body {
+            padding: var(--layout-card-padding);
+        }
+        .layout-spacious {
+            --layout-card-padding: 2.25rem;
+            --layout-element-spacing: 2rem;
+        }
+        .layout-spacious .card, .layout-spacious .card-clean {
+            padding: var(--layout-card-padding);
+        }
+        .layout-spacious .card-body {
+            padding: var(--layout-card-padding);
         }
 
         /* Global Theme Overrides for Bootstrap Components */
@@ -430,9 +457,9 @@
             text-align: center;
         }
 
-        .dropdown-item:hover, .dropdown-item:focus {
+        .dropdown-item:hover {
             background: rgba(37, 99, 235, 0.08) !important;
-            color: var(--brand-primary) !important;
+            color: var(--text-main) !important;
             transform: translateX(2px);
         }
 
@@ -1457,11 +1484,11 @@
             const applyTheme = (theme) => {
                 if (theme === 'dark') {
                     root.classList.add('dark');
-                    if (themeIcon) { themeIcon.className = 'fas fa-sun text-warning'; }
+                    if (themeIcon) { themeIcon.className = 'fas fa-sun me-2'; }
                     if (themeText) { themeText.textContent = 'Dark'; }
                 } else {
                     root.classList.remove('dark');
-                    if (themeIcon) { themeIcon.className = 'fas fa-moon text-primary'; }
+                    if (themeIcon) { themeIcon.className = 'fas fa-moon me-2'; }
                     if (themeText) { themeText.textContent = 'Light'; }
                 }
             };
@@ -1491,6 +1518,7 @@
             if (themeToggle) {
                 themeToggle.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     saved = (saved === 'dark') ? 'light' : 'dark';
                     localStorage.setItem('theme', saved);
                     applyTheme(saved);
