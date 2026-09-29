@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Complaint;
 use App\Models\Department;
 use App\Models\Report;
@@ -85,10 +86,10 @@ class ReportController extends Controller
 
         // Check if user can view this report
         $user = auth()->user();
-        if ($user->role === 'citizen' && $report->user_id !== $user->id) {
+        if ($user->role === 'citizen' && (int) $report->user_id !== (int) $user->id) {
             abort(403, 'Unauthorized access to report.');
         }
-        if (in_array($user->role, ['staff', 'department_head']) && $report->department_id !== $user->department_id) {
+        if (in_array($user->role, ['staff', 'department_head']) && (int) $report->department_id !== (int) $user->department_id && (int) $report->assigned_to !== (int) $user->id) {
             abort(403, 'Unauthorized access to report from another department.');
         }
 
@@ -124,9 +125,37 @@ class ReportController extends Controller
         ]);
 
         $report = Report::findOrFail($id);
-        $report->update($request->only([
+        $oldData = $report->toArray();
+        $oldStatus = $report->status;
+
+        $updateData = $request->only([
             'title', 'description', 'category', 'status', 'priority', 'department_id', 'assigned_to', 'location',
-        ]));
+        ]);
+
+        // Recalculate SLA due date if priority changed
+        if (isset($updateData['priority']) && $updateData['priority'] !== $report->priority) {
+            $report->priority = $updateData['priority'];
+            $updateData['sla_due_at'] = $report->calculateSLADueDate();
+        }
+
+        $report->update($updateData);
+
+        // Audit log for direct admin update
+        AuditLog::create([
+            'auditable_type' => Report::class,
+            'auditable_id' => $report->id,
+            'user_id' => auth()->id(),
+            'event' => 'updated_by_admin',
+            'old_values' => $oldData,
+            'new_values' => $report->fresh()->toArray(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        // Fire status changed event if status was changed
+        if ($oldStatus !== $report->status) {
+            event(new \App\Events\ReportStatusChanged($report, $oldStatus, $report->status, auth()->user()));
+        }
 
         return redirect()->route('admin.reports')->with('success', 'Laporan berhasil diperbarui.');
     }
@@ -137,6 +166,28 @@ class ReportController extends Controller
     public function destroy(string $id)
     {
         $report = Report::findOrFail($id);
+
+        // Clean up file attachments
+        if (! empty($report->attachments) && is_array($report->attachments)) {
+            foreach ($report->attachments as $attachment) {
+                if (Storage::disk('public')->exists($attachment)) {
+                    Storage::disk('public')->delete($attachment);
+                }
+            }
+        }
+
+        // Audit log before delete
+        AuditLog::create([
+            'auditable_type' => Report::class,
+            'auditable_id' => $report->id,
+            'user_id' => auth()->id(),
+            'event' => 'deleted_by_admin',
+            'old_values' => $report->toArray(),
+            'new_values' => null,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         $report->delete();
 
         return redirect()->route('admin.reports')->with('success', 'Laporan berhasil dihapus.');
@@ -224,7 +275,8 @@ class ReportController extends Controller
             $query->where('created_at', '<=', $request->date_to);
         }
 
-        $reports = $query->get();
+        // Limit to 5000 records to prevent memory exhaustion
+        $reports = $query->limit(5000)->get();
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
@@ -343,7 +395,14 @@ class ReportController extends Controller
 
     private function getMonthlyTrends()
     {
-        return Report::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+        $driver = \DB::connection()->getDriverName();
+        $dateExpression = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', created_at)",
+            'pgsql' => "to_char(created_at, 'YYYY-MM')",
+            default => 'DATE_FORMAT(created_at, "%Y-%m")',
+        };
+
+        return Report::selectRaw("{$dateExpression} as month, COUNT(*) as count")
             ->where('created_at', '>=', now()->subMonths(12))
             ->groupBy('month')
             ->orderBy('month')

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Complaint;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ComplaintController extends Controller
@@ -83,10 +85,10 @@ class ComplaintController extends Controller
 
         // Check if user can view this complaint
         $user = Auth::user();
-        if ($user->isCitizen() && $complaint->user_id !== $user->id) {
+        if ($user->isCitizen() && (int) $complaint->user_id !== (int) $user->id) {
             abort(403, 'Unauthorized access to complaint.');
         }
-        if (in_array($user->role, ['department_head', 'staff']) && $complaint->department_id !== $user->department_id) {
+        if (in_array($user->role, ['department_head', 'staff']) && (int) $complaint->department_id !== (int) $user->department_id && (int) $complaint->assigned_to !== (int) $user->id) {
             abort(403, 'Unauthorized access to complaint from another department.');
         }
 
@@ -122,9 +124,23 @@ class ComplaintController extends Controller
         ]);
 
         $complaint = Complaint::findOrFail($id);
+        $oldData = $complaint->toArray();
+
         $complaint->update($request->only([
             'title', 'description', 'category', 'status', 'priority', 'department_id', 'assigned_to', 'location',
         ]));
+
+        // Audit log for direct admin update
+        AuditLog::create([
+            'auditable_type' => Complaint::class,
+            'auditable_id' => $complaint->id,
+            'user_id' => Auth::id(),
+            'event' => 'updated_by_admin',
+            'old_values' => $oldData,
+            'new_values' => $complaint->fresh()->toArray(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()->route('admin.complaints')->with('success', 'Keluhan berhasil diperbarui.');
     }
@@ -135,6 +151,28 @@ class ComplaintController extends Controller
     public function destroy(string $id)
     {
         $complaint = Complaint::findOrFail($id);
+
+        // Clean up file attachments
+        if (! empty($complaint->attachments) && is_array($complaint->attachments)) {
+            foreach ($complaint->attachments as $attachment) {
+                if (Storage::disk('public')->exists($attachment)) {
+                    Storage::disk('public')->delete($attachment);
+                }
+            }
+        }
+
+        // Audit log before delete
+        AuditLog::create([
+            'auditable_type' => Complaint::class,
+            'auditable_id' => $complaint->id,
+            'user_id' => Auth::id(),
+            'event' => 'deleted_by_admin',
+            'old_values' => $complaint->toArray(),
+            'new_values' => null,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         $complaint->delete();
 
         return redirect()->route('admin.complaints')->with('success', 'Keluhan berhasil dihapus.');
