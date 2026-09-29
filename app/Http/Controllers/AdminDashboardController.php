@@ -93,9 +93,10 @@ class AdminDashboardController extends Controller
 
     public function reports()
     {
+        $perPage = Auth::user()->getSettings('items_per_page', 15);
         $reports = Report::with(['user', 'department', 'assignedUser'])
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         // Get all staff for assignment dropdown
         $staffList = User::where('role', 'staff')->get();
@@ -105,9 +106,10 @@ class AdminDashboardController extends Controller
 
     public function complaints()
     {
+        $perPage = Auth::user()->getSettings('items_per_page', 15);
         $complaints = Complaint::with(['user', 'department', 'assignedUser'])
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage);
 
         return view('admin.complaints', compact('complaints'));
     }
@@ -115,10 +117,11 @@ class AdminDashboardController extends Controller
     public function users()
     {
         try {
-            // Get users with department relationship, paginate 20 per page
+            $perPage = Auth::user()->getSettings('items_per_page', 15);
+            // Get users with department relationship, paginate per page
             $users = User::with('department')
                 ->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate($perPage);
 
             // Get all departments for filters
             $departments = Department::all();

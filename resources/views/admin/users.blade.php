@@ -106,12 +106,18 @@
                                 </span>
                             </td>
                             <td>
-                                <span style="background: #f0fdf4; color: #10b981; padding: 0.35rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
-                                    Aktif
-                                </span>
+                                @if($user->is_active)
+                                    <span style="background: #f0fdf4; color: #10b981; padding: 0.35rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                        Aktif
+                                    </span>
+                                @else
+                                    <span style="background: #fef2f2; color: #ef4444; padding: 0.35rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                        Nonaktif
+                                    </span>
+                                @endif
                             </td>
                             <td>
-                                <span style="color: #999; font-size: 0.9rem;">{{ $user->created_at->format('d M Y') }}</span>
+                                <span style="color: #999; font-size: 0.9rem;">{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</span>
                             </td>
                         </tr>
                         @endforeach
