@@ -13,12 +13,22 @@
                         Files for {{ ucfirst($type) }}: {{ $reportable->ticket_no }}
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        @php
+                            $backUrl = route('admin.dashboard');
+                            if (auth()->check()) {
+                                if (auth()->user()->isCitizen()) {
+                                    $backUrl = route('citizen.dashboard');
+                                } elseif (auth()->user()->isStaff() || auth()->user()->isDepartmentHead()) {
+                                    $backUrl = route('administration.reports');
+                                }
+                            }
+                        @endphp
+                        <a href="{{ $backUrl }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Kembali
                         </a>
                         @if(count($files) > 0)
                         <a href="{{ route('files.download_all', [$type, $reportable->id]) }}" class="btn btn-success btn-sm">
-                            <i class="fas fa-download"></i> Download All
+                            <i class="fas fa-download"></i> Unduh Semua (ZIP)
                         </a>
                         @endif
                     </div>
@@ -36,7 +46,7 @@
                                                 <img src="{{ route('files.preview_image', [$type, $reportable->id, $file['name']]) }}" 
                                                      alt="{{ $file['name'] }}" 
                                                      class="img-fluid rounded" 
-                                                     style="max-height: 150px; width: 100%; object-fit: cover;"
+                                                     style="max-height: 150px; width: 100%; object-fit: cover; cursor: pointer;"
                                                      onclick="openImageModal('{{ route('files.preview_image', [$type, $reportable->id, $file['name']]) }}', '{{ $file['name'] }}')">
                                             </div>
                                         @else
@@ -44,7 +54,9 @@
                                                 <div class="file-icon">
                                                     @switch($file['extension'])
                                                         @case('pdf')
-                                                            <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                            <a href="{{ route('files.preview_image', [$type, $reportable->id, $file['name']]) }}" target="_blank" title="Buka Pratinjau PDF">
+                                                                <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                            </a>
                                                             @break
                                                         @case('doc')
                                                         @case('docx')
@@ -77,15 +89,21 @@
                                         
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('files.download', [$type, $reportable->id, $file['name']]) }}" 
-                                               class="btn btn-primary btn-sm">
-                                                <i class="fas fa-download"></i> Download
+                                               class="btn btn-primary btn-sm" title="Unduh Berkas">
+                                                <i class="fas fa-download"></i> Unduh
                                             </a>
                                             @if($file['is_image'])
                                             <button type="button" 
                                                     class="btn btn-info btn-sm" 
                                                     onclick="openImageModal('{{ route('files.preview_image', [$type, $reportable->id, $file['name']]) }}', '{{ $file['name'] }}')">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> Lihat
                                             </button>
+                                            @elseif(!empty($file['is_pdf']) || $file['extension'] === 'pdf')
+                                            <a href="{{ route('files.preview_image', [$type, $reportable->id, $file['name']]) }}" 
+                                               target="_blank" 
+                                               class="btn btn-danger btn-sm" title="Buka PDF di Tab Baru">
+                                                <i class="fas fa-file-pdf"></i> Buka PDF
+                                            </a>
                                             @endif
                                         </div>
                                     </div>

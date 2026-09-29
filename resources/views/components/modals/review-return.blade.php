@@ -17,8 +17,21 @@
                         <label for="assigned_to{{ $report->id }}" class="form-label">Kembalikan ke Staff:</label>
                         <select class="form-select" id="assigned_to{{ $report->id }}" name="assigned_to" required>
                             <option value="">-- Pilih Staff --</option>
-                            @foreach(\App\Models\User::where('role', 'staff')->where('department_id', $report->department_id)->get() as $staff)
-                                <option value="{{ $staff->id }}">{{ $staff->name }}</option>
+                            @php
+                                $targetDeptId = $report->department_id ?: (auth()->check() ? auth()->user()->department_id : null);
+                                $deptStaffList = \App\Models\User::where('role', 'staff')
+                                    ->when($targetDeptId, function ($q) use ($targetDeptId) {
+                                        $q->where('department_id', $targetDeptId);
+                                    })
+                                    ->get();
+                                if ($deptStaffList->isEmpty()) {
+                                    $deptStaffList = \App\Models\User::where('role', 'staff')->get();
+                                }
+                            @endphp
+                            @foreach($deptStaffList as $staff)
+                                <option value="{{ $staff->id }}" {{ (int) $report->assigned_to === (int) $staff->id ? 'selected' : '' }}>
+                                    {{ $staff->name }} ({{ $staff->email }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
