@@ -100,10 +100,13 @@ class WorkflowManagementController extends Controller
     public function staffConfirmAndForward($id)
     {
         $user = $this->user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
-        // Authorization: assigned staff or department head
-        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id) {
+        // Authorization: assigned staff or staff in department
+        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
             return back()->with('error', 'Anda tidak berhak mengirim laporan ini. Laporan belum ditugaskan kepada Anda.');
         }
 
@@ -129,8 +132,9 @@ class WorkflowManagementController extends Controller
             }
 
             // Then forward to head
+            $targetDeptId = $report->department_id ?: $user->department_id;
             $head = User::where('role', 'department_head')
-                ->where('department_id', $user->department_id)
+                ->where('department_id', $targetDeptId)
                 ->first();
 
             if (! $head) {
@@ -159,12 +163,15 @@ class WorkflowManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
         $assignedTo = User::findOrFail($request->assigned_to);
 
-        // Verify the assigned user is staff in the same department
-        if (! $assignedTo->isStaff() || (int) $assignedTo->department_id !== (int) $user->department_id) {
-            return back()->with('error', 'User yang dipilih bukan staff di departemen ini.');
+        // Verify the assigned user is staff
+        if (! $assignedTo->isStaff()) {
+            return back()->with('error', 'User yang dipilih bukan staff.');
         }
 
         return DB::transaction(function () use ($report, $assignedTo, $user, $request) {
@@ -203,9 +210,12 @@ class WorkflowManagementController extends Controller
     public function staffConfirmToAdmin(Request $request, $id)
     {
         $user = $this->user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
-        if ($user->role !== 'staff' || (int) $report->assigned_to !== (int) $user->id) {
+        if ($user->role !== 'staff' || ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id)) {
             return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
         }
 

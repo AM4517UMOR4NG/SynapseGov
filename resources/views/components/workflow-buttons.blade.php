@@ -25,29 +25,39 @@
 
     @elseif($user->isStaff())
         {{-- Staff Actions --}}
-        @if($report->assigned_to === $user->id && in_array($report->status, ['assigned', 'verified', 'reviewed']))
+        @php
+            $isAssignedStaff = (int) $report->assigned_to === (int) $user->id;
+            $isInDept = (int) $report->department_id === (int) $user->department_id;
+            $canAct = $isAssignedStaff || $isInDept;
+        @endphp
+        @if($canAct && in_array($report->status, ['assigned', 'verified']))
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmForwardModal{{ $report->id }}">
                     <i class="fas fa-forward"></i> Konfirmasi & Kirim ke Head
                 </button>
-            </div>
-        @elseif($report->assigned_to === $user->id && $report->status === 'needs_revision')
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmForwardModal{{ $report->id }}">
-                    <i class="fas fa-forward"></i> Konfirmasi & Kirim ke Head
+                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
+                    <i class="fas fa-check-circle"></i> Selesaikan & Kirim ke Admin
                 </button>
             </div>
-        @elseif($report->assigned_to === $user->id && $report->status === 'in_progress')
+        @elseif($canAct && in_array($report->status, ['reviewed', 'in_progress', 'needs_revision']))
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                     <i class="fas fa-check-circle"></i> Selesaikan & Kirim ke Admin
                 </button>
+                @if($report->status === 'needs_revision')
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmForwardModal{{ $report->id }}">
+                    <i class="fas fa-forward"></i> Kirim Ulang ke Head
+                </button>
+                @endif
             </div>
         @endif
 
     @elseif($user->isDepartmentHead())
         {{-- Department Head Actions --}}
-        @if($report->assigned_to === $user->id && in_array($report->status, ['assigned', 'verified']))
+        @php
+            $canHeadAct = ((int) $report->assigned_to === (int) $user->id) || ((int) $report->department_id === (int) $user->department_id);
+        @endphp
+        @if($canHeadAct && in_array($report->status, ['assigned', 'verified', 'in_progress']))
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
                     <i class="fas fa-undo"></i> Review & Kembalikan ke Staff
