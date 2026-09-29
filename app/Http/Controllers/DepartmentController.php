@@ -83,10 +83,11 @@ class DepartmentController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        // If a head of department is assigned, associate their department_id
+        // If a head of department is assigned, associate their department_id and set role
         if ($department->head_id) {
             User::where('id', $department->head_id)->update([
                 'department_id' => $department->id,
+                'role' => 'department_head',
             ]);
         }
 
@@ -152,10 +153,27 @@ class DepartmentController extends Controller
         ]);
 
         // Sync department head
-        if ($newHeadId && (int) $newHeadId !== (int) $previousHeadId) {
-            User::where('id', $newHeadId)->update([
-                'department_id' => $department->id,
-            ]);
+        if ((int) $newHeadId !== (int) $previousHeadId) {
+            // If previous head exists, revert role to staff if not head of another department
+            if ($previousHeadId) {
+                $isHeadElsewhere = Department::where('head_id', $previousHeadId)
+                    ->where('id', '!=', $department->id)
+                    ->exists();
+
+                if (! $isHeadElsewhere) {
+                    User::where('id', $previousHeadId)->update([
+                        'role' => 'staff',
+                    ]);
+                }
+            }
+
+            // Assign new head
+            if ($newHeadId) {
+                User::where('id', $newHeadId)->update([
+                    'department_id' => $department->id,
+                    'role' => 'department_head',
+                ]);
+            }
         }
 
         return redirect()->route('admin.departments')->with('success', 'Departemen "'.$department->name.'" berhasil diperbarui.');

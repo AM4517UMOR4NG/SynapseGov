@@ -197,10 +197,15 @@ Route::middleware(['auth'])->group(function () {
 // API Routes for AJAX requests
 Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
     Route::get('/departments', [App\Http\Controllers\DepartmentController::class, 'apiIndex'])->name('departments');
-    Route::get('/reports/stats', [App\Http\Controllers\ReportController::class, 'stats'])->name('reports.stats');
-    Route::get('/reports/kpi', [App\Http\Controllers\ReportController::class, 'kpiDashboard'])->name('reports.kpi');
-    Route::get('/reports/export', [App\Http\Controllers\ReportController::class, 'export'])->name('reports.export');
-    Route::get('/complaints/stats', [App\Http\Controllers\ComplaintController::class, 'stats'])->name('complaints.stats');
+
+    // Administrative API endpoints restricted to admin
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/reports/stats', [App\Http\Controllers\ReportController::class, 'stats'])->name('reports.stats');
+        Route::get('/reports/kpi', [App\Http\Controllers\ReportController::class, 'kpiDashboard'])->name('reports.kpi');
+        Route::get('/reports/export', [App\Http\Controllers\ReportController::class, 'export'])->name('reports.export');
+        Route::get('/complaints/stats', [App\Http\Controllers\ComplaintController::class, 'stats'])->name('complaints.stats');
+    });
+
     Route::post('/workflow/reports/{id}/reopen', [App\Http\Controllers\WorkflowController::class, 'reopenReport'])->name('reports.reopen');
     Route::post('/workflow/reports/{id}/reassign', [App\Http\Controllers\WorkflowController::class, 'reassignReport'])->name('reports.reassign');
     Route::get('/workflow/reports/{id}/history', [App\Http\Controllers\WorkflowController::class, 'getWorkflowHistory'])->name('reports.history');
