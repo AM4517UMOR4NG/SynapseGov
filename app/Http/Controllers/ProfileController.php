@@ -200,16 +200,12 @@ class ProfileController extends Controller
             return back()->withErrors(['password' => 'Password baru tidak boleh sama dengan password saat ini.']);
         }
 
-        // Invalidate sessions on other devices
-        try {
-            Auth::logoutOtherDevices($request->password);
-        } catch (\Exception $e) {
-            \Log::warning('Logout other devices notice: '.$e->getMessage());
-        }
-
         $user->update([
             'password' => Hash::make($request->password),
         ]);
+
+        Auth::logoutOtherDevices($request->password);
+        $request->session()->regenerate();
 
         return redirect()->route('profile.settings')->with('success', 'Password berhasil diperbarui dan sesi di perangkat lain telah diakhiri!');
     }

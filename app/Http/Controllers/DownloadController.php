@@ -29,7 +29,17 @@ class DownloadController extends Controller
             'title' => 'Report Details - '.$report->ticket_no,
         ];
 
-        // Generate HTML content with error handling
+        // If DomPDF is available, generate binary PDF
+        if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            try {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.reports.pdf', $data);
+                return $pdf->download('report_'.$report->ticket_no.'.pdf');
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('DomPDF render fallback: '.$e->getMessage());
+            }
+        }
+
+        // Generate HTML content as fallback
         try {
             $html = view('admin.reports.pdf', $data)->render();
         } catch (\Throwable $e) {
@@ -37,7 +47,7 @@ class DownloadController extends Controller
             return back()->with('error', 'Gagal memuat dokumen laporan.');
         }
 
-        // Return as HTML export
+        // Return as HTML export fallback
         return response($html)
             ->header('Content-Type', 'text/html')
             ->header('Content-Disposition', 'attachment; filename="report_'.$report->ticket_no.'.html"');
