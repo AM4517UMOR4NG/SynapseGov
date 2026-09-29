@@ -9,15 +9,19 @@ use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdministrationDashboardController extends Controller
 {
     public function index()
     {
+        if (Auth::user()->isDepartmentHead()) {
+            return app(DepartmentHeadWorkspaceController::class)->index();
+        }
         $user = Auth::user();
         $department = $user->department;
 
-        if (! $department) {
+        if (!$department) {
             return redirect()->route('home')->with('error', 'Akun Anda belum terhubung dengan departemen manapun.');
         }
 
@@ -122,6 +126,9 @@ class AdministrationDashboardController extends Controller
 
     public function reports()
     {
+        if (Auth::user()->isDepartmentHead()) {
+            return app(DepartmentHeadWorkspaceController::class)->tickets(request(), 'reports');
+        }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
 
@@ -130,7 +137,7 @@ class AdministrationDashboardController extends Controller
             ->where(function ($q) use ($user) {
                 if ($user->department_id) {
                     $q->where('department_id', $user->department_id)
-                      ->orWhere('assigned_to', $user->id);
+                        ->orWhere('assigned_to', $user->id);
                 } else {
                     $q->where('assigned_to', $user->id);
                 }
@@ -149,6 +156,9 @@ class AdministrationDashboardController extends Controller
 
     public function complaints()
     {
+        if (Auth::user()->isDepartmentHead()) {
+            return app(DepartmentHeadWorkspaceController::class)->tickets(request(), 'complaints');
+        }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
         $complaints = Complaint::with(['user', 'assignedUser'])
@@ -166,6 +176,9 @@ class AdministrationDashboardController extends Controller
 
     public function staff()
     {
+        if (Auth::user()->isDepartmentHead()) {
+            return app(DepartmentHeadWorkspaceController::class)->staff(request());
+        }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
         $staff = User::where('department_id', $user->department_id)
@@ -178,12 +191,7 @@ class AdministrationDashboardController extends Controller
     public function assignReport(Request $request, $id)
     {
         $user = Auth::user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
-
-        if (! in_array($user->role, ['department_head', 'staff'])) {
+        if (!in_array($user->role, ['department_head', 'staff'])) {
             abort(403, 'Anda tidak berhak menugaskan laporan ini.');
         }
 
@@ -198,20 +206,25 @@ class AdministrationDashboardController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $assignedTo = User::findOrFail($request->assigned_to);
+        return DB::transaction(function () use ($id, $request, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        $workflowService = app(\App\Services\WorkflowService::class);
-        $workflowService->assignReport($report, $assignedTo, $user, $request->notes);
+            $assignedTo = User::findOrFail($request->assigned_to);
 
-        return redirect()->back()->with('success', 'Laporan berhasil ditugaskan ke '.$assignedTo->name);
+            $workflowService = app(\App\Services\WorkflowService::class);
+            $workflowService->assignReport($report, $assignedTo, $user, $request->notes);
+
+            return redirect()->back()->with('success', 'Laporan berhasil ditugaskan ke ' . $assignedTo->name);
+        });
     }
 
     public function assignComplaint(Request $request, $id)
     {
         $user = Auth::user();
-        $complaint = Complaint::where('department_id', $user->department_id)->findOrFail($id);
-
-        if (! in_array($user->role, ['department_head', 'staff'])) {
+        if (!in_array($user->role, ['department_head', 'staff'])) {
             abort(403, 'Anda tidak berhak menugaskan keluhan ini.');
         }
 
@@ -226,45 +239,49 @@ class AdministrationDashboardController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $assignedTo = User::findOrFail($request->assigned_to);
+        return DB::transaction(function () use ($id, $request, $user) {
+            $complaint = Complaint::where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
 
-        \App\Models\Assignment::where('assignable_type', Complaint::class)
-            ->where('assignable_id', $complaint->id)
-            ->where('status', 'active')
-            ->update([
-                'status' => 'reassigned',
-                'completed_at' => now(),
+            $assignedTo = User::findOrFail($request->assigned_to);
+
+            \App\Models\Assignment::where('assignable_type', Complaint::class)
+                ->where('assignable_id', $complaint->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'reassigned',
+                    'completed_at' => now(),
+                ]);
+
+            \App\Models\Assignment::create([
+                'assignable_id' => $complaint->id,
+                'assignable_type' => Complaint::class,
+                'assigned_to' => $assignedTo->id,
+                'assigned_by' => $user->id,
+                'notes' => $request->notes,
+                'assigned_at' => now(),
+                'status' => 'active',
             ]);
 
-        \App\Models\Assignment::create([
-            'assignable_id' => $complaint->id,
-            'assignable_type' => Complaint::class,
-            'assigned_to' => $assignedTo->id,
-            'assigned_by' => $user->id,
-            'notes' => $request->notes,
-            'assigned_at' => now(),
-            'status' => 'active',
-        ]);
+            $oldAssigned = $complaint->assigned_to;
+            $complaint->update([
+                'assigned_to' => $assignedTo->id,
+                'status' => 'investigating',
+                'last_activity_at' => now(),
+            ]);
 
-        $oldAssigned = $complaint->assigned_to;
-        $complaint->update([
-            'assigned_to' => $assignedTo->id,
-            'status' => 'investigating',
-            'last_activity_at' => now(),
-        ]);
+            AuditLog::create([
+                'auditable_type' => Complaint::class,
+                'auditable_id' => $complaint->id,
+                'user_id' => $user->id,
+                'event' => 'complaint_assigned',
+                'old_values' => ['assigned_to' => $oldAssigned],
+                'new_values' => ['assigned_to' => $assignedTo->id, 'status' => 'investigating'],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
 
-        AuditLog::create([
-            'auditable_type' => Complaint::class,
-            'auditable_id' => $complaint->id,
-            'user_id' => $user->id,
-            'event' => 'complaint_assigned',
-            'old_values' => ['assigned_to' => $oldAssigned],
-            'new_values' => ['assigned_to' => $assignedTo->id, 'status' => 'investigating'],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return redirect()->back()->with('success', 'Keluhan berhasil ditugaskan ke '.$assignedTo->name);
+            return redirect()->back()->with('success', 'Keluhan berhasil ditugaskan ke ' . $assignedTo->name);
+        });
     }
 
     public function downloadReport($id)
@@ -273,17 +290,17 @@ class AdministrationDashboardController extends Controller
         $report = Report::with(['user', 'department', 'assignedUser'])
             ->where(function ($q) use ($user) {
                 $q->where('department_id', $user->department_id)
-                  ->orWhere('assigned_to', $user->id);
+                    ->orWhere('assigned_to', $user->id);
             })
             ->findOrFail($id);
 
-        if (! class_exists('ZipArchive')) {
+        if (!class_exists('ZipArchive')) {
             return back()->with('error', 'Ekstensi ZipArchive PHP tidak terpasang di server.');
         }
 
         $zip = new \ZipArchive;
-        $zipPath = storage_path('app/temp/report_'.$report->id.'_'.time().'.zip');
-        if (! is_dir(dirname($zipPath))) {
+        $zipPath = storage_path('app/temp/report_' . $report->id . '_' . time() . '.zip');
+        if (!is_dir(dirname($zipPath))) {
             mkdir(dirname($zipPath), 0755, true);
         }
         if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
@@ -310,12 +327,12 @@ class AdministrationDashboardController extends Controller
             foreach ($report->attachments as $relPath) {
                 $normalized = str_replace('\\', '/', (string) $relPath);
                 $cleanRel = str_starts_with($normalized, 'public/') ? substr($normalized, 7) : $normalized;
-                $abs = storage_path('app/public/'.$cleanRel);
-                if (! file_exists($abs)) {
-                    $abs = storage_path('app/'.$normalized);
+                $abs = storage_path('app/public/' . $cleanRel);
+                if (!file_exists($abs)) {
+                    $abs = storage_path('app/' . $normalized);
                 }
                 if (file_exists($abs)) {
-                    $zip->addFile($abs, 'attachments/'.basename($relPath));
+                    $zip->addFile($abs, 'attachments/' . basename($relPath));
                 }
             }
         }
@@ -328,81 +345,73 @@ class AdministrationDashboardController extends Controller
     public function confirmReport($id)
     {
         $user = Auth::user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
-
         // Hanya Kepala Departemen atau Staff terkait yang boleh konfirmasi
-        if (! in_array($user->role, ['department_head', 'staff'])) {
-            abort(403);
-        }
-        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+        if (!in_array($user->role, ['department_head', 'staff'])) {
             abort(403);
         }
 
-        // Gunakan WorkflowService agar: set status, generate queue_no (jika belum), dan trigger event/notification
-        $workflow = app(\App\Services\WorkflowService::class);
-        $workflow->verifyReport($report, $user);
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        // Catat audit tambahan (opsional, karena WorkflowService juga melog)
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'confirmed',
-            'old_values' => null,
-            'new_values' => ['status' => 'verified', 'queue_no' => $report->queue_no],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+                abort(403);
+            }
 
-        return back()->with('success', 'Laporan berhasil dikonfirmasi. Nomor antrian: '.($report->queue_no ?? '-'));
+            // Gunakan WorkflowService agar: set status, generate queue_no (jika belum), dan trigger event/notification
+            $workflow = app(\App\Services\WorkflowService::class);
+            $workflow->verifyReport($report, $user);
+
+            return back()->with('success', 'Laporan berhasil dikonfirmasi. Nomor antrian: ' . ($report->queue_no ?? '-'));
+        });
     }
 
     public function sendReportToHead($id)
     {
         $user = Auth::user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
 
-        // Pastikan laporan sudah dikonfirmasi terlebih dahulu
-        if (! in_array($report->status, ['verified', 'in_progress', 'assigned'])) {
-            return back()->with('error', 'Laporan harus dikonfirmasi terlebih dahulu sebelum diteruskan ke Kepala Departemen.');
-        }
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        // Hanya staff yang ditugaskan ATAU kepala departemen yang boleh meneruskan
-        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-            return back()->with('error', 'Anda tidak berhak meneruskan laporan ini.');
-        }
+            // Pastikan laporan sudah dikonfirmasi terlebih dahulu
+            if (!in_array($report->status, ['verified', 'in_progress', 'assigned', 'needs_revision'])) {
+                return back()->with('error', 'Laporan harus dikonfirmasi terlebih dahulu sebelum diteruskan ke Kepala Departemen.');
+            }
 
-        $targetDeptId = $report->department_id ?: $user->department_id;
-        $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
-        if (! $head) {
-            return back()->with('error', 'Tidak ditemukan kepala departemen.');
-        }
+            // Hanya staff yang ditugaskan ATAU kepala departemen yang boleh meneruskan
+            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+                return back()->with('error', 'Anda tidak berhak meneruskan laporan ini.');
+            }
 
-        $report->update([
-            'assigned_to' => $head->id,
-            'status' => 'assigned',
-            'last_activity_at' => now(),
-        ]);
+            $targetDeptId = $report->department_id ?: $user->department_id;
+            $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
+            if (!$head) {
+                return back()->with('error', 'Tidak ditemukan kepala departemen.');
+            }
 
-        // Log audit
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'forwarded_to_head',
-            'old_values' => null,
-            'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+            // Gunakan WorkflowService agar Assignment dibuat dan event ditrigger
+            $workflow = app(\App\Services\WorkflowService::class);
+            $workflow->assignReport($report, $head, $user, 'Diteruskan ke Kepala Departemen');
 
-        return back()->with('success', 'Laporan berhasil diteruskan ke Kepala Departemen.');
+            // Log audit
+            AuditLog::create([
+                'auditable_type' => Report::class,
+                'auditable_id' => $report->id,
+                'user_id' => $user->id,
+                'event' => 'forwarded_to_head',
+                'old_values' => null,
+                'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return back()->with('success', 'Laporan berhasil diteruskan ke Kepala Departemen.');
+        });
     }
 
     /**
@@ -411,61 +420,66 @@ class AdministrationDashboardController extends Controller
     public function confirmAndSend($id)
     {
         $user = Auth::user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
 
-        // Authorization: assigned staff or department head
-        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-            return back()->with('error', 'Anda tidak berhak mengirim laporan ini.');
-        }
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        // If still submitted/pending, mark as verified first
-        if (in_array($report->status, ['submitted', 'pending'])) {
-            $report->update([
-                'status' => 'verified',
-                'last_activity_at' => now(),
-            ]);
+            // Authorization: assigned staff or department head
+            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+                return back()->with('error', 'Anda tidak berhak mengirim laporan ini.');
+            }
 
-            // Audit: confirmed by staff/head
+            // Status guard
+            $allowedStatuses = ['submitted', 'pending', 'verified', 'assigned', 'needs_revision'];
+            if (!in_array($report->status, $allowedStatuses)) {
+                return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikirim ke Kepala Departemen.');
+            }
+
+            $workflow = app(\App\Services\WorkflowService::class);
+
+            // If still submitted/pending, mark as verified first via WorkflowService
+            if (in_array($report->status, ['submitted', 'pending'])) {
+                $workflow->verifyReport($report, $user);
+
+                // Audit: confirmed by staff/head
+                AuditLog::create([
+                    'auditable_type' => Report::class,
+                    'auditable_id' => $report->id,
+                    'user_id' => $user->id,
+                    'event' => 'confirmed',
+                    'old_values' => null,
+                    'new_values' => ['status' => 'verified'],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+            }
+
+            $targetDeptId = $report->department_id ?: $user->department_id;
+            $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
+            if (!$head) {
+                return back()->with('error', 'Tidak ditemukan kepala departemen.');
+            }
+
+            // Gunakan WorkflowService agar Assignment dibuat dan event ditrigger
+            $workflow->assignReport($report, $head, $user, 'Dikonfirmasi dan dikirim ke Kepala Departemen');
+
+            // Audit: forwarded to head
             AuditLog::create([
                 'auditable_type' => Report::class,
                 'auditable_id' => $report->id,
                 'user_id' => $user->id,
-                'event' => 'confirmed',
+                'event' => 'forwarded_to_head',
                 'old_values' => null,
-                'new_values' => ['status' => 'verified'],
+                'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
-        }
 
-        $targetDeptId = $report->department_id ?: $user->department_id;
-        $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
-        if (! $head) {
-            return back()->with('error', 'Tidak ditemukan kepala departemen.');
-        }
-
-        $report->update([
-            'assigned_to' => $head->id,
-            'status' => 'assigned',
-            'last_activity_at' => now(),
-        ]);
-
-        // Audit: forwarded to head
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'forwarded_to_head',
-            'old_values' => null,
-            'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return back()->with('success', 'Laporan dikonfirmasi dan dikirim ke Kepala Departemen.');
+            return back()->with('success', 'Laporan dikonfirmasi dan dikirim ke Kepala Departemen.');
+        });
     }
 
     /**
@@ -480,29 +494,41 @@ class AdministrationDashboardController extends Controller
 
         $request->validate(['assigned_to' => 'required|integer|exists:users,id']);
 
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
+        $assignedTo = User::findOrFail($request->assigned_to);
+        if (!$assignedTo->isStaff()) {
+            return back()->with('error', 'User yang dipilih bukan staff.');
+        }
 
-        $report->update([
-            'assigned_to' => $request->assigned_to,
-            'status' => 'reviewed',
-            'last_activity_at' => now(),
-        ]);
+        return DB::transaction(function () use ($id, $user, $request, $assignedTo) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'returned_to_staff',
-            'old_values' => null,
-            'new_values' => ['assigned_to' => $request->assigned_to, 'status' => 'reviewed'],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+            // Status guard
+            if (!in_array($report->status, ['assigned', 'in_progress', 'verified'])) {
+                return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikembalikan ke staff.');
+            }
 
-        return back()->with('success', 'Laporan dikembalikan ke staff untuk tindak lanjut.');
+            $oldStatus = $report->status;
+
+            // Gunakan WorkflowService agar assignment ditutup dan assignment baru dibuat
+            $workflow = app(\App\Services\WorkflowService::class);
+            $workflow->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', 'reviewed');
+
+            AuditLog::create([
+                'auditable_type' => Report::class,
+                'auditable_id' => $report->id,
+                'user_id' => $user->id,
+                'event' => 'returned_to_staff',
+                'old_values' => ['status' => $oldStatus],
+                'new_values' => ['assigned_to' => $assignedTo->id, 'status' => 'reviewed'],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return back()->with('success', 'Laporan dikembalikan ke staff untuk tindak lanjut.');
+        });
     }
 
     /**
@@ -511,36 +537,59 @@ class AdministrationDashboardController extends Controller
     public function confirmToAdmin($id)
     {
         $user = Auth::user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
-
-        if ($user->role !== 'staff' || ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id)) {
-            return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
+        if ($user->role !== 'staff') {
+            return back()->with('error', 'Hanya staff yang berhak mengonfirmasi laporan ini ke admin.');
         }
 
-        $oldStatus = $report->status;
-        $report->update([
-            'assigned_to' => null,
-            'status' => 'awaiting_admin_approval',
-            'last_activity_at' => now(),
-        ]);
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                    ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'confirmed_to_admin',
-            'old_values' => ['assigned_to' => $user->id, 'status' => $oldStatus],
-            'new_values' => ['assigned_to' => null, 'status' => 'awaiting_admin_approval'],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
+            if ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+                return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
+            }
 
-        event(new \App\Events\ReportStatusChanged($report, $oldStatus, 'awaiting_admin_approval', $user));
+            // Status guard: only allow valid active statuses
+            $allowedStatuses = ['reviewed', 'in_progress', 'assigned', 'needs_revision', 'verified'];
+            if (!in_array($report->status, $allowedStatuses)) {
+                return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikonfirmasi ke admin.');
+            }
 
-        return back()->with('success', 'Laporan telah dikonfirmasi ke admin untuk persetujuan akhir.');
+            $oldStatus = $report->status;
+            $oldAssignedTo = $report->assigned_to;
+            $completionNotes = request('completion_notes', $report->completion_notes);
+
+            // Tutup active assignments record
+            $report->assignments()->where('status', 'active')->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'notes' => $completionNotes ?: 'Dikonfirmasi ke admin untuk persetujuan akhir',
+            ]);
+
+            $report->update([
+                'assigned_to' => null,
+                'status' => 'awaiting_admin_approval',
+                'last_activity_at' => now(),
+                'completion_notes' => $completionNotes,
+            ]);
+
+            AuditLog::create([
+                'auditable_type' => Report::class,
+                'auditable_id' => $report->id,
+                'user_id' => $user->id,
+                'event' => 'confirmed_to_admin',
+                'old_values' => ['assigned_to' => $oldAssignedTo, 'status' => $oldStatus],
+                'new_values' => ['assigned_to' => null, 'status' => 'awaiting_admin_approval'],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            event(new \App\Events\ReportStatusChanged($report, $oldStatus, 'awaiting_admin_approval', $user));
+
+            return back()->with('success', 'Laporan telah dikonfirmasi ke admin untuk persetujuan akhir.');
+        });
     }
 
     /**
@@ -580,7 +629,7 @@ class AdministrationDashboardController extends Controller
         ]);
 
         // Mark as resolved if status is resolved
-        if ($request->status === 'resolved' && ! $report->resolved_at) {
+        if ($request->status === 'resolved' && !$report->resolved_at) {
             $report->update(['resolved_at' => now()]);
         }
 

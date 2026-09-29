@@ -189,8 +189,8 @@ class AdminDashboardController extends Controller
                 return [
                     'type' => 'report',
                     'title' => $report->title,
-                    'user' => $report->user->name,
-                    'department' => $report->department->name,
+                    'user' => $report->user?->name ?? 'Anonim',
+                    'department' => $report->department?->name ?? 'Umum',
                     'status' => $report->status,
                     'created_at' => $report->created_at,
                 ];
@@ -205,8 +205,8 @@ class AdminDashboardController extends Controller
                 return [
                     'type' => 'complaint',
                     'title' => $complaint->title,
-                    'user' => $complaint->user->name,
-                    'department' => $complaint->department->name,
+                    'user' => $complaint->user?->name ?? 'Anonim',
+                    'department' => $complaint->department?->name ?? 'Umum',
                     'status' => $complaint->status,
                     'created_at' => $complaint->created_at,
                 ];
@@ -303,16 +303,32 @@ class AdminDashboardController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|string|max:100',
-            'status' => 'required|in:submitted,pending,verified,assigned,in_progress,awaiting_info,needs_revision,resolved,closed,rejected',
+            'status' => 'required|in:submitted,pending,verified,assigned,in_progress,reviewed,awaiting_info,needs_revision,awaiting_admin_approval,resolved,closed,rejected',
             'priority' => 'required|in:low,medium,high,urgent',
             'department_id' => 'nullable|exists:departments,id',
             'assigned_to' => 'nullable|exists:users,id',
             'location' => 'nullable|string|max:255',
         ]);
 
-        $report->update($request->only([
-            'title', 'description', 'category', 'status', 'priority', 'department_id', 'assigned_to', 'location',
-        ]));
+        $fields = ['title', 'description', 'category', 'status', 'priority', 'department_id', 'assigned_to', 'location'];
+        $oldValues = $report->only($fields);
+
+        $report->update($request->only($fields));
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Report::class,
+            'auditable_id' => $report->id,
+            'user_id' => Auth::id(),
+            'event' => 'admin_report_updated',
+            'old_values' => $oldValues,
+            'new_values' => $report->only($fields),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        if ($oldValues['status'] !== $report->status) {
+            event(new \App\Events\ReportStatusChanged($report, $oldValues['status'], $report->status, Auth::user()));
+        }
 
         return redirect()->route('admin.reports')->with('success', 'Laporan berhasil diperbarui.');
     }
@@ -320,6 +336,23 @@ class AdminDashboardController extends Controller
     public function deleteReport($id)
     {
         $report = Report::findOrFail($id);
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Report::class,
+            'auditable_id' => $report->id,
+            'user_id' => Auth::id(),
+            'event' => 'admin_report_deleted',
+            'old_values' => [
+                'ticket_no' => $report->ticket_no,
+                'title' => $report->title,
+                'status' => $report->status,
+                'department_id' => $report->department_id,
+            ],
+            'new_values' => null,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         $report->delete();
 
         return redirect()->route('admin.reports')->with('success', 'Laporan berhasil dihapus.');
@@ -511,20 +544,39 @@ class AdminDashboardController extends Controller
     {
         $complaint = Complaint::findOrFail($id);
 
-        $request->validate([
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'category' => 'sometimes|required|string|max:100',
+            'priority' => 'sometimes|required|in:low,medium,high,urgent',
+            'department_id' => 'sometimes|nullable|exists:departments,id',
+            'assigned_to' => 'sometimes|nullable|exists:users,id',
+            'location' => 'sometimes|nullable|string|max:255',
             'status' => 'nullable|in:submitted,pending,investigating,in_progress,resolved,closed,rejected',
             'resolution_notes' => 'nullable|string|max:2000',
         ]);
 
-        $complaint->update([
-            'status' => $request->status ?? $complaint->status,
-            'resolution_notes' => $request->resolution_notes ?? $complaint->resolution_notes,
-            'last_activity_at' => now(),
-        ]);
+        $oldValues = $complaint->only(array_keys($validated));
+
+        if (array_key_exists('status', $validated) && $validated['status'] === null) {
+            unset($validated['status']);
+        }
+        $complaint->update($validated + ['last_activity_at' => now()]);
 
         if ($request->status === 'resolved' && ! $complaint->resolved_at) {
             $complaint->update(['resolved_at' => now()]);
         }
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Complaint::class,
+            'auditable_id' => $complaint->id,
+            'user_id' => Auth::id(),
+            'event' => 'admin_complaint_updated',
+            'old_values' => $oldValues,
+            'new_values' => $complaint->only(array_keys($validated)),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'complaint' => $complaint]);
@@ -536,6 +588,23 @@ class AdminDashboardController extends Controller
     public function deleteComplaint($id)
     {
         $complaint = Complaint::findOrFail($id);
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Complaint::class,
+            'auditable_id' => $complaint->id,
+            'user_id' => Auth::id(),
+            'event' => 'admin_complaint_deleted',
+            'old_values' => [
+                'ticket_no' => $complaint->ticket_no,
+                'title' => $complaint->title,
+                'status' => $complaint->status,
+                'department_id' => $complaint->department_id,
+            ],
+            'new_values' => null,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         $complaint->delete();
 
         return redirect()->route('admin.complaints')->with('success', 'Keluhan berhasil dihapus.');
