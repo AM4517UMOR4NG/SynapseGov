@@ -48,30 +48,30 @@
 
     <title>@yield('title', 'Dashboard') — {{ config('app.name', 'SynapseGov') }}</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans (Optimized) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js (Deferred) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- SynapseGov Next-Gen Design System -->
     <style>
         :root {
-            /* Brand Identity Colors */
-            --brand-primary: #2563eb;
-            --brand-primary-hover: #1d4ed8;
-            --brand-secondary: #0ea5e9;
-            --brand-accent: #6366f1;
-            --brand-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
-            --brand-gradient-hover: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
-            --brand-gradient-subtle: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%);
-            --brand-glow: 0 4px 20px rgba(37, 99, 235, 0.35);
+            /* Brand Identity Colors (Indonesian Government Theme) */
+            --brand-primary: #b71c1c;
+            --brand-primary-hover: #991b1b;
+            --brand-secondary: #333333;
+            --brand-accent: #f59e0b;
+            --brand-gradient: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+            --brand-gradient-hover: linear-gradient(135deg, #991b1b 0%, #b71c1c 100%);
+            --brand-gradient-subtle: linear-gradient(135deg, rgba(183, 28, 28, 0.08) 0%, rgba(211, 47, 47, 0.08) 100%);
+            --brand-glow: 0 4px 20px rgba(183, 28, 28, 0.35);
 
             /* Semantic Status Colors */
             --success: #10b981;
@@ -90,7 +90,7 @@
             /* Light Canvas Variables */
             --bg-canvas: #f8fafc;
             --card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 100%);
-            --card-border: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(0, 0, 0, 0.2);
             --text-main: #000000;
             --text-muted: #334155;
             --text-subtle: #475569;
@@ -128,28 +128,38 @@
         }
 
         .dark {
+            /* Brand Identity for Dark Mode - High Contrast & Vibrancy */
+            --brand-primary: #ef4444;
+            --brand-primary-hover: #f87171;
+            --brand-secondary: #334155;
+            --brand-accent: #fbbf24;
+            --brand-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --brand-gradient-hover: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            --brand-gradient-subtle: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+            --brand-glow: 0 4px 20px rgba(239, 68, 68, 0.35);
+
             /* Dark Canvas Variables (Modern Slate) */
             --bg-canvas: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-bg: #1e293b;
             --card-border: rgba(255, 255, 255, 0.12);
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --text-subtle: #64748b;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --text-subtle: #94a3b8;
             --shadow-ambient: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-            --shadow-elevated: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.1);
-            --navbar-bg: rgba(15, 23, 42, 0.88);
+            --shadow-elevated: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(239, 68, 68, 0.1);
+            --navbar-bg: rgba(15, 23, 42, 0.95);
             --sidebar-bg: #0f172a;
-            --table-hover: rgba(59, 130, 246, 0.08);
+            --table-hover: rgba(255, 255, 255, 0.04);
             --input-bg: #1e293b;
             --input-border: #334155;
 
             /* Legacy compatibility mapping */
-            --primary-color: #3b82f6;
-            --secondary-color: #64748b;
-            --accent-color: #38bdf8;
+            --primary-color: #ef4444;
+            --secondary-color: #94a3b8;
+            --accent-color: #f87171;
             --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --text-secondary: #cbd5e1;
+            --border-color: rgba(255, 255, 255, 0.12);
             --bg: var(--bg-canvas);
             --card: var(--card-bg);
             --text: var(--text-main);
@@ -178,7 +188,7 @@
             background-attachment: fixed;
             min-height: 100vh;
             color: var(--text-main);
-            padding-top: 64px;
+            padding-top: 44px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-weight: 500;
@@ -190,60 +200,251 @@
                 radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.06) 0px, transparent 50%);
         }
 
-        /* Top Navbar */
+        /* Global Theme Overrides for Bootstrap Components */
+        .card, .modal-content, .offcanvas {
+            color: var(--text-main) !important;
+            background-color: var(--card-bg) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .text-dark {
+            color: var(--text-main) !important;
+        }
+
+        .dark .text-dark:not(.btn-header-back):not(.btn-header-back *):not(.btn-light):not(.btn-light *) {
+            color: #f8fafc !important;
+        }
+
+        /* Global Form Controls & Inputs for Dark Mode */
+        .dark .form-control,
+        .dark .form-select,
+        .dark input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+        .dark textarea,
+        .dark select {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .form-control:focus,
+        .dark .form-select:focus,
+        .dark input:focus,
+        .dark textarea:focus,
+        .dark select:focus {
+            background-color: #1e293b !important;
+            border-color: #ef4444 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+        }
+
+        .dark .form-control::placeholder,
+        .dark textarea::placeholder,
+        .dark input::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+
+        .dark .form-label,
+        .dark label {
+            color: #e2e8f0 !important;
+            font-weight: 600;
+        }
+
+        .dark .form-select option {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .input-group-text {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+
+        /* Buttons & Contrast in Dark Mode */
+        .btn-header-back {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+
+        .btn-header-back:hover {
+            background: #f1f5f9 !important;
+            color: #000000 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-header-back * {
+            color: #0f172a !important;
+        }
+
+        .dark .btn-light:not(.btn-header-back) {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .btn-light:not(.btn-header-back):hover {
+            background-color: #475569 !important;
+            color: #ffffff !important;
+        }
+
+        /* Headings & High Contrast Text in Dark Mode */
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+            color: #f8fafc !important;
+        }
+
+        .dark .text-primary-emphasis,
+        .dark [style*="color: var(--brand-primary)"],
+        .dark [style*="color:var(--brand-primary)"] {
+            color: #f87171 !important;
+        }
+
+        .dark .guide-list li {
+            color: #cbd5e1 !important;
+        }
+
+        .dark .guide-list li strong {
+            color: #f8fafc !important;
+        }
+
+        .dark .guide-list i {
+            color: #f87171 !important;
+        }
+
+        /* Unified Monochrome Stat Icons for All Themes */
+        .stat-icon-wrapper {
+            background-color: var(--bg-canvas) !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--card-border) !important;
+        }
+
+        /* Top Navbar - Compact, Slim & Neat */
         .navbar {
             background: var(--navbar-bg) !important;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border-bottom: none !important;
-            box-shadow: none !important;
-            padding: 0.65rem 1.25rem;
-            position: fixed;
+            border-bottom: 1px solid #000000 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+            padding: 0.15rem 1.25rem !important;
+            min-height: 44px;
+            position: fixed !important;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1030;
-            transition: all 0.3s ease;
+            z-index: 9999 !important;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            will-change: background-color, box-shadow;
         }
 
-        /* Custom Dropdown Styling */
+        .dark .navbar {
+            border-bottom: 1px solid #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Navbar Role Badge - Neat & Compact */
+        .navbar-role-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.22rem 0.65rem;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background-color: rgba(183, 28, 28, 0.08);
+            color: #b71c1c;
+            border: 1px solid rgba(183, 28, 28, 0.25);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .dark .navbar-role-badge {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        /* Custom Dropdown Styling - 100% Solid & Opaque to prevent bleed-through */
         .dropdown-menu {
-            background: var(--card-bg) !important;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border) !important;
-            border-radius: 14px;
-            box-shadow: var(--shadow-elevated) !important;
-            padding: 0.5rem;
-            min-width: 240px;
-            margin-top: 0.75rem !important;
-            z-index: 1050;
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
+            padding: 0.35rem !important;
+            min-width: 180px !important;
+            margin-top: 0.45rem !important;
+            z-index: 10000 !important;
+        }
+
+
+        .dark .dropdown-menu {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
         }
 
         .dropdown-header {
-            padding: 0.5rem 1rem;
-            color: var(--text-main);
+            padding: 0.5rem 0.75rem !important;
+            color: var(--text-muted) !important;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
         .dropdown-item {
             color: var(--text-main) !important;
+            text-decoration: none !important;
+            border-bottom: none !important;
             border-radius: 8px;
-            padding: 0.65rem 1rem;
+            padding: 0.6rem 0.85rem !important;
             font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+            will-change: transform, background-color;
             margin-bottom: 0.15rem;
+        }
+
+        .dropdown-item i {
+            font-size: 0.95rem;
+            width: 1.25rem;
+            text-align: center;
         }
 
         .dropdown-item:hover, .dropdown-item:focus {
             background: rgba(37, 99, 235, 0.08) !important;
             color: var(--brand-primary) !important;
+            transform: translateX(2px);
+        }
+
+        .dropdown-item.text-danger:hover {
+            background: var(--danger-bg) !important;
+            color: var(--danger) !important;
         }
 
         .dropdown-divider {
-            border-top: 1px solid var(--card-border);
-            margin: 0.5rem 0;
-            opacity: 1;
+            border-top: 1px solid var(--card-border) !important;
+            margin: 0.4rem 0 !important;
+            opacity: 0.8 !important;
         }
 
         .navbar-brand, 
@@ -348,7 +549,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            will-change: transform, background-color, border-color;
         }
 
         .btn-theme-toggle:hover {
@@ -360,88 +562,53 @@
 
         /* User Profile Pill in Navbar */
         .user-profile-pill {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 0.35rem 0.75rem 0.35rem 0.35rem;
             border-radius: 9999px;
             display: flex;
             align-items: center;
-            text-decoration: none;
+            text-decoration: none !important;
             color: var(--text-main) !important;
             font-weight: 600;
             font-size: 0.88rem;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .user-profile-pill *, .user-profile-pill:hover * {
+            text-decoration: none !important;
+            border-bottom: none !important;
         }
 
         .user-profile-pill:hover {
-            border-color: var(--brand-primary);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
-            transform: translateY(-1px);
+            background: rgba(148, 163, 184, 0.12);
         }
 
-        /* Dropdown Menu */
-        .dropdown-menu {
-            background: var(--card-bg) !important;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--card-border) !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-elevated) !important;
-            padding: 0.5rem;
-            min-width: 230px;
-            margin-top: 0.6rem;
-            z-index: 9999 !important;
-        }
-
-        .dropdown-header {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.5rem 0.75rem;
-        }
-
-        .dropdown-item {
-            color: var(--text-main);
-            border-radius: 8px;
-            padding: 0.55rem 0.75rem;
-            font-size: 0.88rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(37, 99, 235, 0.08);
-            color: var(--brand-primary);
-            transform: translateX(2px);
-        }
-
-        .dropdown-item.text-danger:hover {
-            background: var(--danger-bg);
-            color: var(--danger) !important;
-        }
 
         /* Sidebar & Layout */
         .layout {
             display: grid;
             grid-template-columns: 260px 1fr;
-            min-height: calc(100vh - 64px);
+            min-height: calc(100vh - 44px);
             background: var(--bg-canvas);
+            position: relative;
+            z-index: 1;
         }
 
         @media (min-width: 992px) {
             .layout { grid-template-columns: auto 1fr; }
             .sidebar { 
-                width: 72px; 
+                width: 64px; 
                 overflow-x: hidden; 
                 transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             }
             .sidebar:hover { 
                 width: 260px; 
+            }
+            .sidebar a, .sidebar .btn {
+                text-decoration: none !important;
+                border-bottom: none !important;
             }
             .sidebar:not(:hover) .side-link span,
             .sidebar:not(:hover) .sidebar-bottom-actions span { display: none; }
@@ -453,18 +620,23 @@
 
         .sidebar {
             background: var(--sidebar-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border-right: 1px solid var(--card-border) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-right: 1px solid #000000 !important;
             position: sticky;
-            top: 64px;
-            height: calc(100vh - 64px);
+            top: 44px;
+            height: calc(100vh - 44px);
             overflow-y: auto;
+            overflow-x: hidden; /* Prevent items bleeding past the border */
             z-index: 1020;
             box-shadow: 10px 0 30px -10px rgba(0,0,0,0.02) !important;
             padding: 1rem 0;
             display: flex;
             flex-direction: column;
+        }
+        
+        .dark .sidebar {
+            border-right: 1px solid #ffffff !important;
         }
 
         .sidebar .section-title {
@@ -484,12 +656,14 @@
             gap: 0.75rem;
             padding: 0.65rem 1rem;
             color: var(--text-muted);
-            text-decoration: none;
+            text-decoration: none !important;
             border-radius: 10px;
             margin: 0.2rem 0.6rem;
+            width: calc(100% - 1.2rem); /* Ensure width respects margins so it doesn't bleed */
             font-size: 0.9rem;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            will-change: transform, background-color;
             white-space: nowrap;
         }
 
@@ -499,6 +673,8 @@
             font-size: 1rem;
             transition: transform 0.2s ease;
             flex-shrink: 0;
+            text-decoration: none !important;
+            border-bottom: none !important;
         }
 
         .side-link:hover {
@@ -533,15 +709,14 @@
             .content { padding: 1.25rem; }
         }
 
-        /* Cards & Glassmorphism */
+        /* Cards & Performance-Optimized Styling */
         .card {
             background: var(--card-bg) !important;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--card-border) !important;
+            border: 2px solid var(--card-border) !important;
             border-radius: 24px !important;
             box-shadow: var(--shadow-ambient) !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
             overflow: hidden;
             margin-bottom: 1.5rem;
             position: relative;
@@ -553,13 +728,13 @@
             inset: 2px;
             border-radius: 22px;
             pointer-events: none;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            z-index: -1;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            z-index: 0;
         }
 
         .card:hover {
             box-shadow: var(--shadow-elevated) !important;
-            transform: translateY(-5px);
+            transform: translateY(-4px);
         }
 
         .card-header {
@@ -588,7 +763,8 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            will-change: transform, box-shadow, background-color;
             border: 1px solid transparent;
         }
 
@@ -649,7 +825,8 @@
             border-radius: 10px;
             padding: 0.65rem 0.95rem;
             font-size: 0.9rem;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            will-change: border-color, box-shadow;
         }
 
         .form-control:focus, .form-select:focus {
@@ -777,13 +954,14 @@
             background: var(--card-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
+            border: 2px solid var(--card-border);
             border-radius: 16px;
             padding: 1.5rem;
             position: relative;
             overflow: hidden;
             box-shadow: var(--shadow-ambient);
-            transition: all 0.25s ease;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            will-change: transform, box-shadow;
         }
 
         .stats-card:hover {
@@ -891,21 +1069,36 @@
 
         /* SynapseGov Global Dashboard Components */
         .page-header-modern, .dashboard-header, .dept-header, .reports-header, .users-header, .complaints-header, .departments-header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%) !important;
+            background-color: #b71c1c !important;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M200,0 L200,100 L30,100 C130,100 80,0 160,0 Z' fill='%23333333'/%3E%3C/svg%3E"),
+                linear-gradient(115deg, transparent 35%, rgba(0,0,0,0.1) 36%, rgba(0,0,0,0.1) 55%, transparent 56%),
+                linear-gradient(65deg, rgba(255,255,255,0.05) 25%, transparent 26%, transparent 65%, rgba(0,0,0,0.1) 66%),
+                linear-gradient(135deg, #b71c1c 0%, #d32f2f 50%, #991b1b 100%) !important;
+            background-position: right center, center, center, center !important;
+            background-size: 35% 100%, cover, cover, cover !important;
+            background-repeat: no-repeat !important;
             color: #ffffff !important;
-            padding: 2.25rem 2rem !important;
-            border-radius: 16px !important;
-            margin-bottom: 2rem !important;
-            box-shadow: 0 10px 30px -8px rgba(37, 99, 235, 0.45) !important;
+            padding: 1.25rem 1.5rem !important;
+            border-radius: 12px !important;
+            margin-bottom: 1.5rem !important;
+            box-shadow: 0 8px 25px -8px rgba(183, 28, 28, 0.45) !important;
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border: none !important;
+            border-bottom: 4px solid #f59e0b !important;
         }
 
         .dark .page-header-modern, .dark .dashboard-header, .dark .dept-header, .dark .reports-header, .dark .users-header, .dark .complaints-header, .dark .departments-header {
-            background: linear-gradient(135deg, #090e1a 0%, #172554 50%, #1e3a8a 100%) !important;
-            box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.7) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background-color: #7f1d1d !important;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M200,0 L200,100 L30,100 C130,100 80,0 160,0 Z' fill='%23111111'/%3E%3C/svg%3E"),
+                linear-gradient(115deg, transparent 35%, rgba(0,0,0,0.2) 36%, rgba(0,0,0,0.2) 55%, transparent 56%),
+                linear-gradient(65deg, rgba(255,255,255,0.02) 25%, transparent 26%, transparent 65%, rgba(0,0,0,0.2) 66%),
+                linear-gradient(135deg, #991b1b 0%, #b71c1c 50%, #7f1d1d 100%) !important;
+            box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.8) !important;
+            border: none !important;
+            border-bottom: 4px solid #d97706 !important;
         }
 
         .dashboard-header-title, .page-header-modern h1, .page-header-modern h2, .dept-header h1, .reports-header h1, .users-header h1, .complaints-header h1, .departments-header h1 {
@@ -946,7 +1139,8 @@
             border-radius: 12px !important;
             border: 1px solid rgba(255, 255, 255, 0.22) !important;
             text-align: center;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+            will-change: transform, box-shadow, background-color, border-color;
             color: #ffffff !important;
         }
 
@@ -985,10 +1179,11 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-radius: 16px !important;
-            border: 1px solid var(--card-border) !important;
+            border: 2px solid var(--card-border) !important;
             box-shadow: var(--shadow-ambient) !important;
             overflow: hidden;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+            will-change: transform, box-shadow;
             margin-bottom: 1.5rem;
         }
 
@@ -1036,7 +1231,7 @@
             padding: 1.2rem !important;
             background: var(--card-bg) !important;
             border-radius: 12px !important;
-            border: 1px solid var(--card-border) !important;
+            border: 2px solid var(--card-border) !important;
             border-left: 4px solid var(--brand-primary) !important;
             text-align: center;
             transition: transform 0.2s ease;
@@ -1097,7 +1292,8 @@
             align-items: center !important;
             gap: 0.5rem !important;
             text-decoration: none !important;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease !important;
+            will-change: transform, box-shadow, background-color;
         }
 
         .btn-back:hover, .btn-modern:hover {
@@ -1109,6 +1305,7 @@
     </style>
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 <body>
     <div id="app">
@@ -1127,49 +1324,34 @@
                         <!-- Navigation is centered in the side rail -->
                     </ul>
                     <ul class="navbar-nav ms-auto align-items-center gap-2">
-                        <!-- Theme Toggle Button -->
-                        <li class="nav-item">
-                            <button class="btn btn-theme-toggle" id="themeToggle" type="button" title="{{ $t('theme') }}">
-                                <i class="fas fa-moon" id="themeIcon"></i>
-                                <span class="d-none d-md-inline" id="themeText">{{ $isDark ? 'Dark' : 'Light' }}</span>
-                            </button>
-                        </li>
-
                         @auth
                             <!-- User Account Dropdown -->
                             <li class="nav-item dropdown">
-                                @php
-                                    $initials = auth()->user()->getAvatarInitials();
-                                    $avatarColor = auth()->user()->getAvatarColor();
-                                    $avatarPath = auth()->user()->avatar;
-                                    $avatarUrl = $avatarPath ? route('avatar.show', basename($avatarPath)) : null;
-                                @endphp
-                                <a class="user-profile-pill dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    @if($avatarUrl)
-                                        <img src="{{ $avatarUrl }}" alt="{{ auth()->user()->name }}" class="avatar me-2"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                                        <span class="avatar-fallback me-2" style="display: none; background-color: {{ $avatarColor }};">{{ $initials }}</span>
-                                    @else
-                                        <span class="avatar-fallback me-2" style="background-color: {{ $avatarColor }};">{{ $initials }}</span>
-                                    @endif
-                                    <span class="d-none d-md-inline me-1">{{ auth()->user()->name }}</span>
-                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 ms-1 text-uppercase" style="font-size:0.7rem;">{{ auth()->user()->role }}</span>
-                                </a>
+                                <button class="btn border-0 p-0 d-flex align-items-center dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; box-shadow: none;">
+                                    <span class="navbar-role-badge">{{ auth()->user()->role }}</span>
+                                </button>
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li class="dropdown-header">
-                                        <div class="fw-bold text-truncate" style="color: var(--text-main);">{{ auth()->user()->name }}</div>
-                                        <div class="text-muted small text-truncate">{{ auth()->user()->email }}</div>
+                                        <div class="fw-bold text-truncate text-decoration-none" style="color: var(--text-main); text-decoration: none !important;">{{ auth()->user()->name }}</div>
+                                        <div class="text-muted small text-truncate text-decoration-none" style="text-decoration: none !important;">{{ auth()->user()->email }}</div>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ route('profile.show') }}"><i class="fas fa-id-badge text-primary"></i>{{ $t('view_profile') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user-pen text-info"></i>{{ $t('edit_profile') }}</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('profile.settings') }}"><i class="fas fa-sliders text-secondary"></i>{{ $t('settings') }}</a></li>
+                                    <li><a class="dropdown-item text-decoration-none" href="{{ route('profile.show') }}" style="text-decoration: none !important;"><i class="fas fa-id-badge me-2"></i>{{ $t('view_profile') }}</a></li>
+                                    <li><a class="dropdown-item text-decoration-none" href="{{ route('profile.edit') }}" style="text-decoration: none !important;"><i class="fas fa-user-pen me-2"></i>{{ $t('edit_profile') }}</a></li>
+                                    <li><a class="dropdown-item text-decoration-none" href="{{ route('profile.settings') }}" style="text-decoration: none !important;"><i class="fas fa-sliders me-2"></i>{{ $t('settings') }}</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <button class="dropdown-item text-decoration-none d-flex align-items-center justify-content-between" id="themeToggle" type="button" style="width: 100%; border: none; background: transparent; text-decoration: none !important;">
+                                            <div><i class="fas fa-moon me-2" id="themeIcon"></i>{{ $t('theme') }}</div>
+                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="themeText">{{ $isDark ? 'Dark' : 'Light' }}</span>
+                                        </button>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('logout') }}" method="POST" class="m-0">
                                             @csrf
-                                            <button type="submit" class="dropdown-item text-danger"><i class="fas fa-arrow-right-from-bracket"></i>{{ $t('logout') }}</button>
+                                            <button type="submit" class="dropdown-item text-decoration-none" style="text-decoration: none !important;"><i class="fas fa-arrow-right-from-bracket me-2"></i>{{ $t('logout') }}</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -1218,11 +1400,11 @@
                 @if(auth()->check() && auth()->user()->role === 'citizen')
                 <div class="mt-auto px-3 pb-3 sidebar-bottom-actions">
                     <div class="section-title px-0 mb-2">Aksi Cepat</div>
-                    <a href="{{ route('citizen.reports.create') }}" class="btn btn-primary w-100 mb-2 py-2 d-flex align-items-center" style="font-size:0.82rem;">
-                        <i class="fas fa-plus me-2"></i> <span>Laporan Baru</span>
+                    <a href="{{ route('citizen.reports.create') }}" class="btn btn-primary w-100 mb-2 py-2 d-flex align-items-center text-decoration-none" style="font-size:0.82rem;">
+                        <i class="fas fa-plus me-2 text-decoration-none"></i> <span>Laporan Baru</span>
                     </a>
-                    <a href="{{ route('citizen.complaints.create') }}" class="btn btn-warning w-100 py-2 d-flex align-items-center" style="font-size:0.82rem;">
-                        <i class="fas fa-bullhorn me-2"></i> <span>Keluhan Baru</span>
+                    <a href="{{ route('citizen.complaints.create') }}" class="btn btn-warning w-100 py-2 d-flex align-items-center text-decoration-none" style="font-size:0.82rem;">
+                        <i class="fas fa-bullhorn me-2 text-decoration-none"></i> <span>Keluhan Baru</span>
                     </a>
                 </div>
                 @endif
@@ -1329,5 +1511,6 @@
 
     @stack('modals')
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>
