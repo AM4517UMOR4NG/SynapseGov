@@ -82,14 +82,173 @@
 @section('title', $t('settings'))
 
 @section('content')
+<style>
+    .profile-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-bottom: 4rem;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Gradient Header */
+    .edit-header-clean {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding: 2.5rem;
+        border-radius: 12px;
+        background-color: #b71c1c;
+        background-image: 
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M200,0 L200,100 L30,100 C130,100 80,0 160,0 Z' fill='%23333333'/%3E%3C/svg%3E"),
+            linear-gradient(115deg, transparent 35%, rgba(0,0,0,0.1) 36%, rgba(0,0,0,0.1) 55%, transparent 56%),
+            linear-gradient(65deg, rgba(255,255,255,0.05) 25%, transparent 26%, transparent 65%, rgba(0,0,0,0.1) 66%),
+            linear-gradient(135deg, #b71c1c 0%, #d32f2f 50%, #991b1b 100%);
+        background-position: right center, center, center, center;
+        background-size: 35% 100%, cover, cover, cover;
+        background-repeat: no-repeat;
+        border: none;
+        border-bottom: 4px solid #f59e0b;
+        box-shadow: 0 8px 25px -8px rgba(183, 28, 28, 0.45);
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        color: #ffffff;
+    }
+    
+    .edit-header-clean h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .edit-header-clean h1 i { color: #ffffff; }
+    
+    .edit-header-clean .btn-outline-clean {
+        background: #ffffff;
+        color: #000000;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .edit-header-clean .btn-outline-clean:hover {
+        background: #f8fafc;
+        color: #000000;
+        transform: translateY(-2px);
+    }
+    
+    .btn-clean {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 100px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-primary-clean {
+        background: #b71c1c;
+        color: #ffffff;
+    }
+    .btn-primary-clean:hover {
+        background: #991b1b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(183, 28, 28, 0.2);
+        color: white;
+    }
+    .btn-outline-clean {
+        background: transparent;
+        color: #000000;
+        border: 2px solid #000000;
+    }
+    .btn-outline-clean:hover {
+        background: rgba(0,0,0,0.05);
+        color: #000000;
+    }
+    
+    /* Card Styling */
+    .card-clean {
+        background: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 16px;
+        box-shadow: none;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-clean:hover {
+        box-shadow: 4px 4px 0px #000000;
+    }
+    .card-clean .card-header {
+        background: transparent;
+        border-bottom: 2px solid #000000;
+        padding: 1.5rem 2rem;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #000000;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .card-clean .card-header i { color: #000000; }
+    .card-clean .card-body {
+        padding: 2rem;
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #000000;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #000000;
+    }
+    .form-section-title i { color: #000000; }
+    
+    /* Dark Mode Overrides */
+    html.dark .card-clean {
+        background: #1e293b;
+        border-color: #ffffff;
+    }
+    html.dark .card-clean:hover {
+        box-shadow: 4px 4px 0px #ffffff;
+    }
+    html.dark .card-clean .card-header,
+    html.dark .form-section-title {
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+    html.dark .card-clean .card-header i,
+    html.dark .form-section-title i {
+        color: #ffffff;
+    }
+    html.dark .btn-outline-clean {
+        color: #ffffff;
+        border-color: #ffffff;
+    }
+    html.dark .btn-outline-clean:hover {
+        background: rgba(255,255,255,0.1);
+        color: #ffffff;
+    }
+    html.dark .edit-header-clean h1 { color: #ffffff !important; }
+    html.dark .edit-header-clean h1 i { color: #ffffff !important; }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0 text-gray-800">
+            <div class="edit-header-clean mb-4">
+                <h1 class="h3 mb-0">
                     <i class="fas fa-cog me-2"></i>{{ $t('settings') }}
                 </h1>
-                <a href="{{ route('profile.show') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('profile.show') }}" class="btn-clean btn-outline-clean">
                     <i class="fas fa-arrow-left me-1"></i>{{ $t('back_to_profile') }}
                 </a>
             </div>
@@ -124,26 +283,14 @@
     </div>
     @endif
 
-    @if(config('app.debug'))
-    <!-- Debug Info (Only visible in development) -->
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <strong><i class="fas fa-bug me-2"></i>Debug Mode:</strong>
-        <details class="mt-2">
-            <summary style="cursor: pointer;">View Current Settings</summary>
-            <pre class="mt-2 mb-0" style="font-size: 0.8rem;">{{ json_encode($settings, JSON_PRETTY_PRINT) }}</pre>
-        </details>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
+
 
     <div class="row">
         <!-- Settings Form -->
         <div class="col-lg-8">
-            <div class="card shadow mb-4">
+            <div class="card card-clean mb-4">
                 <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-primary">
                         <i class="fas fa-sliders-h me-2"></i>{{ $t('general_prefs') }}
-                    </h6>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('profile.settings.update') }}" method="POST">
@@ -153,9 +300,9 @@
                         <div class="row">
                             <!-- Display Preferences -->
                             <div class="col-md-6 mb-4">
-                                <h6 class="text-primary mb-3">
+                                <div class="form-section-title">
                                     <i class="fas fa-desktop me-2"></i>{{ $t('display_prefs') }}
-                                </h6>
+                                </div>
                                 
                                 <div class="mb-3">
                                     <label for="dashboard_layout" class="form-label">{{ $t('dashboard_layout') }}</label>
@@ -203,9 +350,9 @@
 
                             <!-- Notification Settings -->
                             <div class="col-md-6 mb-4">
-                                <h6 class="text-primary mb-3">
+                                <div class="form-section-title">
                                     <i class="fas fa-bell me-2"></i>{{ $t('notifications') }}
-                                </h6>
+                                </div>
                                 
                                 <div class="mb-3">
                                     <small class="text-muted d-block mb-2">Channel Notifikasi:</small>
@@ -225,9 +372,10 @@
                                     </div>
 
                                     <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="notifications_sms" name="notifications[sms]" value="1" {{ ($settings['notifications']['sms'] ?? false) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="notifications_sms">
+                                        <input class="form-check-input" type="checkbox" id="notifications_sms" name="notifications[sms]" value="1" {{ ($settings['notifications']['sms'] ?? false) ? 'checked' : '' }} disabled>
+                                        <label class="form-check-label text-muted" for="notifications_sms">
                                             <i class="fas fa-sms me-2"></i>{{ $t('sms_notifications') }}
+                                            <span class="badge bg-secondary-subtle text-secondary ms-1 fw-normal" style="font-size: 0.72rem;">Segera Hadir</span>
                                         </label>
                                     </div>
                                 </div>
@@ -262,9 +410,9 @@
                         <!-- Privacy Settings -->
                         <div class="row">
                             <div class="col-12 mb-4">
-                                <h6 class="text-primary mb-3">
+                                <div class="form-section-title">
                                     <i class="fas fa-shield-alt me-2"></i>{{ $t('privacy') }}
-                                </h6>
+                                </div>
                                 
                                 <div class="row">
                                     <div class="col-md-4">
@@ -296,7 +444,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn-clean btn-primary-clean">
                                 <i class="fas fa-save me-1"></i>{{ $t('save_settings') }}
                             </button>
                         </div>
@@ -308,11 +456,9 @@
         <!-- Change Password & Account Actions -->
         <div class="col-lg-4">
             <!-- Change Password -->
-            <div class="card shadow mb-4">
+            <div class="card card-clean mb-4">
                 <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-warning">
                         <i class="fas fa-key me-2"></i>{{ $t('change_password') }}
-                    </h6>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('profile.password.update') }}" method="POST">
@@ -321,23 +467,41 @@
 
                         <div class="mb-3">
                             <label for="current_password" class="form-label">{{ $t('current_password') }}</label>
-                            <input type="password" class="form-control @error('current_password') is-invalid @enderror" id="current_password" name="current_password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control @error('current_password') is-invalid @enderror" id="current_password" name="current_password" required autocomplete="current-password">
+                                <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="current_password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                             @error('current_password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="password" class="form-label">{{ $t('new_password') }}</label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required autocomplete="new-password">
+                                <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-shield-alt me-1"></i>Min. 8 karakter, berbeda dari password saat ini.
+                            </small>
                             @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="password_confirmation" class="form-label">{{ $t('confirm_new_password') }}</label>
-                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required autocomplete="new-password">
+                                <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="password_confirmation">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-warning w-100">
@@ -348,11 +512,9 @@
             </div>
 
             <!-- Account Info -->
-            <div class="card shadow">
+            <div class="card card-clean">
                 <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-info">
                         <i class="fas fa-info-circle me-2"></i>{{ $t('account_info') }}
-                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -369,7 +531,7 @@
 
                     <div class="mb-3">
                         <small class="text-muted">{{ $t('joined') }}:</small>
-                        <div class="fw-bold">{{ $user->created_at->format($lang === 'en' ? 'M d, Y' : 'd F Y') }}</div>
+                        <div class="fw-bold">{{ $user->created_at ? $user->created_at->format($lang === 'en' ? 'M d, Y' : 'd F Y') : '-' }}</div>
                     </div>
 
                     @if($user->last_login_at)
@@ -534,15 +696,30 @@
             }, 5000);
         });
 
-        // Debug: Log form submission
-        const settingsForm = document.querySelector('form[action*="settings"]');
-        if (settingsForm) {
-            settingsForm.addEventListener('submit', function(e) {
-                console.log('Settings form submitted');
-                const formData = new FormData(this);
-                console.log('Form data:', Object.fromEntries(formData));
+        // Password visibility toggler
+        document.querySelectorAll('.toggle-pwd-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                if (input) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        if (icon) {
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        }
+                    } else {
+                        input.type = 'password';
+                        if (icon) {
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        }
+                    }
+                }
             });
-        }
+        });
     });
 </script>
 @endpush
+
