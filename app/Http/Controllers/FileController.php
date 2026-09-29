@@ -98,16 +98,16 @@ class FileController extends Controller
             abort(404, 'File not found.');
         }
 
-        // Check if file is an image
-        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        // Support previewing images and PDF documents directly in the browser
+        $previewExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-        if (! in_array($extension, $imageExtensions)) {
-            abort(400, 'File is not an image.');
+        if (! in_array($extension, $previewExtensions)) {
+            abort(400, 'Format berkas tidak mendukung pratinjau.');
         }
 
         $file = Storage::get($filePath);
-        $mimeType = Storage::mimeType($filePath);
+        $mimeType = $extension === 'pdf' ? 'application/pdf' : Storage::mimeType($filePath);
 
         return response($file, 200, [
             'Content-Type' => $mimeType,
@@ -149,7 +149,12 @@ class FileController extends Controller
             }
 
             foreach ($files as $file) {
-                $fullPath = storage_path('app/public/'.$file);
+                $normalized = str_replace('\\', '/', (string) $file);
+                $relativePath = str_starts_with($normalized, 'public/') ? substr($normalized, 7) : $normalized;
+                $fullPath = storage_path('app/public/'.$relativePath);
+                if (! file_exists($fullPath)) {
+                    $fullPath = storage_path('app/'.$normalized);
+                }
                 if (file_exists($fullPath)) {
                     $zip->addFile($fullPath, basename($file));
                 }
@@ -173,7 +178,12 @@ class FileController extends Controller
         $fileList = [];
 
         foreach ($files as $file) {
-            $fullPath = storage_path('app/public/'.$file);
+            $normalized = str_replace('\\', '/', (string) $file);
+            $relativePath = str_starts_with($normalized, 'public/') ? substr($normalized, 7) : $normalized;
+            $fullPath = storage_path('app/public/'.$relativePath);
+            if (! file_exists($fullPath)) {
+                $fullPath = storage_path('app/'.$normalized);
+            }
             if (file_exists($fullPath)) {
                 $fileList[] = [
                     'name' => basename($file),
@@ -205,17 +215,24 @@ class FileController extends Controller
         $files = [];
 
         foreach ($attachments as $file) {
-            $fullPath = storage_path('app/public/'.$file);
+            $normalized = str_replace('\\', '/', (string) $file);
+            $relativePath = str_starts_with($normalized, 'public/') ? substr($normalized, 7) : $normalized;
+            $fullPath = storage_path('app/public/'.$relativePath);
+            if (! file_exists($fullPath)) {
+                $fullPath = storage_path('app/'.$normalized);
+            }
 
             if (file_exists($fullPath)) {
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
                 $fileInfo = [
                     'name' => basename($file),
                     'path' => $file,
                     'size' => filesize($fullPath),
                     'size_formatted' => $this->formatFileSize(filesize($fullPath)),
-                    'extension' => strtolower(pathinfo($file, PATHINFO_EXTENSION)),
+                    'extension' => $ext,
                     'mime_type' => mime_content_type($fullPath),
                     'is_image' => $this->isImageFile($file),
+                    'is_pdf' => $ext === 'pdf',
                     'created_at' => date('Y-m-d H:i:s', filemtime($fullPath)),
                 ];
 
