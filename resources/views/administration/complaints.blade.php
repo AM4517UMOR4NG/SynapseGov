@@ -1,178 +1,172 @@
 @extends('layouts.dashboard')
-
-@section('title', 'Keluhan Administrasi')
-
+@section('title', 'Keluhan Masyarakat')
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-exclamation-triangle me-2"></i>Keluhan Departemen
-            </h1>
-            <div class="text-muted">
-                <i class="fas fa-calendar me-1"></i>
-                {{ now()->format('d F Y, H:i') }}
+@php
+    $statusLabels = ['submitted' => 'Baru masuk', 'pending' => 'Menunggu verifikasi', 'verified' => 'Siap ditugaskan', 'assigned' => 'Ditugaskan', 'in_progress' => 'Dalam pengerjaan', 'reviewed' => 'Ditinjau', 'needs_revision' => 'Perlu revisi', 'awaiting_info' => 'Menunggu informasi', 'awaiting_admin_approval' => 'Persetujuan admin', 'investigating' => 'Dalam investigasi', 'resolved' => 'Selesai', 'closed' => 'Ditutup', 'rejected' => 'Ditolak'];
+    $priorityLabels = ['low' => 'Rendah', 'medium' => 'Normal', 'high' => 'Tinggi', 'urgent' => 'Mendesak'];
+@endphp
+<div class="dh-workspace">
+@include('administration.head.heading', ['heading' => 'Keluhan & Aspirasi', 'description' => 'Dengarkan kebutuhan masyarakat dan koordinasikan penanganannya.'])
+
+<section class="dh-panel">
+    <form class="dh-filters" method="GET" action="{{ route('administration.complaints') }}">
+        <div class="dh-search">
+            <label for="ticket-search">Cari keluhan</label>
+            <div>
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input id="ticket-search" name="q" value="{{ request('q') }}" maxlength="150" placeholder="Judul, nomor tiket, atau nama pelapor">
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Complaints Table -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Daftar Keluhan Departemen</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Judul</th>
-                                <th>Pengguna</th>
-                                <th>Status</th>
-                                <th>Prioritas</th>
-                                <th>Tanggal</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($complaints as $complaint)
-                            <tr>
-                                <td>{{ $complaint->id }}</td>
-                                <td>
-                                    <strong>{{ $complaint->title }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ Str::limit($complaint->description, 50) }}</small>
-                                </td>
-                                <td>{{ $complaint->user ? $complaint->user->name : 'N/A' }}</td>
-                                <td>
-                                    <span class="badge bg-{{ $complaint->status == 'pending' ? 'warning' : ($complaint->status == 'resolved' ? 'success' : 'info') }}">
-                                        {{ ucfirst($complaint->status) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ $complaint->priority == 'urgent' ? 'danger' : ($complaint->priority == 'high' ? 'warning' : ($complaint->priority == 'medium' ? 'info' : 'secondary')) }}">
-                                        {{ ucfirst($complaint->priority) }}
-                                    </span>
-                                </td>
-                                <td>{{ $complaint->created_at->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewComplaintModal{{ $complaint->id }}">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        @if($complaint->status == 'pending')
-                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#assignComplaintModal{{ $complaint->id }}">
-                                            <i class="fas fa-user-plus"></i>
-                                        </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center">Tidak ada keluhan</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                <div class="d-flex justify-content-center">
-                    {{ $complaints->links() }}
-                </div>
-            </div>
+        <div>
+            <label for="ticket-status">Status</label>
+            <select id="ticket-status" name="status" class="form-select">
+                <option value="">Semua status</option>
+                @foreach($statusLabels as $value => $label)
+                    <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
+        <div>
+            <label for="ticket-priority">Prioritas</label>
+            <select id="ticket-priority" name="priority" class="form-select">
+                <option value="">Semua prioritas</option>
+                @foreach($priorityLabels as $value => $label)
+                    <option value="{{ $value }}" @selected(request('priority') === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <button class="dh-button" type="submit">Terapkan</button>
+        @if(request()->hasAny(['q','status','priority']))
+            <a class="dh-reset" href="{{ route('administration.complaints') }}">Reset</a>
+        @endif
+    </form>
+    
+    <div class="dh-results">
+        <span>{{ number_format($complaints->total()) }} keluhan ditemukan</span>
+        <span>Terbaru lebih dahulu</span>
     </div>
+    
+    <div class="dh-table-wrap">
+        <table class="dh-table">
+            <thead>
+                <tr>
+                    <th scope="col">Keluhan</th>
+                    <th scope="col">Status & prioritas</th>
+                    <th scope="col">Penanggung jawab</th>
+                    <th scope="col">Tanggal masuk</th>
+                    <th scope="col">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($complaints as $ticket)
+                <tr>
+                    <td>
+                        <small class="dh-ticket-no">{{ $ticket->ticket_no }}</small>
+                        <button class="dh-title-button" data-bs-toggle="modal" data-bs-target="#ticketDetail{{ $ticket->id }}">{{ $ticket->title }}</button>
+                        <span class="dh-muted">{{ $ticket->user?->name ?? 'Pengguna dihapus' }} · {{ $ticket->category }}</span>
+                    </td>
+                    <td>
+                        <span class="dh-status dh-status-{{ $ticket->status }}">{{ $statusLabels[$ticket->status] ?? $ticket->status }}</span>
+                        <small class="dh-priority dh-priority-{{ $ticket->priority }}"><i class="fas fa-circle" aria-hidden="true"></i> {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}</small>
+                    </td>
+                    <td>
+                        <span class="dh-assignee">{{ $ticket->assignedUser?->name ?? 'Belum ditugaskan' }}</span>
+                        @if($ticket->sla_due_at && !in_array($ticket->status, ['resolved','closed','rejected']))
+                            <small class="{{ $ticket->sla_due_at->isPast() ? 'text-danger' : 'dh-muted' }}">SLA {{ $ticket->sla_due_at->format('d M, H:i') }}</small>
+                        @endif
+                    </td>
+                    <td class="text-nowrap">
+                        {{ $ticket->created_at->format('d M Y') }}
+                        <small class="dh-muted">{{ $ticket->created_at->format('H:i') }} WIB</small>
+                    </td>
+                    <td>
+                        <button class="dh-button dh-button-outline" data-bs-toggle="modal" data-bs-target="#ticketDetail{{ $ticket->id }}">Lihat detail <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5">
+                        <div class="dh-empty">
+                            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                            <h3>{{ request()->hasAny(['q','status','priority']) ? 'Tidak ada hasil yang cocok' : 'Belum ada data' }}</h3>
+                            <p>Coba ubah filter atau periksa kembali nanti.</p>
+                            <a href="{{ route('administration.complaints') }}">Tampilkan semua keluhan</a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="dh-pagination">
+        {{ $complaints->links('pagination::bootstrap-5') }}
+    </div>
+</section>
 </div>
 
-<!-- View Complaint Modals -->
-@foreach($complaints as $complaint)
-<div class="modal fade" id="viewComplaintModal{{ $complaint->id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+@foreach($complaints as $ticket)
+@push('modals')
+<div class="modal fade dh-detail" id="ticketDetail{{ $ticket->id }}" tabindex="-1" aria-labelledby="ticketTitle{{ $ticket->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detail Keluhan #{{ $complaint->id }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div>
+                    <small class="dh-ticket-no">{{ $ticket->ticket_no }}</small>
+                    <h2 class="modal-title fs-5" id="ticketTitle{{ $ticket->id }}">{{ $ticket->title }}</h2>
+                </div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Informasi Keluhan</h6>
-                        <p><strong>Judul:</strong> {{ $complaint->title }}</p>
-                        <p><strong>Kategori:</strong> {{ $complaint->category }}</p>
-                        <p><strong>Prioritas:</strong> 
-                            <span class="badge bg-{{ $complaint->priority == 'urgent' ? 'danger' : ($complaint->priority == 'high' ? 'warning' : ($complaint->priority == 'medium' ? 'info' : 'secondary')) }}">
-                                {{ ucfirst($complaint->priority) }}
-                            </span>
-                        </p>
-                        <p><strong>Status:</strong> 
-                            <span class="badge bg-{{ $complaint->status == 'pending' ? 'warning' : ($complaint->status == 'resolved' ? 'success' : 'info') }}">
-                                {{ ucfirst($complaint->status) }}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Informasi Pengguna</h6>
-                        <p><strong>Nama:</strong> {{ $complaint->user ? $complaint->user->name : 'Pengguna Dihapus' }}</p>
-                        <p><strong>Email:</strong> {{ $complaint->user ? $complaint->user->email : '-' }}</p>
-                        <p><strong>Lokasi:</strong> {{ $complaint->location ?? 'Tidak disebutkan' }}</p>
-                    </div>
+                <div class="d-flex gap-2 mb-4">
+                    <span class="dh-status dh-status-{{ $ticket->status }}">{{ $statusLabels[$ticket->status] ?? $ticket->status }}</span>
+                    <span class="dh-status">Prioritas {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}</span>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Deskripsi</h6>
-                        <p>{{ $complaint->description }}</p>
-                    </div>
+                <div class="dh-detail-grid">
+                    <div><small>PELAPOR</small><p>{{ $ticket->user?->name ?? 'Pengguna dihapus' }}</p></div>
+                    <div><small>PENANGGUNG JAWAB</small><p>{{ $ticket->assignedUser?->name ?? 'Belum ditugaskan' }}</p></div>
+                    <div><small>LOKASI</small><p>{{ $ticket->location ?: 'Tidak disebutkan' }}</p></div>
+                    <div><small>KATEGORI</small><p>{{ $ticket->category }}</p></div>
                 </div>
-                @if($complaint->assignedUser)
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Ditugaskan ke:</h6>
-                        <p>{{ $complaint->assignedUser->name }} ({{ $complaint->assignedUser->email }})</p>
-                    </div>
+                
+                <h3 class="fs-6">Deskripsi keluhan</h3>
+                <p class="dh-description">{{ $ticket->description }}</p>
+                
+                @if($ticket->completion_notes || $ticket->resolution_notes)
+                    <h3 class="fs-6">Catatan penanganan</h3>
+                    <p class="dh-description">{{ $ticket->completion_notes ?: $ticket->resolution_notes }}</p>
+                @endif
+                
+                <div class="d-flex gap-2 flex-wrap mb-4">
+                    @if($ticket->attachments)
+                        <a class="dh-button dh-button-outline" href="{{ route('files.view', ['complaint', $ticket->id]) }}"><i class="fas fa-paperclip" aria-hidden="true"></i> Lihat {{ count($ticket->attachments) }} lampiran</a>
+                    @endif
                 </div>
+                
+                @if(in_array($ticket->status, ['submitted','pending']))
+                <form class="dh-action-box" action="{{ route('administration.complaints.assign', $ticket->id) }}" method="POST">
+                    @csrf
+                    <h3 class="fs-6">Tugaskan kepada staf</h3>
+                    <label for="complaintStaff{{ $ticket->id }}" class="form-label">Penanggung jawab</label>
+                    <select class="form-select mb-3" name="assigned_to" id="complaintStaff{{ $ticket->id }}" required>
+                        <option value="">Pilih staf aktif</option>
+                        @foreach($staffList as $member)
+                            <option value="{{ $member->id }}">{{ $member->name }}</option>
+                        @endforeach
+                    </select>
+                    @if($staffList->isEmpty())
+                        <p class="dh-muted">Belum ada staf aktif. Hubungi administrator untuk menambahkan staf.</p>
+                    @endif
+                    <button class="dh-button" @disabled($staffList->isEmpty())>Simpan penugasan</button>
+                </form>
                 @endif
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="dh-button dh-button-outline" data-bs-dismiss="modal">Tutup detail</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Assign Complaint Modal -->
-<div class="modal fade" id="assignComplaintModal{{ $complaint->id }}" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tugaskan Keluhan #{{ $complaint->id }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('administration.complaints.assign', $complaint->id) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="assigned_to_{{ $complaint->id }}" class="form-label">Tugaskan ke:</label>
-                        <select class="form-select" id="assigned_to_{{ $complaint->id }}" name="assigned_to" required>
-                            <option value="">Pilih Staff</option>
-                            @foreach($staffList as $staff)
-                            <option value="{{ $staff->id }}">{{ $staff->name }} ({{ $staff->email }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success">Tugaskan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+@endpush
 @endforeach
 @endsection
