@@ -23,41 +23,59 @@ class AdministrationDashboardController extends Controller
 
         // Statistik departemen
         if ($user->role === 'department_head') {
-            $stats = [
-                'total_reports' => Report::where('department_id', $department->id)->count(),
-                'pending_reports' => Report::where('department_id', $department->id)
-                    ->whereIn('status', ['submitted', 'pending'])->count(),
-                'in_progress_reports' => Report::where('department_id', $department->id)
-                    ->where('status', 'in_progress')->count(),
-                'resolved_reports' => Report::where('department_id', $department->id)
-                    ->where('status', 'resolved')->count(),
-                'total_complaints' => Complaint::where('department_id', $department->id)->count(),
-                'pending_complaints' => Complaint::where('department_id', $department->id)
-                    ->whereIn('status', ['submitted', 'pending'])->count(),
-                'investigating_complaints' => Complaint::where('department_id', $department->id)
-                    ->where('status', 'investigating')->count(),
-                'resolved_complaints' => Complaint::where('department_id', $department->id)
-                    ->where('status', 'resolved')->count(),
-            ];
+            $repStat = Report::where('department_id', $department->id)
+                ->selectRaw('
+                    COUNT(*) as total_reports,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
+                    COALESCE(SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END), 0) as in_progress_reports,
+                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
+                    COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
+                    COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending", "verified") THEN 1 ELSE 0 END), 0) as pending_action
+                ')->first();
+
+            $compStat = Complaint::where('department_id', $department->id)
+                ->selectRaw('
+                    COUNT(*) as total_complaints,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
+                    COALESCE(SUM(CASE WHEN status = "investigating" THEN 1 ELSE 0 END), 0) as investigating_complaints,
+                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
+                ')->first();
         } else {
             // Statistik untuk staff - hanya laporan yang ditugaskan kepada mereka
-            $stats = [
-                'total_reports' => Report::where('assigned_to', $user->id)->count(),
-                'pending_reports' => Report::where('assigned_to', $user->id)
-                    ->whereIn('status', ['submitted', 'pending'])->count(),
-                'in_progress_reports' => Report::where('assigned_to', $user->id)
-                    ->where('status', 'in_progress')->count(),
-                'resolved_reports' => Report::where('assigned_to', $user->id)
-                    ->where('status', 'resolved')->count(),
-                'total_complaints' => Complaint::where('assigned_to', $user->id)->count(),
-                'pending_complaints' => Complaint::where('assigned_to', $user->id)
-                    ->whereIn('status', ['submitted', 'pending'])->count(),
-                'investigating_complaints' => Complaint::where('assigned_to', $user->id)
-                    ->where('status', 'investigating')->count(),
-                'resolved_complaints' => Complaint::where('assigned_to', $user->id)
-                    ->where('status', 'resolved')->count(),
-            ];
+            $repStat = Report::where('assigned_to', $user->id)
+                ->selectRaw('
+                    COUNT(*) as total_reports,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
+                    COALESCE(SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END), 0) as in_progress_reports,
+                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
+                    COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
+                    COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending", "verified") THEN 1 ELSE 0 END), 0) as pending_action
+                ')->first();
+
+            $compStat = Complaint::where('assigned_to', $user->id)
+                ->selectRaw('
+                    COUNT(*) as total_complaints,
+                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
+                    COALESCE(SUM(CASE WHEN status = "investigating" THEN 1 ELSE 0 END), 0) as investigating_complaints,
+                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
+                ')->first();
         }
+
+        $stats = [
+            'total_reports' => (int) ($repStat->total_reports ?? 0),
+            'pending_reports' => (int) ($repStat->pending_reports ?? 0),
+            'in_progress_reports' => (int) ($repStat->in_progress_reports ?? 0),
+            'resolved_reports' => (int) ($repStat->resolved_reports ?? 0),
+            'total_complaints' => (int) ($compStat->total_complaints ?? 0),
+            'pending_complaints' => (int) ($compStat->pending_complaints ?? 0),
+            'investigating_complaints' => (int) ($compStat->investigating_complaints ?? 0),
+            'resolved_complaints' => (int) ($compStat->resolved_complaints ?? 0),
+            'today_reports' => (int) ($repStat->today_reports ?? 0),
+            'completed_today' => (int) ($repStat->completed_today ?? 0),
+            'pending_action' => (int) ($repStat->pending_action ?? 0),
+        ];
 
         // Laporan departemen
         if ($user->role === 'department_head') {
@@ -92,14 +110,7 @@ class AdministrationDashboardController extends Controller
             ->where('role', '!=', 'citizen')
             ->get();
 
-        // Tambahan statistik untuk dashboard modern
-        $stats['today_reports'] = Report::where('department_id', $department->id)
-            ->whereDate('created_at', today())->count();
-        $stats['completed_today'] = Report::where('department_id', $department->id)
-            ->whereDate('resolved_at', today())->count();
-        $stats['pending_action'] = Report::where('department_id', $department->id)
-            ->whereIn('status', ['submitted', 'pending', 'verified'])
-            ->count();
+
 
         return view('administration.modern-dashboard', compact(
             'stats',
