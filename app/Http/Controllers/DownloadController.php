@@ -14,9 +14,10 @@ class DownloadController extends Controller
     {
         $report = Report::with(['user', 'department', 'assignedUser'])->findOrFail($id);
 
-        // Check permissions
-        if (! Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
+        // Check permissions: admin, assigned staff, department head, or report owner
+        $user = Auth::user();
+        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+            abort(403, 'Akses ditolak.');
         }
 
         $data = [
@@ -24,10 +25,15 @@ class DownloadController extends Controller
             'title' => 'Report Details - '.$report->ticket_no,
         ];
 
-        // Generate HTML content
-        $html = view('admin.reports.pdf', $data)->render();
+        // Generate HTML content with error handling
+        try {
+            $html = view('admin.reports.pdf', $data)->render();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PDF report render error: '.$e->getMessage());
+            return back()->with('error', 'Gagal memuat dokumen laporan.');
+        }
 
-        // For now, return as HTML (you can add PDF generation later)
+        // Return as HTML export
         return response($html)
             ->header('Content-Type', 'text/html')
             ->header('Content-Disposition', 'attachment; filename="report_'.$report->ticket_no.'.html"');
@@ -40,9 +46,10 @@ class DownloadController extends Controller
     {
         $report = Report::with(['user', 'department', 'assignedUser'])->findOrFail($id);
 
-        // Check permissions
-        if (! Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
+        // Check permissions: admin, assigned staff, department head, or report owner
+        $user = Auth::user();
+        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+            abort(403, 'Akses ditolak.');
         }
 
         $csvData = [
@@ -77,9 +84,10 @@ class DownloadController extends Controller
     {
         $report = Report::findOrFail($id);
 
-        // Check permissions
-        if (! Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized access.');
+        // Check permissions: admin, assigned staff, department head, or report owner
+        $user = Auth::user();
+        if (! ($user->isAdmin() || (int) $report->user_id === (int) $user->id || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $report->department_id === (int) $user->department_id))) {
+            abort(403, 'Akses ditolak.');
         }
 
         $attachments = $report->attachments ?? [];

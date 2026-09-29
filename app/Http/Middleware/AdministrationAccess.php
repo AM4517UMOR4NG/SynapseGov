@@ -19,7 +19,7 @@ class AdministrationAccess
         }
 
         $user = auth()->user();
-        if (! ($user->isDepartmentHead() || $user->isStaff())) {
+        if (! ($user->isDepartmentHead() || $user->isStaff() || $user->isAdmin())) {
             abort(403, 'Access denied. Administration privileges required.');
         }
 
