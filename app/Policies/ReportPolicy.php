@@ -33,8 +33,8 @@ class ReportPolicy
             return true;
         }
 
-        // Department head can view reports in their department
-        if ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) {
+        // Department head can view reports in their department or assigned to them
+        if ($user->role === 'department_head' && ((int) $report->department_id === (int) $user->department_id || (int) $report->assigned_to === (int) $user->id)) {
             return true;
         }
 

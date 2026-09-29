@@ -33,8 +33,8 @@ class ComplaintPolicy
             return true;
         }
 
-        // Department head can view complaints in their department
-        if ($user->role === 'department_head' && (int) $complaint->department_id === (int) $user->department_id) {
+        // Department head can view complaints in their department or assigned to them
+        if ($user->role === 'department_head' && ((int) $complaint->department_id === (int) $user->department_id || (int) $complaint->assigned_to === (int) $user->id)) {
             return true;
         }
 
