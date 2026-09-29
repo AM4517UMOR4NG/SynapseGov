@@ -59,14 +59,29 @@ class CheckSLA extends Command
             $this->info('No SLA breaches found.');
         }
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 
     private function escalateReport(Report $report)
     {
+        $oldPriority = $report->priority;
         $report->update([
             'is_escalated' => true,
-            'status' => 'escalated',
+            'priority' => 'urgent',
+            'last_activity_at' => now(),
+        ]);
+
+        $userId = $report->assigned_to ?? $report->user_id ?? \App\Models\User::where('role', 'admin')->value('id') ?? 1;
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Report::class,
+            'auditable_id' => $report->id,
+            'user_id' => $userId,
+            'event' => 'sla_breached_escalated',
+            'old_values' => ['priority' => $oldPriority, 'is_escalated' => false],
+            'new_values' => ['priority' => 'urgent', 'is_escalated' => true],
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'Console/CheckSLA',
         ]);
 
         // Fire SLA breach event
@@ -77,9 +92,24 @@ class CheckSLA extends Command
 
     private function escalateComplaint(Complaint $complaint)
     {
+        $oldPriority = $complaint->priority ?? 'medium';
         $complaint->update([
             'is_escalated' => true,
-            'status' => 'escalated',
+            'priority' => 'urgent',
+            'last_activity_at' => now(),
+        ]);
+
+        $userId = $complaint->assigned_to ?? $complaint->user_id ?? \App\Models\User::where('role', 'admin')->value('id') ?? 1;
+
+        \App\Models\AuditLog::create([
+            'auditable_type' => Complaint::class,
+            'auditable_id' => $complaint->id,
+            'user_id' => $userId,
+            'event' => 'sla_breached_escalated',
+            'old_values' => ['priority' => $oldPriority, 'is_escalated' => false],
+            'new_values' => ['priority' => 'urgent', 'is_escalated' => true],
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'Console/CheckSLA',
         ]);
 
         // Fire SLA breach event

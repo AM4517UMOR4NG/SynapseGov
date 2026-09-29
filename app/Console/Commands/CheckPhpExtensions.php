@@ -82,6 +82,6 @@ class CheckPhpExtensions extends Command
         $this->line('Current PHP version: '.PHP_VERSION);
         $this->line('PHP configuration file: '.php_ini_loaded_file());
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }
