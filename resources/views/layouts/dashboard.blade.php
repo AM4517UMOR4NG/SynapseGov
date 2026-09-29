@@ -228,9 +228,23 @@
         }
 
         /* Global Theme Overrides for Bootstrap Components */
-        .card, .modal-content, .offcanvas {
+        .card, .offcanvas {
             color: var(--text-main) !important;
             background-color: var(--card-bg) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        /* requested by user: text on cards underlined like the photo */
+        .card-header span, .card-title, .card-header {
+            text-decoration: underline;
+            text-decoration-color: var(--brand-primary);
+            text-underline-offset: 6px;
+            text-decoration-thickness: 2px;
+        }
+
+        .modal-content {
+            color: var(--text-main) !important;
+            background-color: var(--bg-canvas) !important;
             border-color: var(--card-border) !important;
         }
 
@@ -1159,23 +1173,20 @@
         }
 
         .quick-stat-box {
-            background: rgba(255, 255, 255, 0.12) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: #ffffff !important;
             padding: 1.1rem 1rem !important;
             border-radius: 12px !important;
-            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            border: 1px solid var(--card-border) !important;
             text-align: center;
-            transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
-            will-change: transform, box-shadow, background-color, border-color;
-            color: #ffffff !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+            will-change: transform, box-shadow;
+            color: var(--text-main) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
         }
 
         .quick-stat-box:hover {
-            background: rgba(255, 255, 255, 0.22) !important;
             transform: translateY(-3px) !important;
-            border-color: rgba(255, 255, 255, 0.45) !important;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15) !important;
         }
 
         .quick-stat-icon {
@@ -1333,8 +1344,24 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/workspace.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ time() }}">
+    <style>
+        /* Global enforce no underline on workspace interactive elements */
+        a, a:hover, a:focus, a:active,
+        .dh-workspace a, .dh-workspace a *,
+        .dh-panel a, .dh-panel a *,
+        .dh-report-row, .dh-report-row *,
+        .dh-panel-heading a, .dh-panel-heading a *,
+        .dh-attention a, .dh-empty a,
+        .dh-status, .dh-status *,
+        .dh-welcome a, .dh-button, .dh-button *,
+        .workspace-ui a, .workspace-ui a:hover {
+            text-decoration: none !important;
+        }
+    </style>
 </head>
-<body>
+<body class="workspace-ui {{ auth()->check() && auth()->user()->isDepartmentHead() ? 'department-head' : '' }}">
     <div id="app">
         <!-- Top Navigation Bar -->
         <nav class="navbar navbar-expand-lg">
@@ -1342,11 +1369,16 @@
 
 
                 <!-- Mobile Hamburger Button -->
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#topbarNav">
+                <button id="workspaceMenuToggle" class="workspace-menu-toggle" type="button" aria-label="Buka menu navigasi" aria-controls="sidebar" aria-expanded="false">
                     <i class="fas fa-bars text-secondary"></i>
                 </button>
 
-                <div class="collapse navbar-collapse" id="topbarNav">
+                @if(auth()->check())
+                    <a class="dh-brand" href="{{ route('home') }}"><span class="dh-brand-symbol"><i class="fas fa-layer-group" aria-hidden="true"></i></span>SynapseGov<span style="color:#9f2434">.</span></a>
+                    <span class="dh-top-context">{{ auth()->user()->getRoleDisplayName() }}</span>
+                @endif
+
+                <div class="navbar-collapse" id="topbarNav">
                     <ul class="navbar-nav me-auto">
                         <!-- Navigation is centered in the side rail -->
                     </ul>
@@ -1355,13 +1387,13 @@
                             <!-- User Account Dropdown -->
                             <li class="nav-item dropdown">
                                 <button class="btn border-0 p-0 d-flex align-items-center dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; box-shadow: none;">
-                                    <span class="navbar-role-badge">{{ auth()->user()->role }}</span>
+                                    <span class="navbar-role-badge">{{ auth()->user()->isDepartmentHead() ? auth()->user()->name.' · Kepala Dinas' : auth()->user()->role }}</span>
                                 </button>
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li class="dropdown-header">
-                                        <div class="fw-bold text-truncate text-decoration-none" style="color: var(--text-main); text-decoration: none !important;">{{ auth()->user()->name }}</div>
-                                        <div class="text-muted small text-truncate text-decoration-none" style="text-decoration: none !important;">{{ auth()->user()->email }}</div>
+                                        <div class="fw-bold text-decoration-none" style="color: var(--text-main); text-decoration: none !important; white-space: normal; overflow-wrap: anywhere;">{{ auth()->user()->name }}</div>
+                                        <div class="text-muted small text-decoration-none" style="text-decoration: none !important; white-space: normal; overflow-wrap: anywhere;">{{ auth()->user()->email }}</div>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-decoration-none" href="{{ route('profile.show') }}" style="text-decoration: none !important;"><i class="fas fa-id-badge me-2"></i>{{ $t('view_profile') }}</a></li>
@@ -1396,7 +1428,8 @@
         <!-- Sidebar + Content Stage Layout -->
         <div class="layout">
             <!-- Sleek Modern Sidebar -->
-            <aside class="sidebar" id="sidebar">
+            <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+                <button type="button" class="workspace-menu-close" aria-label="Tutup menu navigasi"><i class="fas fa-xmark" aria-hidden="true"></i><span>Tutup menu</span></button>
                 <div class="section-title">{{ $t('navigation') }}</div>
                 <nav class="mb-3">
                     @auth
@@ -1412,7 +1445,10 @@
                             <a class="side-link {{ request()->routeIs('administration.reports*') ? 'active' : '' }}" href="{{ route('administration.reports') }}"><i class="fas fa-file-shield"></i><span>{{ $t('reports') }}</span></a>
                             <a class="side-link {{ request()->routeIs('administration.complaints*') ? 'active' : '' }}" href="{{ route('administration.complaints') }}"><i class="fas fa-triangle-exclamation"></i><span>{{ $t('complaints') }}</span></a>
                             @if(auth()->user()->isDepartmentHead())
-                                <a class="side-link {{ request()->routeIs('administration.staff*') ? 'active' : '' }}" href="{{ route('administration.staff') }}"><i class="fas fa-user-tie"></i><span>Staff Lapangan</span></a>
+                                <a class="side-link {{ request()->routeIs('administration.staff*') ? 'active' : '' }}" href="{{ route('administration.staff') }}"><i class="fas fa-user-tie"></i><span>Tim Departemen</span></a>
+                                <div class="section-title">AKUN</div>
+                                <a class="side-link {{ request()->routeIs('profile.show', 'profile.edit') ? 'active' : '' }}" href="{{ route('profile.show') }}"><i class="fas fa-id-badge"></i><span>Profil Saya</span></a>
+                                <a class="side-link {{ request()->routeIs('profile.settings') ? 'active' : '' }}" href="{{ route('profile.settings') }}"><i class="fas fa-sliders"></i><span>Pengaturan</span></a>
                             @endif
                         @else
                             <a class="side-link {{ request()->routeIs('citizen.dashboard') ? 'active' : '' }}" href="{{ route('citizen.dashboard') }}"><i class="fas fa-chart-pie"></i><span>{{ $t('dashboard') }}</span></a>
@@ -1435,7 +1471,12 @@
                     </a>
                 </div>
                 @endif
+                @if(auth()->check() && auth()->user()->isDepartmentHead())
+                    <div class="dh-sidebar-note"><strong>Pelayanan dimulai dari kita.</strong>Terhubung untuk masyarakat.<br>SynapseGov © {{ now()->year }}</div>
+                @endif
             </aside>
+
+            <button type="button" class="workspace-backdrop" aria-label="Tutup menu navigasi" tabindex="-1" hidden></button>
 
             <!-- Main Content Stage -->
             <main class="content">
@@ -1455,6 +1496,9 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="alert alert-danger" role="alert"><strong>Periksa kembali isian Anda.</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+                @endif
                 @yield('content')
             </main>
         </div>
@@ -1527,16 +1571,9 @@
             }
         })();
 
-        // Mobile Sidebar Drawer Toggle
-        const navbarToggler = document.querySelector('.navbar-toggler');
-        const sidebar = document.getElementById('sidebar');
-        if (navbarToggler && sidebar) {
-            navbarToggler.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-            });
-        }
     </script>
 
+    <script src="{{ asset('js/navigation.js') }}?v={{ filemtime(public_path('js/navigation.js')) }}" defer></script>
     @stack('modals')
     @yield('scripts')
     @stack('scripts')

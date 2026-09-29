@@ -121,16 +121,16 @@
             box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
 </head>
-<body>
+<body class="public-ui">
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-dark shadow-sm">
             <div class="container">
                 <!-- compact brand: icon only, title available on hover -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                    <a class="navbar-brand text-decoration-none" href="{{ route('home') }}" title="SynapseGov" style="text-decoration: none !important;">
+                <button class="site-menu-toggle" type="button" data-site-menu aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Buka navigasi"><i class="fas fa-bars" aria-hidden="true"></i> Menu</button>
+                    <a class="navbar-brand text-decoration-none" href="{{ route('landing') }}" title="SynapseGov" style="text-decoration: none !important;">
                         <div class="brand-icon-box" style="text-decoration: none !important;">
                             <i class="fas fa-bolt-lightning" style="text-decoration: none !important;"></i>
                         </div>
@@ -153,7 +153,6 @@
                     <ul class="navbar-nav ms-auto">
                         <!-- Authentication Links -->
                         @guest
-                            @if (!Route::is('login') && !Route::is('register'))
                                 @if (Route::has('login'))
                                     <li class="nav-item">
                                         <a class="nav-link" href="{{ route('login') }}">
@@ -168,7 +167,6 @@
                                         </a>
                                     </li>
                                 @endif
-                            @endif
                         @else
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
@@ -235,5 +233,6 @@
             });
         }, 5000);
     </script>
+<script src="{{ asset('js/navigation.js') }}?v={{ filemtime(public_path('js/navigation.js')) }}" defer></script>
 </body>
 </html>
