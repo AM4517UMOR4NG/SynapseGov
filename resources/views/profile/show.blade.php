@@ -3,399 +3,461 @@
 @section('title', 'Profil Saya')
 
 @section('content')
-<style>
-    .profile-header {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
-    }
+    <style>
+        .profile-wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 4rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
 
-    .profile-header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 2rem;
-    }
+        /* Gradient Profile Header */
+        .profile-header-clean {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            margin-bottom: 2rem;
+            padding: 2.5rem;
+            border-radius: 12px;
+            background-color: #b71c1c;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M200,0 L200,100 L30,100 C130,100 80,0 160,0 Z' fill='%23333333'/%3E%3C/svg%3E"),
+                linear-gradient(115deg, transparent 35%, rgba(0,0,0,0.1) 36%, rgba(0,0,0,0.1) 55%, transparent 56%),
+                linear-gradient(65deg, rgba(255,255,255,0.05) 25%, transparent 26%, transparent 65%, rgba(0,0,0,0.1) 66%),
+                linear-gradient(135deg, #b71c1c 0%, #d32f2f 50%, #991b1b 100%);
+            background-position: right center, center, center, center;
+            background-size: 35% 100%, cover, cover, cover;
+            background-repeat: no-repeat;
+            border: none;
+            border-bottom: 4px solid #f59e0b;
+            box-shadow: 0 8px 25px -8px rgba(183, 28, 28, 0.45);
+            position: relative;
+            overflow: hidden;
+            color: #ffffff;
+        }
 
-    .profile-header-left {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-    }
+        .avatar-clean {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: #b71c1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
 
-    .profile-avatar-large {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        object-fit: cover;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
+        .profile-meta h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 0.25rem 0;
+            letter-spacing: -0.02em;
+        }
 
-    .profile-header-info h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin: 0;
-    }
+        .badge-clean {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
 
-    .profile-header-info p {
-        margin: 0.25rem 0;
-        opacity: 0.95;
-    }
+        .badge-secondary-clean {
+            background: rgba(255,255,255,0.15);
+        }
 
-    .profile-header-actions {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .profile-header-actions .btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-
-    .profile-header-actions .btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    .profile-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid #f0f0f0;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        margin-bottom: 1.5rem;
-    }
-
-    .profile-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .profile-card-header {
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-        padding: 1.25rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    .profile-card-header h5 {
-        margin: 0;
-        color: #0369a1;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .profile-card-header i {
-        color: #0284c7;
-        font-size: 1.1rem;
-    }
-
-    .profile-card-body {
-        padding: 1.5rem;
-    }
-
-    .profile-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .profile-item:last-child {
-        border-bottom: none;
-    }
-
-    .profile-item-icon {
-        color: #0284c7;
-        font-size: 1.1rem;
-        min-width: 24px;
-        text-align: center;
-        margin-top: 0.25rem;
-    }
-
-    .profile-item-content {
-        flex: 1;
-    }
-
-    .profile-item-label {
-        font-weight: 600;
-        color: #2c3e50;
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .profile-item-value {
-        color: #555;
-        font-size: 0.95rem;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-
-    .stat-box {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .stat-box:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
-    }
-
-    .stat-box.stat-success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-
-    .stat-box.stat-warning {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    }
-
-    .stat-box.stat-info {
-        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-    }
-
-    .stat-icon {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        opacity: 0.9;
-    }
-
-    @media (max-width: 768px) {
-        .profile-header-content {
-            flex-direction: column;
+        .profile-actions-clean {
+            margin-left: auto;
+            display: flex;
             gap: 1rem;
         }
 
-        .profile-header-left {
-            width: 100%;
+        .btn-clean {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 100px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
         }
 
-        .profile-header-actions {
-            width: 100%;
+        .profile-actions-clean .btn-primary-clean {
+            background: #ffffff;
+            color: #b71c1c;
         }
 
-        .profile-header-actions .btn {
-            flex: 1;
+        .profile-actions-clean .btn-primary-clean:hover {
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: #b71c1c;
         }
-    }
-</style>
 
-<div class="container-fluid">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="profile-header-content">
-            <div class="profile-header-left">
-                @php
-                    $avatarPath = $user->avatar;
-                    $avatarUrl = $avatarPath ? route('avatar.show', basename($avatarPath)) : null;
-                    $initials = $user->getAvatarInitials();
-                    $avatarColor = $user->getAvatarColor();
-                @endphp
-                @if($avatarUrl)
-                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="profile-avatar-large"
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="profile-avatar-large" style="display:none;align-items:center;justify-content:center;font-size:2.5rem;font-weight:700;background: {{ $avatarColor }};">{{ $initials }}</div>
-                @else
-                    <div class="profile-avatar-large d-flex align-items-center justify-content-center" style="font-size:2.5rem;font-weight:700;background: {{ $avatarColor }};">{{ $initials }}</div>
-                @endif
-                <div class="profile-header-info">
-                    <h1>{{ $user->name }}</h1>
-                    <p><i class="fas fa-briefcase me-1"></i>{{ $user->getRoleDisplayName() }}</p>
+        .profile-actions-clean .btn-outline-clean {
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .profile-actions-clean .btn-outline-clean:hover {
+            background: #f8fafc;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        /* Minimalist Cards */
+        .grid-clean {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card-clean {
+            background: transparent;
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 2px solid #000000;
+            box-shadow: none;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header-clean {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-header-clean i {
+            color: #000000;
+        }
+
+        .data-list-clean {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .data-item-clean {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .data-label-clean {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .data-value-clean {
+            font-size: 1.1rem;
+            color: #000000;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .data-value-clean i {
+            color: #000000;
+            font-size: 1rem;
+        }
+
+        /* Stats Dashboard Clean */
+        .stats-clean-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item-clean {
+            background: transparent;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 2px solid #000000;
+            box-shadow: none;
+        }
+
+        .stat-number-clean {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .stat-label-clean {
+            font-size: 0.9rem;
+            color: #000000;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-label-clean i {
+            color: #000000;
+        }
+
+        @media (max-width: 768px) {
+            .profile-header-clean {
+                flex-direction: column;
+                text-align: center;
+                padding: 2rem;
+            }
+
+            .profile-actions-clean {
+                margin-left: 0;
+                margin-top: 1rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .grid-clean {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dark Mode Rules */
+        html.dark .card-clean,
+        html.dark .stat-item-clean,
+        html.dark .btn-outline-clean:not(.profile-actions-clean .btn-outline-clean) {
+            border-color: #ffffff !important;
+        }
+        
+        html.dark .card-header-clean,
+        html.dark .card-header-clean i,
+        html.dark .data-label-clean,
+        html.dark .data-value-clean,
+        html.dark .data-value-clean i,
+        html.dark .stat-number-clean,
+        html.dark .stat-label-clean,
+        html.dark .stat-label-clean i,
+        html.dark .btn-outline-clean:not(.profile-actions-clean .btn-outline-clean) {
+            color: #ffffff !important;
+        }
+        
+        html.dark .btn-outline-clean:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+
+    <div class="container-fluid profile-wrap">
+
+        <!-- Header / Identitas -->
+        <div class="profile-header-clean">
+            @php
+                $avatarPath = $user->avatar;
+                $avatarUrl = $avatarPath ? route('avatar.show', basename($avatarPath)) : null;
+                $initials = $user->getAvatarInitials();
+            @endphp
+
+            @if($avatarUrl)
+                <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="avatar-clean"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar-clean" style="display:none;">{{ $initials }}</div>
+            @else
+                <div class="avatar-clean">{{ $initials }}</div>
+            @endif
+
+            <div class="profile-meta" style="display: flex; flex-direction: row; align-items: center; gap: 1rem;">
+                <h1 style="margin: 0; line-height: 1;">{{ $user->name }}</h1>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                    <span class="badge-clean">
+                        <i class="fas fa-shield-alt"></i> {{ $user->getRoleDisplayName() }}
+                    </span>
                     @if($user->department)
-                    <p><i class="fas fa-building me-1"></i>{{ $user->department->name }}</p>
+                        <span class="badge-clean badge-secondary-clean">
+                            <i class="fas fa-building"></i> {{ $user->department->name }}
+                        </span>
                     @endif
                 </div>
             </div>
-            <div class="profile-header-actions">
-                <a href="{{ route('profile.edit') }}" class="btn">
-                    <i class="fas fa-edit me-1"></i>Edit Profil
+
+            <div class="profile-actions-clean">
+                <a href="{{ route('profile.settings') }}" class="btn-clean btn-outline-clean">
+                    <i class="fas fa-cog"></i> Pengaturan
                 </a>
-                <a href="{{ route('profile.settings') }}" class="btn">
-                    <i class="fas fa-cog me-1"></i>Pengaturan
+                <a href="{{ route('profile.edit') }}" class="btn-clean btn-primary-clean">
+                    <i class="fas fa-edit"></i> Edit Profil
                 </a>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <!-- Contact Information -->
-        <div class="col-lg-6 mb-4">
-            <div class="profile-card">
-                <div class="profile-card-header">
-                    <h5><i class="fas fa-address-card"></i>Informasi Kontak</h5>
-                </div>
-                <div class="profile-card-body">
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-envelope"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Email</div>
-                            <div class="profile-item-value">{{ $user->email }}</div>
-                        </div>
-                    </div>
-                    @if($user->phone)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-phone"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Telepon</div>
-                            <div class="profile-item-value">{{ $user->phone }}</div>
-                        </div>
-                    </div>
-                    @endif
-                    @if($user->address)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-map-marker-alt"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Alamat</div>
-                            <div class="profile-item-value">{{ $user->address }}</div>
-                        </div>
+        <!-- Informasi / Data -->
+        <div class="grid-clean">
+
+            <!-- Kolom Kiri: Kontak -->
+            <div class="card-clean">
+                <h2 class="card-header-clean">
+                    <i class="fas fa-address-book"></i> Informasi Kontak
+                </h2>
+                <div class="data-list-clean">
+                    @php
+                        $isOwner = auth()->check() && (auth()->id() === $user->id || auth()->user()->isAdmin());
+                        $showEmail = $user->getSettings('privacy.show_email', false);
+                        $showPhone = $user->getSettings('privacy.show_phone', false);
+                        $showAddress = $user->getSettings('privacy.show_address', false);
+                    @endphp
+
+                    @if($isOwner || $showEmail)
+                    <div class="data-item-clean">
+                        <span class="data-label-clean">Alamat Email</span>
+                        <span class="data-value-clean">
+                            <i class="fas fa-envelope"></i> {{ $user->email }}
+                            @if(auth()->id() === $user->id)
+                                <span class="badge {{ $showEmail ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} ms-1" style="font-size: 0.7rem;">
+                                    <i class="fas {{ $showEmail ? 'fa-globe' : 'fa-eye-slash' }} me-1"></i>{{ $showEmail ? 'Publik' : 'Privat' }}
+                                </span>
+                            @endif
+                        </span>
                     </div>
                     @endif
+
+                    @if($user->phone && ($isOwner || $showPhone))
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">No. Telepon</span>
+                            <span class="data-value-clean">
+                                <i class="fas fa-phone-alt"></i> {{ $user->phone }}
+                                @if(auth()->id() === $user->id)
+                                    <span class="badge {{ $showPhone ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} ms-1" style="font-size: 0.7rem;">
+                                        <i class="fas {{ $showPhone ? 'fa-globe' : 'fa-eye-slash' }} me-1"></i>{{ $showPhone ? 'Publik' : 'Privat' }}
+                                    </span>
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+
+                    @if($user->address && ($isOwner || $showAddress))
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">Domisili</span>
+                            <span class="data-value-clean">
+                                <i class="fas fa-map-pin"></i> {{ $user->address }}
+                                @if(auth()->id() === $user->id)
+                                    <span class="badge {{ $showAddress ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} ms-1" style="font-size: 0.7rem;">
+                                        <i class="fas {{ $showAddress ? 'fa-globe' : 'fa-eye-slash' }} me-1"></i>{{ $showAddress ? 'Publik' : 'Privat' }}
+                                    </span>
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+
                     @if($user->employee_id)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-id-card"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">ID Karyawan</div>
-                            <div class="profile-item-value">{{ $user->employee_id }}</div>
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">ID Pegawai</span>
+                            <span class="data-value-clean"><i class="fas fa-id-badge"></i> {{ $user->employee_id }}</span>
                         </div>
-                    </div>
                     @endif
                 </div>
             </div>
-        </div>
 
-        <!-- Personal Information -->
-        <div class="col-lg-6 mb-4">
-            <div class="profile-card">
-                <div class="profile-card-header">
-                    <h5><i class="fas fa-user-circle"></i>Informasi Pribadi</h5>
-                </div>
-                <div class="profile-card-body">
+            <!-- Kolom Kanan: Data Pribadi -->
+            <div class="card-clean">
+                <h2 class="card-header-clean">
+                    <i class="fas fa-user-circle"></i> Data Pribadi
+                </h2>
+                <div class="data-list-clean">
                     @if($user->birth_date)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-birthday-cake"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Tanggal Lahir</div>
-                            <div class="profile-item-value">{{ $user->birth_date->format('d F Y') }}</div>
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">Tanggal Lahir</span>
+                            <span class="data-value-clean"><i class="fas fa-calendar-day"></i>
+                                {{ $user->birth_date->format('d F Y') }}</span>
                         </div>
-                    </div>
                     @endif
                     @if($user->gender)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-{{ $user->gender === 'male' ? 'mars' : 'venus' }}"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Jenis Kelamin</div>
-                            <div class="profile-item-value">{{ $user->gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">Jenis Kelamin</span>
+                            <span class="data-value-clean"><i class="fas fa-venus-mars"></i>
+                                {{ $user->gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</span>
                         </div>
-                    </div>
                     @endif
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-calendar"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Bergabung</div>
-                            <div class="profile-item-value">{{ $user->created_at->format('d F Y') }}</div>
-                        </div>
+                    <div class="data-item-clean">
+                        <span class="data-label-clean">Terdaftar Pada</span>
+                        <span class="data-value-clean"><i class="fas fa-clock"></i>
+                            {{ $user->created_at->format('d F Y') }}</span>
                     </div>
                     @if($user->last_login_at)
-                    <div class="profile-item">
-                        <div class="profile-item-icon"><i class="fas fa-clock"></i></div>
-                        <div class="profile-item-content">
-                            <div class="profile-item-label">Login Terakhir</div>
-                            <div class="profile-item-value">{{ $user->last_login_at->format('d F Y, H:i') }}</div>
+                        <div class="data-item-clean">
+                            <span class="data-label-clean">Login Terakhir</span>
+                            <span class="data-value-clean"><i class="fas fa-sign-in-alt"></i>
+                                {{ $user->last_login_at->format('d M Y, H:i') }}</span>
                         </div>
-                    </div>
                     @endif
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Activity Stats (for non-citizens) -->
-    @if(!$user->isCitizen())
-    <div class="row">
-        <div class="col-12">
-            <div class="profile-card">
-                <div class="profile-card-header">
-                    <h5><i class="fas fa-chart-bar"></i>Statistik Aktivitas</h5>
-                </div>
-                <div class="profile-card-body">
-                    <div class="stats-grid">
+            <!-- Kolom Penuh: Statistik (Jika Bukan Warga) -->
+            @if(!$user->isCitizen())
+                <div class="card-clean" style="grid-column: 1 / -1;">
+                    <h2 class="card-header-clean">
+                        <i class="fas fa-chart-line"></i> Ringkasan Aktivitas
+                    </h2>
+                    <div class="stats-clean-grid">
                         @if($user->isAdmin())
-                        <div class="stat-box">
-                            <div class="stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="stat-number">{{ \App\Models\User::count() }}</div>
-                            <div class="stat-label">Total Pengguna</div>
-                        </div>
-                        <div class="stat-box stat-success">
-                            <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
-                            <div class="stat-number">{{ \App\Models\Report::count() }}</div>
-                            <div class="stat-label">Total Laporan</div>
-                        </div>
-                        <div class="stat-box stat-warning">
-                            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="stat-number">{{ \App\Models\Complaint::count() }}</div>
-                            <div class="stat-label">Total Keluhan</div>
-                        </div>
-                        <div class="stat-box stat-info">
-                            <div class="stat-icon"><i class="fas fa-building"></i></div>
-                            <div class="stat-number">{{ \App\Models\Department::count() }}</div>
-                            <div class="stat-label">Total Departemen</div>
-                        </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ \App\Models\User::count() }}</div>
+                                <div class="stat-label-clean"><i class="fas fa-users"></i> Pengguna Terdaftar</div>
+                            </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ \App\Models\Report::count() }}</div>
+                                <div class="stat-label-clean"><i class="fas fa-file-alt"></i> Total Laporan Publik</div>
+                            </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ \App\Models\Complaint::count() }}</div>
+                                <div class="stat-label-clean"><i class="fas fa-exclamation-circle"></i> Aspirasi / Keluhan</div>
+                            </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ \App\Models\Department::count() }}</div>
+                                <div class="stat-label-clean"><i class="fas fa-building"></i> Instansi Terhubung</div>
+                            </div>
                         @else
-                        <div class="stat-box">
-                            <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-                            <div class="stat-number">{{ $user->assignedReports()->count() }}</div>
-                            <div class="stat-label">Tugas Laporan</div>
-                        </div>
-                        <div class="stat-box stat-success">
-                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                            <div class="stat-number">{{ $user->assignedReports()->where('status', 'resolved')->count() }}</div>
-                            <div class="stat-label">Diselesaikan</div>
-                        </div>
-                        <div class="stat-box stat-warning">
-                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                            <div class="stat-number">{{ $user->assignedReports()->whereIn('status', ['submitted', 'pending', 'in_progress'])->count() }}</div>
-                            <div class="stat-label">Dalam Proses</div>
-                        </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ $user->assignedReports()->count() }}</div>
+                                <div class="stat-label-clean"><i class="fas fa-tasks"></i> Total Tugas Masuk</div>
+                            </div>
+                            <div class="stat-item-clean">
+                                <div class="stat-number-clean">{{ $user->assignedReports()->where('status', 'resolved')->count() }}
+                                </div>
+                                <div class="stat-label-clean"><i class="fas fa-check-double"></i> Berhasil Diselesaikan</div>
+                            </div>
+                            <div class="stat-item-clean" style="grid-column: 1 / -1;">
+                                <div class="stat-number-clean">
+                                    {{ $user->assignedReports()->whereIn('status', ['submitted', 'pending', 'in_progress'])->count() }}
+                                </div>
+                                <div class="stat-label-clean"><i class="fas fa-spinner"></i> Sedang Dalam Penanganan</div>
+                            </div>
                         @endif
                     </div>
                 </div>
-            </div>
+            @endif
+
         </div>
     </div>
-    @endif
-</div>
 @endsection
