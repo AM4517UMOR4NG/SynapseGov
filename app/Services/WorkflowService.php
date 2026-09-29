@@ -33,21 +33,28 @@ class WorkflowService
             // Fire submitted event
             event(new ReportSubmitted($report));
 
-            // Auto-assign to the first admin without overriding 'submitted' status
-            $firstAdmin = User::where('role', 'admin')->orderBy('id')->first();
-            if ($firstAdmin) {
+            // Auto-assign to least loaded admin without overriding 'submitted' status
+            $adminUser = User::where('role', 'admin')
+                ->withCount(['assignments' => function ($q) {
+                    $q->where('status', 'active');
+                }])
+                ->orderBy('assignments_count', 'asc')
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($adminUser) {
                 Assignment::create([
                     'assignable_id' => $report->id,
                     'assignable_type' => Report::class,
-                    'assigned_to' => $firstAdmin->id,
+                    'assigned_to' => $adminUser->id,
                     'assigned_by' => $user->id,
-                    'notes' => 'Auto-assigned to first admin on submission',
+                    'notes' => 'Auto-assigned to admin on submission (workload-balanced)',
                     'assigned_at' => now(),
                     'status' => 'active',
                 ]);
 
                 $report->update([
-                    'assigned_to' => $firstAdmin->id,
+                    'assigned_to' => $adminUser->id,
                     'status' => 'submitted',
                     'reassign_count' => 0,
                 ]);

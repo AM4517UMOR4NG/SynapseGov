@@ -45,7 +45,9 @@ class Complaint extends Model
 
         static::creating(function ($complaint) {
             if (empty($complaint->ticket_no)) {
-                $complaint->ticket_no = 'CMP-'.strtoupper(Str::random(8));
+                $datePrefix = now()->format('Ymd');
+                $randomSuffix = strtoupper(Str::random(6));
+                $complaint->ticket_no = 'CMP-'.$datePrefix.'-'.$randomSuffix;
             }
 
             // Calculate SLA due date based on priority
