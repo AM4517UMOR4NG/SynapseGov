@@ -8,10 +8,35 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class DepartmentController extends Controller
 {
+    private function normalizeCode(Request $request): void
+    {
+        if (is_string($request->input('code'))) {
+            $request->merge(['code' => strtoupper(trim($request->input('code')))]);
+        }
+    }
+
+    private function headRules(?int $departmentId = null): array
+    {
+        return ['nullable', Rule::exists('users', 'id')->where(function ($query) use ($departmentId) {
+            $query->where('is_active', true)
+                ->whereIn('role', ['staff', 'department_head'])
+                ->where(function ($query) use ($departmentId) {
+                    $query->whereNull('department_id');
+                    if ($departmentId !== null) {
+                        $query->orWhere('department_id', $departmentId);
+                    }
+                })
+                ->whereNotIn('id', Department::query()->select('head_id')->whereNotNull('head_id')
+                    ->when($departmentId !== null, fn ($query) => $query->where('id', '!=', $departmentId)));
+        })];
+    }
+
     /**
      * Check if user is authenticated admin.
      */
@@ -61,6 +86,7 @@ class DepartmentController extends Controller
     {
         $this->ensureAdmin();
 
+        $this->normalizeCode($request);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:20|unique:departments,code',
@@ -68,28 +94,32 @@ class DepartmentController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'description' => 'nullable|string|max:1000',
-            'head_id' => 'nullable|exists:users,id',
+            'head_id' => $this->headRules(),
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $department = Department::create([
-            'name' => (string) $request->input('name'),
-            'code' => strtoupper(trim((string) $request->input('code'))),
-            'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
-            'address' => $request->input('address'),
-            'description' => $request->input('description'),
-            'head_id' => $request->input('head_id') ?: null,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
-
-        // If a head of department is assigned, associate their department_id and set role
-        if ($department->head_id) {
-            User::where('id', $department->head_id)->update([
-                'department_id' => $department->id,
-                'role' => 'department_head',
+        $department = DB::transaction(function () use ($request) {
+            $department = Department::create([
+                'name' => (string) $request->input('name'),
+                'code' => strtoupper(trim((string) $request->input('code'))),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'address' => $request->input('address'),
+                'description' => $request->input('description'),
+                'head_id' => $request->input('head_id') ?: null,
+                'is_active' => $request->boolean('is_active', true),
             ]);
-        }
+
+            // If a head of department is assigned, associate their department_id and set role
+            if ($department->head_id) {
+                User::where('id', $department->head_id)->update([
+                    'department_id' => $department->id,
+                    'role' => 'department_head',
+                ]);
+            }
+
+            return $department;
+        });
 
         return redirect()->route('admin.departments')->with('success', 'Departemen "'.$department->name.'" berhasil ditambahkan.');
     }
@@ -127,54 +157,58 @@ class DepartmentController extends Controller
 
         $department = Department::findOrFail($id);
 
+        $this->normalizeCode($request);
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:20|unique:departments,code,'.$id,
+            'code' => ['required', 'string', 'max:20', Rule::unique('departments', 'code')->ignore($department->id)],
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'description' => 'nullable|string|max:1000',
-            'head_id' => 'nullable|exists:users,id',
+            'head_id' => $this->headRules($department->id),
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $previousHeadId = $department->head_id;
-        $newHeadId = $request->input('head_id') ?: null;
+        DB::transaction(function () use ($request, $department) {
+            $previousHeadId = $department->head_id;
+            $newHeadId = $request->input('head_id') ?: null;
 
-        $department->update([
-            'name' => (string) $request->input('name'),
-            'code' => strtoupper(trim((string) $request->input('code'))),
-            'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
-            'address' => $request->input('address'),
-            'description' => $request->input('description'),
-            'head_id' => $newHeadId,
-            'is_active' => $request->boolean('is_active'),
-        ]);
+            $department->update([
+                'name' => (string) $request->input('name'),
+                'code' => strtoupper(trim((string) $request->input('code'))),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'address' => $request->input('address'),
+                'description' => $request->input('description'),
+                'head_id' => $newHeadId,
+                'is_active' => $request->boolean('is_active'),
+            ]);
 
-        // Sync department head
-        if ((int) $newHeadId !== (int) $previousHeadId) {
-            // If previous head exists, revert role to staff if not head of another department
-            if ($previousHeadId) {
-                $isHeadElsewhere = Department::where('head_id', $previousHeadId)
-                    ->where('id', '!=', $department->id)
-                    ->exists();
+            // Sync department head
+            if ((int) $newHeadId !== (int) $previousHeadId) {
+                // If previous head exists, revert role to staff if not head of another department
+                if ($previousHeadId) {
+                    $isHeadElsewhere = Department::where('head_id', $previousHeadId)
+                        ->where('id', '!=', $department->id)
+                        ->exists();
 
-                if (! $isHeadElsewhere) {
-                    User::where('id', $previousHeadId)->update([
-                        'role' => 'staff',
+                    if (! $isHeadElsewhere) {
+                        User::where('id', $previousHeadId)->update([
+                            'role' => 'staff',
+                        ]);
+                    }
+                }
+
+                // Assign new head
+                if ($newHeadId) {
+                    User::where('id', $newHeadId)->update([
+                        'department_id' => $department->id,
+                        'role' => 'department_head',
                     ]);
                 }
             }
 
-            // Assign new head
-            if ($newHeadId) {
-                User::where('id', $newHeadId)->update([
-                    'department_id' => $department->id,
-                    'role' => 'department_head',
-                ]);
-            }
-        }
+        });
 
         return redirect()->route('admin.departments')->with('success', 'Departemen "'.$department->name.'" berhasil diperbarui.');
     }

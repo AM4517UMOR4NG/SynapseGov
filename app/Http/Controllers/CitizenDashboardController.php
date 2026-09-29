@@ -63,8 +63,8 @@ class CitizenDashboardController extends Controller
         $departments = Department::where('is_active', true)->get();
 
         // Statistik tambahan untuk dashboard modern
-        $pendingCount = $myReports->whereIn('status', ['submitted', 'pending', 'verified'])->count();
-        $resolvedCount = $myReports->where('status', 'resolved')->count();
+        $pendingCount = $stats['pending_reports'];
+        $resolvedCount = $stats['resolved_reports'];
 
         return view('citizen.modern-dashboard', compact(
             'stats',
