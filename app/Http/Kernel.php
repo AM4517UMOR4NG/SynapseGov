@@ -33,6 +33,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
             \App\Http\Middleware\SetLocale::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
@@ -72,5 +73,6 @@ class Kernel extends HttpKernel
         'administration_access' => \App\Http\Middleware\AdministrationAccess::class,
         'file_access' => \App\Http\Middleware\FileAccessControl::class,
         'disable_email_dev' => \App\Http\Middleware\DisableEmailInDevelopment::class,
+        'validate_upload' => \App\Http\Middleware\ValidateFileUpload::class,
     ];
 }

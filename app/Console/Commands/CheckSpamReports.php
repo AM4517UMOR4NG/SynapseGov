@@ -38,6 +38,7 @@ class CheckSpamReports extends Command
 
             // Flag reports for admin review
             Report::where('title', $duplicate->title)
+                ->where('status', 'submitted')
                 ->where('created_at', '>=', now()->subDay())
                 ->update(['status' => 'pending']);
         }
@@ -54,6 +55,7 @@ class CheckSpamReports extends Command
 
             // Flag complaints for admin review
             Complaint::where('title', $duplicate->title)
+                ->where('status', 'submitted')
                 ->where('created_at', '>=', now()->subDay())
                 ->update(['status' => 'pending']);
         }
