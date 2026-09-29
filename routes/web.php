@@ -152,7 +152,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/files/{type}/{id}', [App\Http\Controllers\FileController::class, 'viewReportFiles'])->name('files.view');
     Route::get('/files/{type}/{id}/download/{filename}', [App\Http\Controllers\FileController::class, 'downloadFile'])->name('files.download');
     Route::get('/files/{type}/{id}/preview/{filename}', [App\Http\Controllers\FileController::class, 'previewImage'])->name('files.preview_image');
+    Route::get('/files/{type}/{id}/view-preview/{filename}', [App\Http\Controllers\FileController::class, 'previewImage'])->name('files.preview');
     Route::get('/files/{type}/{id}/download-all', [App\Http\Controllers\FileController::class, 'downloadAllFiles'])->name('files.download_all');
+
+    // Report Document Downloads (PDF & CSV)
+    Route::get('/reports/{id}/download-pdf', [App\Http\Controllers\DownloadController::class, 'downloadReportAsPdf'])->name('reports.download_pdf');
+    Route::get('/reports/{id}/download-csv', [App\Http\Controllers\DownloadController::class, 'downloadReportAsCsv'])->name('reports.download_csv');
 });
 
 // Workflow Routes
