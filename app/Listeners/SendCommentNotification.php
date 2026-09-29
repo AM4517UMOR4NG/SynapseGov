@@ -31,12 +31,16 @@ class SendCommentNotification implements ShouldQueue
 
         // Notify report owner if not the commenter and comment is NOT internal
         if (! $comment->is_internal && $reportable && $reportable->user_id && $reportable->user_id !== $comment->user_id) {
-            $reportable->user?->notify(new \App\Notifications\CommentAddedNotification($comment));
+            if ($reportable->user && $reportable->user->getSettings('notifications.status', true)) {
+                $reportable->user->notify(new \App\Notifications\CommentAddedNotification($comment));
+            }
         }
 
         // Notify assigned staff if not the commenter
         if ($reportable && $reportable->assigned_to && $reportable->assigned_to !== $comment->user_id) {
-            $reportable->assignedUser?->notify(new \App\Notifications\CommentAddedNotification($comment));
+            if ($reportable->assignedUser && $reportable->assignedUser->getSettings('notifications.status', true)) {
+                $reportable->assignedUser->notify(new \App\Notifications\CommentAddedNotification($comment));
+            }
         }
 
         // Notify admin users for internal comments
@@ -46,7 +50,9 @@ class SendCommentNotification implements ShouldQueue
                 ->get();
 
             foreach ($adminUsers as $admin) {
-                $admin->notify(new \App\Notifications\InternalCommentAddedNotification($comment));
+                if ($admin->getSettings('notifications.status', true)) {
+                    $admin->notify(new \App\Notifications\InternalCommentAddedNotification($comment));
+                }
             }
         }
     }
