@@ -16,9 +16,9 @@
             --border-color: #e2e8f0;
             --text-main: #000000;
             --text-muted: #334155;
-            --accent-glow: rgba(37, 99, 235, 0.05);
+            --accent-glow: rgba(183, 28, 28, 0.05);
             --font-main: 'Plus Jakarta Sans', sans-serif;
-            --accent: #2563eb;
+            --accent: #b71c1c;
         }
 
         * {
@@ -45,14 +45,16 @@
             width: 100vw;
             height: 100vh;
             background: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(167, 139, 250, 0.15) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(183, 28, 28, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(211, 47, 47, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(153, 27, 27, 0.1) 0px, transparent 50%);
             pointer-events: none;
             z-index: -1;
             filter: blur(40px);
             animation: pulse-ambient 15s ease-in-out infinite alternate;
+            will-change: transform, opacity;
+            transform: translateZ(0);
         }
 
         @keyframes pulse-ambient {
@@ -70,9 +72,9 @@
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.95);
             border-bottom: 1px solid var(--border-color);
+            transform: translateZ(0);
         }
 
         .logo {
@@ -134,13 +136,13 @@
             font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.2);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            background: #1d4ed8;
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+            background: #991b1b;
+            box-shadow: 0 6px 16px rgba(183, 28, 28, 0.3);
         }
 
         /* Hero Section */
@@ -164,7 +166,7 @@
             font-size: 0.8rem;
             font-weight: 500;
             color: var(--text-muted);
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
             background: var(--accent-glow);
         }
 
@@ -172,10 +174,10 @@
             font-size: clamp(3.5rem, 7vw, 6.5rem);
             font-weight: 800;
             letter-spacing: -0.04em;
-            line-height: 1.1;
+            line-height: 1.05;
             margin-bottom: 1.5rem;
             max-width: 900px;
-            background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #b71c1c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: slideUp 1s ease-out forwards;
@@ -219,24 +221,23 @@
         }
 
         .bento-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            background: #ffffff;
+            border: 1px solid var(--border-color);
             border-radius: 24px;
             padding: 2.5rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease;
             position: relative;
             overflow: hidden;
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+            will-change: transform, box-shadow;
         }
 
         .bento-card:hover {
-            border-color: rgba(37, 99, 235, 0.3);
-            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.15);
+            border-color: rgba(183, 28, 28, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(183, 28, 28, 0.15);
             transform: translateY(-8px) scale(1.02);
         }
 
@@ -247,7 +248,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(180deg, rgba(37, 99, 235, 0.02) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(183, 28, 28, 0.02) 0%, transparent 100%);
             pointer-events: none;
         }
 
@@ -376,8 +377,8 @@
                 </div>
                 <div class="bento-visual">
                     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-                        <div style="width: 6px; height: 16px; background: rgba(37,99,235,0.2); border-radius: 2px;"></div>
-                        <div style="width: 6px; height: 32px; background: rgba(37,99,235,0.5); border-radius: 2px;"></div>
+                        <div style="width: 6px; height: 16px; background: rgba(183,28,28,0.2); border-radius: 2px;"></div>
+                        <div style="width: 6px; height: 32px; background: rgba(183,28,28,0.5); border-radius: 2px;"></div>
                         <div style="width: 6px; height: 24px; background: var(--accent); border-radius: 2px;"></div>
                     </div>
                 </div>
