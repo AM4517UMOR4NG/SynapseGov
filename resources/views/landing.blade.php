@@ -372,13 +372,17 @@
             margin: 0 auto;
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
 </head>
 
-<body>
+<body class="landing-ui">
     <div class="ambient-light"></div>
 
     <nav>
         <a href="/" class="logo">SynapseGov</a>
+        <button class="site-menu-toggle" type="button" data-site-menu aria-controls="landingNavigation" aria-expanded="false" aria-label="Buka navigasi">☰ Menu</button>
+        <div id="landingNavigation" class="site-navigation">
         <div class="nav-links">
             <a href="#platform">Platform</a>
             <a href="#features">Keunggulan</a>
@@ -386,6 +390,7 @@
         <div class="nav-actions">
             <a href="{{ route('login') }}" class="btn-text">Masuk</a>
             <a href="{{ route('register') }}" class="btn-primary">Mulai Lapor</a>
+        </div>
         </div>
     </nav>
 
@@ -511,6 +516,7 @@
         <div>&copy; {{ date('Y') }} SynapseGov. Hak cipta dilindungi.</div>
         <div>Dikembangkan untuk IT Days 2026.</div>
     </footer>
+<script src="{{ asset('js/navigation.js') }}?v={{ filemtime(public_path('js/navigation.js')) }}" defer></script>
 </body>
 
 </html>
