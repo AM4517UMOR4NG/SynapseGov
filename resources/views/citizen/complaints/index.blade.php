@@ -10,7 +10,7 @@
             <h2>Keluhan Saya</h2>
             <p>Lihat dan kelola semua keluhan yang telah Anda ajukan.</p>
         </div>
-        <a href="{{ route('citizen.complaints.create') }}" class="btn-modern">
+        <a href="{{ route('citizen.complaints.create') }}" class="btn-clean btn-outline-clean">
             <i class="fas fa-plus"></i>
             <span>Ajukan Keluhan</span>
         </a>
@@ -88,13 +88,13 @@
         @endif
     @else
         <!-- Empty State -->
-        <div class="empty-state">
-            <div class="empty-icon" style="background: rgba(245, 158, 11, 0.08); color: var(--warning);">
-                <i class="fas fa-exclamation-triangle"></i>
+        <div class="empty-state-clean">
+            <div class="empty-icon-clean">
+                <i class="fas fa-box-open"></i>
             </div>
-            <h5 class="empty-title">Belum Ada Keluhan</h5>
-            <p class="empty-text">Anda belum mengajukan keluhan apapun.</p>
-            <a href="{{ route('citizen.complaints.create') }}" class="btn btn-warning d-inline-flex align-items-center gap-2">
+            <h5 class="empty-title-clean">Belum Ada Keluhan</h5>
+            <p class="empty-text-clean">Anda belum mengajukan keluhan apapun.</p>
+            <a href="{{ route('citizen.complaints.create') }}" class="btn-clean btn-primary-clean">
                 <i class="fas fa-plus"></i>
                 <span>Ajukan Keluhan Pertama</span>
             </a>
@@ -103,6 +103,104 @@
 </div>
 
 <style>
+/* Button Clean */
+.btn-clean {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary-clean {
+    background: #b71c1c;
+    color: #ffffff;
+}
+.btn-primary-clean:hover {
+    background: #991b1b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(183, 28, 28, 0.2);
+    color: white;
+}
+.btn-outline-clean {
+    background: transparent;
+    color: #000000;
+    border: 2px solid #000000;
+}
+.btn-outline-clean:hover {
+    background: rgba(0,0,0,0.05);
+    color: #000000;
+}
+.page-header-modern .btn-outline-clean {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.page-header-modern .btn-outline-clean:hover {
+    background: #f8fafc;
+    color: #000000;
+    transform: translateY(-2px);
+}
+
+/* Empty State Clean */
+.empty-state-clean {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: transparent;
+    border-radius: 24px;
+    border: 2px dashed #000000;
+}
+
+.empty-icon-clean {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    background: transparent;
+    color: #b71c1c;
+    border: 2px solid #000000;
+    font-size: 1.5rem;
+}
+
+.empty-title-clean {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 0.5rem;
+}
+
+.empty-text-clean {
+    color: #4a4a4a;
+    margin-bottom: 2rem;
+}
+
+/* Dark Mode Overrides */
+html.dark .empty-state-clean {
+    border-color: #ffffff;
+}
+html.dark .empty-icon-clean {
+    border-color: #ffffff;
+}
+html.dark .empty-title-clean {
+    color: #ffffff;
+}
+html.dark .empty-text-clean {
+    color: #a0aec0;
+}
+
 /* Grid Layout */
 .complaint-grid-header {
     display: grid;
