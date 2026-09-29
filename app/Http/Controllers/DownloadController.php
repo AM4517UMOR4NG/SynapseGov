@@ -88,27 +88,32 @@ class DownloadController extends Controller
             return redirect()->back()->with('error', 'No attachments to download.');
         }
 
+        $safeTicket = htmlspecialchars($report->ticket_no, ENT_QUOTES, 'UTF-8');
+        $safeTitle = htmlspecialchars($report->title, ENT_QUOTES, 'UTF-8');
+
         // Create a simple HTML page with download links
         $html = '<!DOCTYPE html>
 <html>
 <head>
-    <title>Download Report Attachments - '.$report->ticket_no.'</title>
+    <meta charset="utf-8">
+    <title>Download Report Attachments - '.$safeTicket.'</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .file-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
-        .download-btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; }
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.5; }
+        .file-item { margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
+        .download-btn { background: #007bff; color: white; padding: 6px 14px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 6px; }
     </style>
 </head>
 <body>
-    <h1>Report Attachments - '.$report->ticket_no.'</h1>
-    <h2>'.$report->title.'</h2>
+    <h1>Report Attachments - '.$safeTicket.'</h1>
+    <h2>'.$safeTitle.'</h2>
     <p>Click the links below to download individual files:</p>';
 
         foreach ($attachments as $file) {
             $filename = basename($file);
+            $safeFilename = htmlspecialchars($filename, ENT_QUOTES, 'UTF-8');
             $downloadUrl = route('files.download', ['report', $report->id, $filename]);
             $html .= '<div class="file-item">
-                <strong>'.$filename.'</strong><br>
+                <strong>'.$safeFilename.'</strong><br>
                 <a href="'.$downloadUrl.'" class="download-btn">Download</a>
             </div>';
         }
@@ -116,19 +121,29 @@ class DownloadController extends Controller
         $html .= '</body></html>';
 
         return response($html)
-            ->header('Content-Type', 'text/html')
-            ->header('Content-Disposition', 'inline; filename="attachments_'.$report->ticket_no.'.html"');
+            ->header('Content-Type', 'text/html; charset=utf-8')
+            ->header('Content-Disposition', 'inline; filename="attachments_'.$safeTicket.'.html"');
     }
 
     /**
-     * Convert array to CSV
+     * Convert array to CSV with formula injection sanitization
      */
     private function arrayToCsv($data)
     {
         $output = fopen('php://temp', 'r+');
 
         foreach ($data as $row) {
-            fputcsv($output, $row);
+            $sanitizedRow = array_map(function ($val) {
+                if (is_string($val) && strlen($val) > 0) {
+                    $firstChar = $val[0];
+                    if (in_array($firstChar, ['=', '+', '-', '@', "\t", "\r"])) {
+                        return "'".$val;
+                    }
+                }
+                return $val;
+            }, $row);
+
+            fputcsv($output, $sanitizedRow);
         }
 
         rewind($output);

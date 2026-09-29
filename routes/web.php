@@ -109,11 +109,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\CitizenDashboardController::class, 'index'])->name('dashboard');
         Route::get('/reports', [App\Http\Controllers\CitizenDashboardController::class, 'myReports'])->name('reports.index');
         Route::get('/reports/create', [App\Http\Controllers\CitizenDashboardController::class, 'createReport'])->name('reports.create');
-        Route::post('/reports', [App\Http\Controllers\CitizenDashboardController::class, 'storeReport'])->name('reports.store');
+        Route::post('/reports', [App\Http\Controllers\CitizenDashboardController::class, 'storeReport'])
+            ->middleware('throttle:10,1')
+            ->name('reports.store');
         Route::get('/reports/{id}', [App\Http\Controllers\CitizenDashboardController::class, 'showReport'])->name('reports.show');
         Route::get('/complaints', [App\Http\Controllers\CitizenDashboardController::class, 'myComplaints'])->name('complaints.index');
         Route::get('/complaints/create', [App\Http\Controllers\CitizenDashboardController::class, 'createComplaint'])->name('complaints.create');
-        Route::post('/complaints', [App\Http\Controllers\CitizenDashboardController::class, 'storeComplaint'])->name('complaints.store');
+        Route::post('/complaints', [App\Http\Controllers\CitizenDashboardController::class, 'storeComplaint'])
+            ->middleware('throttle:10,1')
+            ->name('complaints.store');
         Route::get('/complaints/{id}', [App\Http\Controllers\CitizenDashboardController::class, 'showComplaint'])->name('complaints.show');
     });
 
@@ -123,11 +127,14 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/settings', [App\Http\Controllers\ProfileController::class, 'settings'])->name('profile.settings');
     Route::put('/profile/settings', [App\Http\Controllers\ProfileController::class, 'updateSettings'])->name('profile.settings.update');
-    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'changePassword'])->name('profile.password.update');
+    Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'changePassword'])
+        ->middleware('throttle:6,1')
+        ->name('profile.password.update');
     Route::delete('/profile/avatar', [App\Http\Controllers\ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     // Avatar fallback route (serve from storage if public symlink fails)
     Route::get('/avatar/{filename}', function ($filename) {
+        $filename = basename($filename);
         $relative = 'avatars/'.$filename;
         if (! Storage::disk('public')->exists($relative)) {
             abort(404);
