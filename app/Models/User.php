@@ -140,20 +140,16 @@ class User extends Authenticatable
 
     /**
      * Get user's avatar URL
+     *
+     * @return string|null
      */
-    public function getAvatarUrl()
+    public function getAvatarUrl(): ?string
     {
         if (! $this->avatar) {
             return null;
         }
 
-        // Use Laravel's Storage abstraction to build the URL reliably
-        try {
-            return Storage::disk('public')->url($this->avatar);
-        } catch (\Exception $e) {
-            // Fallback to manual URL construction if Storage fails
-            return asset('storage/'.$this->avatar);
-        }
+        return asset('storage/'.$this->avatar);
     }
 
     /**
@@ -205,8 +201,12 @@ class User extends Authenticatable
 
     /**
      * Get user's settings with defaults
+     *
+     * @param  string|null  $key
+     * @param  mixed  $default
+     * @return mixed
      */
-    public function getSettings($key = null, $default = null)
+    public function getSettings($key = null, $default = null): mixed
     {
         $defaultSettings = [
             'dashboard_layout' => 'comfortable',
