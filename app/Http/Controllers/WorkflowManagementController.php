@@ -50,18 +50,20 @@ class WorkflowManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $report = Report::findOrFail($id);
-        $assignedTo = User::findOrFail($request->assigned_to);
+        return DB::transaction(function () use ($id, $request, $user) {
+            $report = Report::lockForUpdate()->findOrFail($id);
+            $assignedTo = User::findOrFail($request->assigned_to);
 
-        // Verify the assigned user is staff or department head
-        if (! $assignedTo->isStaff() && ! $assignedTo->isDepartmentHead()) {
-            return back()->with('error', 'User yang dipilih bukan staff atau kepala departemen.');
-        }
+            // Verify the assigned user is staff or department head
+            if (! $assignedTo->isStaff() && ! $assignedTo->isDepartmentHead()) {
+                return back()->with('error', 'User yang dipilih bukan staff atau kepala departemen.');
+            }
 
-        // Use WorkflowService for proper assignment
-        $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes);
+            // Use WorkflowService for proper assignment
+            $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes);
 
-        return back()->with('success', 'Laporan berhasil ditugaskan ke: '.$assignedTo->name.'.');
+            return back()->with('success', 'Laporan berhasil ditugaskan ke: '.$assignedTo->name.'.');
+        });
     }
 
     /**
@@ -74,24 +76,26 @@ class WorkflowManagementController extends Controller
             return back()->with('error', 'Hanya admin yang dapat menugaskan laporan ke kepala departemen.');
         }
 
-        $report = Report::findOrFail($id);
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::lockForUpdate()->findOrFail($id);
 
-        if (! $report->department_id) {
-            return back()->with('error', 'Laporan belum memiliki departemen.');
-        }
+            if (! $report->department_id) {
+                return back()->with('error', 'Laporan belum memiliki departemen.');
+            }
 
-        $head = User::where('role', 'department_head')
-            ->where('department_id', $report->department_id)
-            ->first();
+            $head = User::where('role', 'department_head')
+                ->where('department_id', $report->department_id)
+                ->first();
 
-        if (! $head) {
-            return back()->with('error', 'Tidak ditemukan kepala departemen untuk laporan ini.');
-        }
+            if (! $head) {
+                return back()->with('error', 'Tidak ditemukan kepala departemen untuk laporan ini.');
+            }
 
-        // Use WorkflowService for proper assignment
-        $this->workflowService->assignReport($report, $head, $user, 'Dikirim ke Kepala Departemen oleh Admin');
+            // Use WorkflowService for proper assignment
+            $this->workflowService->assignReport($report, $head, $user, 'Dikirim ke Kepala Departemen oleh Admin');
 
-        return back()->with('success', 'Laporan berhasil dikirim ke Kepala Departemen: '.$head->name.'.');
+            return back()->with('success', 'Laporan berhasil dikirim ke Kepala Departemen: '.$head->name.'.');
+        });
     }
 
     /**
@@ -100,23 +104,27 @@ class WorkflowManagementController extends Controller
     public function staffConfirmAndForward($id)
     {
         $user = $this->user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
 
-        // Authorization: assigned staff or staff in department
-        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-            return back()->with('error', 'Anda tidak berhak mengirim laporan ini. Laporan belum ditugaskan kepada Anda.');
-        }
+        return DB::transaction(function () use ($id, $user) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                  ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
 
-        return DB::transaction(function () use ($report, $user) {
-            // If still submitted/pending, mark as verified first
+            // Authorization: assigned staff or staff in department
+            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+                return back()->with('error', 'Anda tidak berhak mengirim laporan ini. Laporan belum ditugaskan kepada Anda.');
+            }
+
+            // Status guard: only allowed statuses can be forwarded
+            $allowedStatuses = ['submitted', 'pending', 'verified', 'assigned', 'needs_revision'];
+            if (! in_array($report->status, $allowedStatuses)) {
+                return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat diteruskan ke Kepala Departemen.');
+            }
+
+            // If still submitted/pending, verify first via WorkflowService
             if (in_array($report->status, ['submitted', 'pending'])) {
-                $report->update([
-                    'status' => 'verified',
-                    'last_activity_at' => now(),
-                ]);
+                $this->workflowService->verifyReport($report, $user);
 
                 // Audit: confirmed by staff
                 AuditLog::create([
@@ -163,10 +171,6 @@ class WorkflowManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
         $assignedTo = User::findOrFail($request->assigned_to);
 
         // Verify the assigned user is staff
@@ -174,19 +178,20 @@ class WorkflowManagementController extends Controller
             return back()->with('error', 'User yang dipilih bukan staff.');
         }
 
-        return DB::transaction(function () use ($report, $assignedTo, $user, $request) {
+        return DB::transaction(function () use ($id, $assignedTo, $user, $request) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                  ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
+
+            // Status guard
+            if (! in_array($report->status, ['assigned', 'in_progress', 'verified'])) {
+                return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat dikembalikan ke staff.');
+            }
+
             $oldStatus = $report->status;
 
-            $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut');
-
-            // Update status to reviewed
-            $report->update([
-                'status' => 'reviewed',
-                'last_activity_at' => now(),
-            ]);
-
-            // Fire event for transition to reviewed
-            event(new \App\Events\ReportStatusChanged($report, 'assigned', 'reviewed', $user));
+            $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', 'reviewed');
 
             // Audit: reviewed by head
             AuditLog::create([
@@ -210,22 +215,45 @@ class WorkflowManagementController extends Controller
     public function staffConfirmToAdmin(Request $request, $id)
     {
         $user = $this->user();
-        $report = Report::where(function ($q) use ($user) {
-            $q->where('department_id', $user->department_id)
-              ->orWhere('assigned_to', $user->id);
-        })->findOrFail($id);
-
-        if ($user->role !== 'staff' || ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id)) {
-            return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
-        }
 
         $request->validate([
             'completion_notes' => 'required|string|max:1000',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip|max:5120',
         ]);
 
-        return DB::transaction(function () use ($report, $user, $request) {
+        return DB::transaction(function () use ($id, $user, $request) {
+            $report = Report::where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                  ->orWhere('assigned_to', $user->id);
+            })->lockForUpdate()->findOrFail($id);
+
+            if ($user->role !== 'staff' || ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id)) {
+                return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
+            }
+
+            // Status guard: only allow if not already resolved, closed, or rejected
+            $allowedStatuses = ['reviewed', 'in_progress', 'assigned', 'needs_revision', 'verified'];
+            if (! in_array($report->status, $allowedStatuses)) {
+                return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat dikonfirmasi ke admin.');
+            }
+
             $oldStatus = $report->status;
             $oldAssignedTo = $report->assigned_to;
+
+            // Handle evidence attachments
+            $newAttachments = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('public/attachments/resolutions');
+                    $newAttachments[] = str_replace('public/', '', $path);
+                }
+            }
+
+            $currentAttachments = $report->attachments ?? [];
+            if (! empty($newAttachments)) {
+                $currentAttachments = array_merge($currentAttachments, $newAttachments);
+            }
 
             // Close active assignment records for this report
             $report->assignments()->where('status', 'active')->update([
@@ -239,6 +267,7 @@ class WorkflowManagementController extends Controller
                 'status' => 'awaiting_admin_approval',
                 'last_activity_at' => now(),
                 'completion_notes' => $request->completion_notes,
+                'attachments' => $currentAttachments ?: null,
             ]);
 
             // Fire event for status change
@@ -278,13 +307,27 @@ class WorkflowManagementController extends Controller
             return back()->with('error', 'Hanya admin yang dapat menyetujui dan menutup laporan.');
         }
 
-        $report = Report::findOrFail($id);
-
         $request->validate([
             'final_notes' => 'nullable|string|max:1000',
         ]);
 
-        return DB::transaction(function () use ($report, $user, $request) {
+        return DB::transaction(function () use ($id, $user, $request) {
+            $report = Report::lockForUpdate()->findOrFail($id);
+
+            // Status guard
+            if (! in_array($report->status, ['awaiting_admin_approval', 'reviewed', 'in_progress', 'verified', 'assigned'])) {
+                return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat disetujui.');
+            }
+
+            $oldStatus = $report->status;
+
+            // Close any active assignments
+            $report->assignments()->where('status', 'active')->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'notes' => $request->final_notes,
+            ]);
+
             $report->update([
                 'status' => 'resolved',
                 'resolved_at' => now(),
@@ -298,7 +341,7 @@ class WorkflowManagementController extends Controller
                 'auditable_id' => $report->id,
                 'user_id' => $user->id,
                 'event' => 'approved_by_admin',
-                'old_values' => null,
+                'old_values' => ['status' => $oldStatus],
                 'new_values' => [
                     'status' => 'resolved',
                     'resolved_at' => now(),
@@ -309,7 +352,7 @@ class WorkflowManagementController extends Controller
             ]);
 
             // Fire event for status change
-            event(new \App\Events\ReportStatusChanged($report, 'awaiting_admin_approval', 'resolved', $user));
+            event(new \App\Events\ReportStatusChanged($report, $oldStatus, 'resolved', $user));
 
             return back()->with('success', 'Laporan telah disetujui dan ditutup. User akan mendapat notifikasi.');
         });
@@ -326,8 +369,6 @@ class WorkflowManagementController extends Controller
             return back()->with('error', 'Hanya admin yang dapat menolak laporan.');
         }
 
-        $report = Report::findOrFail($id);
-
         $request->validate([
             'rejection_reason' => 'required|string|max:1000',
             'assigned_to' => 'required|exists:users,id',
@@ -335,13 +376,17 @@ class WorkflowManagementController extends Controller
 
         $assignedTo = User::findOrFail($request->assigned_to);
 
-        return DB::transaction(function () use ($report, $assignedTo, $user, $request) {
-            $this->workflowService->assignReport($report, $assignedTo, $user, $request->rejection_reason);
+        return DB::transaction(function () use ($id, $assignedTo, $user, $request) {
+            $report = Report::lockForUpdate()->findOrFail($id);
 
-            $report->update([
-                'status' => 'needs_revision',
-                'last_activity_at' => now(),
-            ]);
+            // Status guard
+            if (! in_array($report->status, ['awaiting_admin_approval', 'reviewed'])) {
+                return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat ditolak.');
+            }
+
+            $oldStatus = $report->status;
+
+            $this->workflowService->assignReport($report, $assignedTo, $user, $request->rejection_reason, 'needs_revision');
 
             // Audit: rejected by admin
             AuditLog::create([
@@ -349,7 +394,7 @@ class WorkflowManagementController extends Controller
                 'auditable_id' => $report->id,
                 'user_id' => $user->id,
                 'event' => 'rejected_by_admin',
-                'old_values' => null,
+                'old_values' => ['status' => $oldStatus],
                 'new_values' => [
                     'status' => 'needs_revision',
                     'assigned_to' => $assignedTo->id,
