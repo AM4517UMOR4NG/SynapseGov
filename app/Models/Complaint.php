@@ -24,6 +24,7 @@ class Complaint extends Model
         'attachments',
         'investigation_notes',
         'resolution_notes',
+        'rejection_reason',
         'resolved_at',
         'sla_due_at',
         'is_escalated',
@@ -50,8 +51,10 @@ class Complaint extends Model
                 $complaint->ticket_no = 'CMP-'.$datePrefix.'-'.$randomSuffix;
             }
 
-            // Calculate SLA due date based on priority
-            $complaint->sla_due_at = $complaint->calculateSLADueDate();
+            // Calculate SLA due date based on priority if not explicitly set
+            if (empty($complaint->sla_due_at)) {
+                $complaint->sla_due_at = $complaint->calculateSLADueDate();
+            }
         });
 
         static::updating(function ($complaint) {

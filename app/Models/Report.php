@@ -56,6 +56,7 @@ class Report extends Model
         'resolution_notes',
         'completion_notes',
         'final_notes',
+        'rejection_reason',
         'resolved_at',
         'sla_due_at',
         'is_escalated',
@@ -83,8 +84,10 @@ class Report extends Model
                 $report->ticket_no = 'RPT-'.$datePrefix.'-'.$randomSuffix;
             }
 
-            // Calculate SLA due date based on priority
-            $report->sla_due_at = $report->calculateSLADueDate();
+            // Calculate SLA due date based on priority if not explicitly set
+            if (empty($report->sla_due_at)) {
+                $report->sla_due_at = $report->calculateSLADueDate();
+            }
         });
 
         static::updating(function ($report) {
@@ -171,9 +174,8 @@ class Report extends Model
 
     public function canBeReopened()
     {
-        return $this->status === 'closed' &&
-               $this->resolved_at &&
-               $this->resolved_at->diffInDays(now()) <= 30;
+        return in_array($this->status, ['closed', 'resolved']) &&
+               ($this->resolved_at === null || $this->resolved_at->diffInDays(now()) <= 30);
     }
 
     /**
