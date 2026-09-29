@@ -23,7 +23,8 @@
         .priority-high { background: #fd7e14; color: #fff; }
         .priority-medium { background: #ffc107; color: #000; }
         .priority-low { background: #6c757d; color: #fff; }
-    </style>
+    body{color:#243043;font-size:12px}.header{background:#f6f7f9;border-left:4px solid #9f2434;padding:22px}.header h1{font-size:23px}.section h2{font-size:16px;color:#852735;border-bottom:1px solid #e5e8ee;padding-bottom:8px}.field{padding:4px 0}.value{color:#475569}
+</style>
 </head>
 <body>
     <div class="header">
