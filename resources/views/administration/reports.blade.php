@@ -160,18 +160,27 @@
                 @if($report->attachments && count($report->attachments) > 0)
                 <div class="row mt-3">
                     <div class="col-12">
-                        <h6>Lampiran ({{ count($report->attachments) }} file):</h6>
+                        <h6>Lampiran ({{ count($report->attachments) }} berkas):</h6>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($report->attachments as $attachment)
-                            <span class="badge bg-light text-dark border">
-                                <i class="fas fa-paperclip me-1"></i>
-                                {{ basename($attachment) }}
-                            </span>
+                            @php
+                                $ext = strtolower(pathinfo($attachment, PATHINFO_EXTENSION));
+                                $isPdf = $ext === 'pdf';
+                            @endphp
+                            <div class="btn-group btn-group-sm mb-1" role="group">
+                                <a href="{{ route('files.preview', ['report', $report->id, basename($attachment)]) }}" target="_blank" class="btn btn-outline-secondary" title="Buka Pratinjau {{ basename($attachment) }}">
+                                    <i class="fas {{ $isPdf ? 'fa-file-pdf text-danger' : 'fa-paperclip' }} me-1"></i>
+                                    {{ basename($attachment) }}
+                                </a>
+                                <a href="{{ route('files.download', ['report', $report->id, basename($attachment)]) }}" class="btn btn-outline-secondary" title="Unduh Berkas">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
                             @endforeach
                         </div>
                         <div class="mt-2">
                             <a href="{{ route('files.view', ['report', $report->id]) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye me-1"></i>Lihat Semua File
+                                <i class="fas fa-folder-open me-1"></i>Kelola & Lihat Semua Berkas
                             </a>
                         </div>
                     </div>

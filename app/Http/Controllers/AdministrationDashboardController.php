@@ -80,18 +80,19 @@ class AdministrationDashboardController extends Controller
         // Laporan departemen
         if ($user->role === 'department_head') {
             $departmentReports = Report::with(['user', 'assignedUser'])
-                ->where('department_id', $department->id)
+                ->where(function ($q) use ($department, $user) {
+                    $q->where('department_id', $department->id)
+                        ->orWhere('assigned_to', $user->id);
+                })
                 ->latest()
                 ->limit(10)
                 ->get();
         } else {
-            // Staff melihat laporan yang ditugaskan kepada mereka + laporan baru
+            // Staff melihat laporan yang ditugaskan kepada mereka + laporan departemen
             $departmentReports = Report::with(['user', 'assignedUser'])
-                ->where('department_id', $department->id)
-                ->where(function ($query) use ($user) {
-                    $query->where('assigned_to', $user->id)
-                        ->orWhereNull('assigned_to')
-                        ->orWhereIn('status', ['submitted', 'pending']);
+                ->where(function ($query) use ($user, $department) {
+                    $query->where('department_id', $department->id)
+                        ->orWhere('assigned_to', $user->id);
                 })
                 ->latest()
                 ->limit(10)
@@ -110,8 +111,6 @@ class AdministrationDashboardController extends Controller
             ->where('role', '!=', 'citizen')
             ->get();
 
-
-
         return view('administration.modern-dashboard', compact(
             'stats',
             'department',
@@ -126,19 +125,18 @@ class AdministrationDashboardController extends Controller
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
 
-        // Department Head melihat semua laporan di departemen
-        if ($user->role === 'department_head') {
-            $reports = Report::with(['user', 'assignedUser'])
-                ->where('department_id', $user->department_id)
-                ->latest()
-                ->paginate($perPage);
-        } else {
-            // Staff melihat semua laporan masyarakat di departemen mereka (termasuk yang ditugaskan dan yang belum)
-            $reports = Report::with(['user', 'assignedUser'])
-                ->where('department_id', $user->department_id)
-                ->latest()
-                ->paginate($perPage);
-        }
+        // Laporan yang dapat diakses oleh Kepala Departemen atau Staff
+        $reports = Report::with(['user', 'assignedUser'])
+            ->where(function ($q) use ($user) {
+                if ($user->department_id) {
+                    $q->where('department_id', $user->department_id)
+                      ->orWhere('assigned_to', $user->id);
+                } else {
+                    $q->where('assigned_to', $user->id);
+                }
+            })
+            ->latest()
+            ->paginate($perPage);
 
         // Ambil daftar staff untuk assignment dropdown
         $staffList = User::where('department_id', $user->department_id)
@@ -180,7 +178,10 @@ class AdministrationDashboardController extends Controller
     public function assignReport(Request $request, $id)
     {
         $user = Auth::user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
         if (! in_array($user->role, ['department_head', 'staff'])) {
             abort(403, 'Anda tidak berhak menugaskan laporan ini.');
@@ -270,7 +271,10 @@ class AdministrationDashboardController extends Controller
     {
         $user = Auth::user();
         $report = Report::with(['user', 'department', 'assignedUser'])
-            ->where('department_id', $user->department_id)
+            ->where(function ($q) use ($user) {
+                $q->where('department_id', $user->department_id)
+                  ->orWhere('assigned_to', $user->id);
+            })
             ->findOrFail($id);
 
         if (! class_exists('ZipArchive')) {
@@ -304,7 +308,12 @@ class AdministrationDashboardController extends Controller
 
         if (is_array($report->attachments)) {
             foreach ($report->attachments as $relPath) {
-                $abs = storage_path('app/public/'.$relPath);
+                $normalized = str_replace('\\', '/', (string) $relPath);
+                $cleanRel = str_starts_with($normalized, 'public/') ? substr($normalized, 7) : $normalized;
+                $abs = storage_path('app/public/'.$cleanRel);
+                if (! file_exists($abs)) {
+                    $abs = storage_path('app/'.$normalized);
+                }
                 if (file_exists($abs)) {
                     $zip->addFile($abs, 'attachments/'.basename($relPath));
                 }
@@ -319,13 +328,16 @@ class AdministrationDashboardController extends Controller
     public function confirmReport($id)
     {
         $user = Auth::user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
         // Hanya Kepala Departemen atau Staff terkait yang boleh konfirmasi
         if (! in_array($user->role, ['department_head', 'staff'])) {
             abort(403);
         }
-        if ($user->role === 'staff' && $report->assigned_to !== $user->id) {
+        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
             abort(403);
         }
 
@@ -351,19 +363,23 @@ class AdministrationDashboardController extends Controller
     public function sendReportToHead($id)
     {
         $user = Auth::user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
         // Pastikan laporan sudah dikonfirmasi terlebih dahulu
-        if (! in_array($report->status, ['verified', 'in_progress'])) {
+        if (! in_array($report->status, ['verified', 'in_progress', 'assigned'])) {
             return back()->with('error', 'Laporan harus dikonfirmasi terlebih dahulu sebelum diteruskan ke Kepala Departemen.');
         }
 
         // Hanya staff yang ditugaskan ATAU kepala departemen yang boleh meneruskan
-        if ($user->role === 'staff' && $report->assigned_to !== $user->id) {
-            return back()->with('error', 'Anda tidak berhak meneruskan laporan ini. Laporan belum ditugaskan kepada Anda.');
+        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+            return back()->with('error', 'Anda tidak berhak meneruskan laporan ini.');
         }
 
-        $head = User::where('role', 'department_head')->where('department_id', $user->department_id)->first();
+        $targetDeptId = $report->department_id ?: $user->department_id;
+        $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
         if (! $head) {
             return back()->with('error', 'Tidak ditemukan kepala departemen.');
         }
@@ -395,11 +411,14 @@ class AdministrationDashboardController extends Controller
     public function confirmAndSend($id)
     {
         $user = Auth::user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
         // Authorization: assigned staff or department head
-        if ($user->role === 'staff' && $report->assigned_to !== $user->id) {
-            return back()->with('error', 'Anda tidak berhak mengirim laporan ini. Laporan belum ditugaskan kepada Anda.');
+        if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
+            return back()->with('error', 'Anda tidak berhak mengirim laporan ini.');
         }
 
         // If still submitted/pending, mark as verified first
@@ -422,8 +441,8 @@ class AdministrationDashboardController extends Controller
             ]);
         }
 
-        // Then forward to head
-        $head = User::where('role', 'department_head')->where('department_id', $user->department_id)->first();
+        $targetDeptId = $report->department_id ?: $user->department_id;
+        $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
         if (! $head) {
             return back()->with('error', 'Tidak ditemukan kepala departemen.');
         }
@@ -461,7 +480,10 @@ class AdministrationDashboardController extends Controller
 
         $request->validate(['assigned_to' => 'required|integer|exists:users,id']);
 
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
 
         $report->update([
             'assigned_to' => $request->assigned_to,
@@ -489,8 +511,12 @@ class AdministrationDashboardController extends Controller
     public function confirmToAdmin($id)
     {
         $user = Auth::user();
-        $report = Report::where('department_id', $user->department_id)->findOrFail($id);
-        if ($user->role !== 'staff' || $report->assigned_to !== $user->id) {
+        $report = Report::where(function ($q) use ($user) {
+            $q->where('department_id', $user->department_id)
+              ->orWhere('assigned_to', $user->id);
+        })->findOrFail($id);
+
+        if ($user->role !== 'staff' || ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id)) {
             return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
         }
 
@@ -527,13 +553,13 @@ class AdministrationDashboardController extends Controller
 
         // Authorization check
         if ($user->role === 'staff') {
-            // Staff can only update reports assigned to them
-            if ($report->assigned_to !== $user->id) {
+            // Staff can update reports assigned to them or in their department
+            if ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
                 abort(403, 'Unauthorized');
             }
         } elseif ($user->role === 'department_head') {
-            // Department head can update reports in their department
-            if ($report->department_id !== $user->department_id) {
+            // Department head can update reports in their department or assigned to them
+            if ((int) $report->department_id !== (int) $user->department_id && (int) $report->assigned_to !== (int) $user->id) {
                 abort(403, 'Unauthorized');
             }
         } else {
