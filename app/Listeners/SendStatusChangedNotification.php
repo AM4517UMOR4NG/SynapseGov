@@ -54,10 +54,12 @@ class SendStatusChangedNotification implements ShouldQueue
             }
         }
 
-        // Notify assigned staff if status affects them and enabled in settings
+        // Notify assigned staff if status affects them and enabled in settings (prevent duplicate if assigned staff is also report owner)
         if ($report->assigned_to && $report->assignedUser && in_array($newStatus, ['in_progress', 'awaiting_info', 'resolved'])) {
-            if ($report->assignedUser->getSettings('notifications.status', true)) {
-                $report->assignedUser->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+            if ((int) $report->assigned_to !== (int) $report->user_id) {
+                if ($report->assignedUser->getSettings('notifications.status', true)) {
+                    $report->assignedUser->notify(new \App\Notifications\ReportStatusChangedNotification($report, $newStatus));
+                }
             }
         }
     }

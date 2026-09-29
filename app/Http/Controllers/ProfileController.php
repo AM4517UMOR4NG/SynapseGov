@@ -133,7 +133,7 @@ class ProfileController extends Controller
         // Standard form submission validation
         $validated = $request->validate([
             'dashboard_layout' => 'required|in:compact,comfortable,spacious',
-            'items_per_page' => 'required|in:10,15,25,50',
+            'items_per_page' => 'required|in:10,15,20,25,50',
             'language' => 'required|in:id,en',
             'notifications' => 'nullable|array',
             'privacy' => 'nullable|array',
