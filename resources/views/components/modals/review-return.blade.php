@@ -14,19 +14,16 @@
                         Laporan akan dikembalikan ke staff untuk tindak lanjut.
                     </div>
                     <div class="mb-3">
-                        <label for="assigned_to{{ $report->id }}" class="form-label">Kembalikan ke Staff:</label>
-                        <select class="form-select" id="assigned_to{{ $report->id }}" name="assigned_to" required>
+                        <label for="review_assigned_to{{ $report->id }}" class="form-label">Kembalikan ke Staff:</label>
+                        <select class="form-select" id="review_assigned_to{{ $report->id }}" name="assigned_to" required>
                             <option value="">-- Pilih Staff --</option>
                             @php
                                 $targetDeptId = $report->department_id ?: (auth()->check() ? auth()->user()->department_id : null);
                                 $deptStaffList = \App\Models\User::where('role', 'staff')
-                                    ->when($targetDeptId, function ($q) use ($targetDeptId) {
-                                        $q->where('department_id', $targetDeptId);
-                                    })
+                                    ->where('is_active', true)
+                                    ->where('department_id', $targetDeptId)
+                                    ->whereRaw($targetDeptId ? '1 = 1' : '1 = 0')
                                     ->get();
-                                if ($deptStaffList->isEmpty()) {
-                                    $deptStaffList = \App\Models\User::where('role', 'staff')->get();
-                                }
                             @endphp
                             @foreach($deptStaffList as $staff)
                                 <option value="{{ $staff->id }}" {{ (int) $report->assigned_to === (int) $staff->id ? 'selected' : '' }}>
@@ -36,13 +33,13 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="notes{{ $report->id }}" class="form-label">Catatan Review (Opsional):</label>
-                        <textarea class="form-control" id="notes{{ $report->id }}" name="notes" rows="3" placeholder="Tambahkan catatan review..."></textarea>
+                        <label for="review_notes{{ $report->id }}" class="form-label">Catatan Review (Opsional):</label>
+                        <textarea class="form-control" id="review_notes{{ $report->id }}" name="notes" rows="3" placeholder="Tambahkan catatan review..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Review & Kembalikan</button>
+                    <button type="submit" class="btn btn-primary" @disabled($deptStaffList->isEmpty())>Review & Kembalikan</button>
                 </div>
             </form>
         </div>

@@ -14,18 +14,23 @@
                         Laporan akan ditolak dan dikembalikan ke staff untuk revisi.
                     </div>
                     <div class="mb-3">
-                        <label for="assigned_to{{ $report->id }}" class="form-label">Kembalikan ke Staff:</label>
-                        <select class="form-select" id="assigned_to{{ $report->id }}" name="assigned_to" required>
+                        <label for="reject_assigned_to{{ $report->id }}" class="form-label">Kembalikan ke Staff:</label>
+                        <select class="form-select" id="reject_assigned_to{{ $report->id }}" name="assigned_to" required>
                             <option value="">-- Pilih Staff --</option>
-                            @if(isset($staffList))
-                                @foreach($staffList->where('department_id', $report->department_id) as $staff)
-                                    <option value="{{ $staff->id }}">{{ $staff->name }}</option>
-                                @endforeach
-                            @else
-                                @foreach(\App\Models\User::where('role', 'staff')->where('department_id', $report->department_id)->get() as $staff)
-                                    <option value="{{ $staff->id }}">{{ $staff->name }}</option>
-                                @endforeach
-                            @endif
+                            @php
+                                $previousStaffId = $report->assignments()->whereNotNull('assigned_to')->latest()->value('assigned_to') ?? $report->assigned_to;
+                                $targetStaffs = (isset($staffList) && $staffList->isNotEmpty())
+                                    ? $staffList->where('department_id', $report->department_id)
+                                    : \App\Models\User::where('role', 'staff')->where('department_id', $report->department_id)->get();
+                                if ($targetStaffs->isEmpty()) {
+                                    $targetStaffs = \App\Models\User::where('role', 'staff')->get();
+                                }
+                            @endphp
+                            @foreach($targetStaffs as $staff)
+                                <option value="{{ $staff->id }}" {{ (int) $previousStaffId === (int) $staff->id ? 'selected' : '' }}>
+                                    {{ $staff->name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
