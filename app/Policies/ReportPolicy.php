@@ -24,7 +24,7 @@ class ReportPolicy
     public function view(User $user, Report $report)
     {
         // User can view their own reports
-        if ($report->user_id === $user->id) {
+        if ((int) $report->user_id === (int) $user->id) {
             return true;
         }
 
@@ -34,12 +34,12 @@ class ReportPolicy
         }
 
         // Department head can view reports in their department
-        if ($user->role === 'department_head' && $report->department_id === $user->department_id) {
+        if ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) {
             return true;
         }
 
         // Staff can view reports in their department or assigned to them
-        if ($user->role === 'staff' && ($report->department_id === $user->department_id || $report->assigned_to === $user->id)) {
+        if ($user->role === 'staff' && ((int) $report->department_id === (int) $user->department_id || (int) $report->assigned_to === (int) $user->id)) {
             return true;
         }
 
@@ -60,7 +60,7 @@ class ReportPolicy
     public function update(User $user, Report $report)
     {
         // User can update their own reports if not yet verified
-        if ($report->user_id === $user->id && in_array($report->status, ['submitted'])) {
+        if ((int) $report->user_id === (int) $user->id && in_array($report->status, ['submitted', 'pending'])) {
             return true;
         }
 
@@ -70,12 +70,12 @@ class ReportPolicy
         }
 
         // Department head can update reports in their department
-        if ($user->role === 'department_head' && $report->department_id === $user->department_id) {
+        if ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) {
             return true;
         }
 
         // Staff can update reports assigned to them
-        if ($user->role === 'staff' && $report->assigned_to === $user->id) {
+        if ($user->role === 'staff' && (int) $report->assigned_to === (int) $user->id) {
             return true;
         }
 
@@ -96,7 +96,7 @@ class ReportPolicy
     public function verify(User $user, Report $report)
     {
         return in_array($user->role, ['admin', 'department_head']) &&
-               $report->status === 'submitted';
+               in_array($report->status, ['submitted', 'pending']);
     }
 
     /**
@@ -113,8 +113,8 @@ class ReportPolicy
      */
     public function resolve(User $user, Report $report)
     {
-        return ($user->role === 'staff' && $report->assigned_to === $user->id) ||
-               ($user->role === 'department_head' && $report->department_id === $user->department_id) ||
+        return ($user->role === 'staff' && (int) $report->assigned_to === (int) $user->id) ||
+               ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) ||
                $user->role === 'admin';
     }
 
@@ -123,7 +123,7 @@ class ReportPolicy
      */
     public function approve(User $user, Report $report)
     {
-        return ($user->role === 'department_head' && $report->department_id === $user->department_id) ||
+        return ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) ||
                $user->role === 'admin';
     }
 
@@ -133,6 +133,6 @@ class ReportPolicy
     public function reopen(User $user, Report $report)
     {
         return $report->canBeReopened() &&
-               ($report->user_id === $user->id || in_array($user->role, ['admin', 'department_head']));
+               ((int) $report->user_id === (int) $user->id || in_array($user->role, ['admin', 'department_head']));
     }
 }
