@@ -65,7 +65,7 @@
                         <div class="col-md-6">
                             <div class="detail-item">
                                 <label class="detail-label"><i class="fas fa-building me-2"></i>Departemen</label>
-                                <div class="detail-value">{{ $complaint->department->name }}</div>
+                                <div class="detail-value">{{ $complaint->department?->name ?? 'Belum ditentukan' }}</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -219,12 +219,12 @@
                 <h6 class="m-0 font-weight-bold text-primary">Informasi Departemen</h6>
             </div>
             <div class="card-body">
-                <h6>{{ $complaint->department->name }}</h6>
-                <p class="text-muted">{{ $complaint->department->description }}</p>
-                <p><strong>Kode:</strong> {{ $complaint->department->code }}</p>
-                <p><strong>Email:</strong> {{ $complaint->department->email }}</p>
-                <p><strong>Telepon:</strong> {{ $complaint->department->phone }}</p>
-                @if($complaint->department->address)
+                <h6>{{ $complaint->department?->name ?? 'Belum ditentukan' }}</h6>
+                <p class="text-muted">{{ $complaint->department?->description ?: '—' }}</p>
+                <p><strong>Kode:</strong> {{ $complaint->department?->code ?: '—' }}</p>
+                <p><strong>Email:</strong> {{ $complaint->department?->email ?: '—' }}</p>
+                <p><strong>Telepon:</strong> {{ $complaint->department?->phone ?: '—' }}</p>
+                @if($complaint->department?->address)
                 <p><strong>Alamat:</strong> {{ $complaint->department->address }}</p>
                 @endif
             </div>
@@ -271,4 +271,3 @@
 }
 </style>
 @endsection
-
