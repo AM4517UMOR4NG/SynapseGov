@@ -12,13 +12,13 @@ class DepartmentFactory extends Factory
     public function definition(): array
     {
         $departments = [
-            ['name' => 'Public Works Department', 'code' => 'PWD'],
-            ['name' => 'Health Department', 'code' => 'HD'],
-            ['name' => 'Education Department', 'code' => 'ED'],
-            ['name' => 'Public Safety Department', 'code' => 'PSD'],
-            ['name' => 'Environmental Department', 'code' => 'ENV'],
-            ['name' => 'Transportation Department', 'code' => 'TD'],
-            ['name' => 'Finance Department', 'code' => 'FD'],
+            ['name' => 'Dinas Pekerjaan Umum dan Penataan Ruang', 'code' => 'PWD'],
+            ['name' => 'Dinas Kesehatan', 'code' => 'HD'],
+            ['name' => 'Dinas Pendidikan', 'code' => 'ED'],
+            ['name' => 'Satuan Polisi Pamong Praja', 'code' => 'PSD'],
+            ['name' => 'Dinas Lingkungan Hidup', 'code' => 'ENV'],
+            ['name' => 'Dinas Perhubungan', 'code' => 'TD'],
+            ['name' => 'Badan Keuangan Daerah', 'code' => 'FD'],
         ];
 
         $dept = $this->faker->randomElement($departments);

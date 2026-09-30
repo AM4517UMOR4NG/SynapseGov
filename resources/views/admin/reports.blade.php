@@ -62,7 +62,7 @@
                                 elseif(in_array($report->status, ['submitted', 'pending', 'awaiting_info'])) { $statusColor = 'warning'; }
                             @endphp
                             <span class="badge bg-white text-dark border border-secondary-subtle rounded-pill px-3 py-2 shadow-sm">
-                                <i class="fas {{ $iconClass }} me-1 text-{{ $statusColor }}"></i> {{ ucfirst(str_replace('_', ' ', $report->status)) }}
+                                <i class="fas {{ $iconClass }} me-1 text-{{ $statusColor }}"></i> {{ \App\Models\Report::statusLabel($report->status) }}
                             </span>
                         </div>
                         
@@ -156,7 +156,7 @@
                             </div>
                             <div class="text-md-end">
                                 <span class="badge bg-{{ in_array($report->status, ['submitted', 'pending']) ? 'warning' : ($report->status == 'resolved' ? 'success' : 'info') }} bg-opacity-10 text-{{ in_array($report->status, ['submitted', 'pending']) ? 'warning' : ($report->status == 'resolved' ? 'success' : 'info') }} rounded-pill px-3 py-2 mb-2 border border-{{ in_array($report->status, ['submitted', 'pending']) ? 'warning' : ($report->status == 'resolved' ? 'success' : 'info') }}-subtle shadow-sm d-inline-flex align-items-center">
-                                    <i class="fas fa-circle me-2" style="font-size: 0.4rem;"></i> {{ ucfirst($report->status) }}
+                                    <i class="fas fa-circle me-2" style="font-size: 0.4rem;"></i> {{ \App\Models\Report::statusLabel($report->status) }}
                                 </span><br>
                                 <span class="badge bg-{{ $report->priority == 'urgent' ? 'danger' : ($report->priority == 'high' ? 'warning' : ($report->priority == 'medium' ? 'info' : 'secondary')) }} bg-opacity-10 text-{{ $report->priority == 'urgent' ? 'danger' : ($report->priority == 'high' ? 'warning' : ($report->priority == 'medium' ? 'info' : 'secondary')) }} rounded-pill px-3 py-1 border border-{{ $report->priority == 'urgent' ? 'danger' : ($report->priority == 'high' ? 'warning' : ($report->priority == 'medium' ? 'info' : 'secondary')) }}-subtle">
                                     <i class="fas fa-exclamation-triangle me-1"></i> Prioritas {{ ucfirst($report->priority) }}

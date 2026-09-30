@@ -2,7 +2,7 @@
 @section('title', 'Ringkasan Departemen')
 @section('content')
 @php
-    $statusLabels = ['submitted' => 'Baru masuk', 'pending' => 'Menunggu verifikasi', 'verified' => 'Siap ditugaskan', 'assigned' => 'Ditugaskan', 'in_progress' => 'Dalam pengerjaan', 'reviewed' => 'Ditinjau', 'needs_revision' => 'Perlu revisi', 'awaiting_info' => 'Menunggu informasi', 'awaiting_admin_approval' => 'Persetujuan admin', 'investigating' => 'Dalam investigasi', 'resolved' => 'Selesai', 'closed' => 'Ditutup', 'rejected' => 'Ditolak'];
+    $statusLabels = \App\Models\Report::STATUS_LABELS;
     $priorityLabels = ['low' => 'Rendah', 'medium' => 'Normal', 'high' => 'Tinggi', 'urgent' => 'Mendesak'];
 @endphp
 <div class="dh-workspace">

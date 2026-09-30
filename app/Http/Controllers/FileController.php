@@ -47,7 +47,7 @@ class FileController extends Controller
             $filePath = $this->getFilePath($reportable, $filename);
 
             if (! $filePath || ! Storage::exists($filePath)) {
-                abort(404, 'File not found.');
+                abort(404, 'Berkas tidak ditemukan.');
             }
 
             return Storage::download($filePath, $filename);
@@ -95,7 +95,7 @@ class FileController extends Controller
         $filePath = $this->getFilePath($reportable, $filename);
 
         if (! $filePath || ! Storage::exists($filePath)) {
-            abort(404, 'File not found.');
+            abort(404, 'Berkas tidak ditemukan.');
         }
 
         // Support previewing images and PDF documents directly in the browser
@@ -128,7 +128,7 @@ class FileController extends Controller
         $files = $reportable->attachments ?? [];
 
         if (empty($files)) {
-            return redirect()->back()->with('error', 'No files to download.');
+            return redirect()->back()->with('error', 'Tidak ada berkas untuk diunduh.');
         }
 
         // Check if ZipArchive is available
@@ -145,7 +145,7 @@ class FileController extends Controller
             }
 
             if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-                return redirect()->back()->with('error', 'Failed to create archive.');
+                return redirect()->back()->with('error', 'Gagal membuat arsip unduhan.');
             }
 
             foreach ($files as $file) {

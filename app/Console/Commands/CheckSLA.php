@@ -30,7 +30,7 @@ class CheckSLA extends Command
         // Check reports with SLA breaches
         $breachedReports = Report::where('sla_due_at', '<', now())
             ->where('is_escalated', false)
-            ->whereNotIn('status', ['closed', 'resolved'])
+            ->whereNotIn('status', ['closed', 'resolved', 'rejected'])
             ->get();
 
         foreach ($breachedReports as $report) {
@@ -40,7 +40,7 @@ class CheckSLA extends Command
         // Check complaints with SLA breaches
         $breachedComplaints = Complaint::where('sla_due_at', '<', now())
             ->where('is_escalated', false)
-            ->whereNotIn('status', ['closed', 'resolved'])
+            ->whereNotIn('status', ['closed', 'resolved', 'rejected'])
             ->get();
 
         foreach ($breachedComplaints as $complaint) {
@@ -65,18 +65,19 @@ class CheckSLA extends Command
     private function escalateReport(Report $report)
     {
         $oldPriority = $report->priority;
-        $report->update([
+
+        // saveQuietly skips the model's updating hook, which would treat the priority bump as a
+        // re-triage and push sla_due_at forward, making the breach disappear.
+        $report->fill([
             'is_escalated' => true,
             'priority' => 'urgent',
             'last_activity_at' => now(),
-        ]);
-
-        $userId = $report->assigned_to ?? $report->user_id ?? \App\Models\User::where('role', 'admin')->value('id') ?? 1;
+        ])->saveQuietly();
 
         \App\Models\AuditLog::create([
             'auditable_type' => Report::class,
             'auditable_id' => $report->id,
-            'user_id' => $userId,
+            'user_id' => null, // system action, not performed by any user
             'event' => 'sla_breached_escalated',
             'old_values' => ['priority' => $oldPriority, 'is_escalated' => false],
             'new_values' => ['priority' => 'urgent', 'is_escalated' => true],
@@ -93,18 +94,18 @@ class CheckSLA extends Command
     private function escalateComplaint(Complaint $complaint)
     {
         $oldPriority = $complaint->priority ?? 'medium';
-        $complaint->update([
+
+        // See escalateReport(): keep the original sla_due_at so the breach stays visible.
+        $complaint->fill([
             'is_escalated' => true,
             'priority' => 'urgent',
             'last_activity_at' => now(),
-        ]);
-
-        $userId = $complaint->assigned_to ?? $complaint->user_id ?? \App\Models\User::where('role', 'admin')->value('id') ?? 1;
+        ])->saveQuietly();
 
         \App\Models\AuditLog::create([
             'auditable_type' => Complaint::class,
             'auditable_id' => $complaint->id,
-            'user_id' => $userId,
+            'user_id' => null, // system action, not performed by any user
             'event' => 'sla_breached_escalated',
             'old_values' => ['priority' => $oldPriority, 'is_escalated' => false],
             'new_values' => ['priority' => 'urgent', 'is_escalated' => true],

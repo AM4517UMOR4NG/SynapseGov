@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\InvalidStatusTransition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -72,6 +73,49 @@ class Report extends Model
         'last_activity_at' => 'datetime',
     ];
 
+    /**
+     * Single source of truth for the report workflow: current status => statuses it may move to.
+     * Enforced in the updating hook, so every code path (service, controller, admin edit) obeys it.
+     * Statuses not listed as keys (including 'rejected') are terminal.
+     */
+    public const STATUS_TRANSITIONS = [
+        'submitted' => ['verified', 'rejected', 'awaiting_info', 'assigned', 'pending'],
+        'pending' => ['verified', 'rejected', 'awaiting_info', 'assigned'],
+        'awaiting_info' => ['submitted', 'verified', 'rejected', 'assigned'],
+        'verified' => ['assigned', 'reviewed', 'rejected', 'awaiting_admin_approval'],
+        'assigned' => ['in_progress', 'awaiting_info', 'reviewed', 'awaiting_admin_approval'],
+        'in_progress' => ['assigned', 'awaiting_info', 'reviewed', 'awaiting_admin_approval'],
+        'reviewed' => ['assigned', 'in_progress', 'needs_revision', 'awaiting_admin_approval'],
+        'needs_revision' => ['assigned', 'in_progress', 'reviewed', 'awaiting_admin_approval'],
+        'awaiting_admin_approval' => ['resolved', 'needs_revision'],
+        'resolved' => ['closed', 'in_progress'],
+        'closed' => ['in_progress'],
+    ];
+
+    /**
+     * Indonesian display labels for statuses. Reports and complaints share this status vocabulary.
+     */
+    public const STATUS_LABELS = [
+        'submitted' => 'Baru masuk',
+        'pending' => 'Menunggu verifikasi',
+        'verified' => 'Siap ditugaskan',
+        'assigned' => 'Ditugaskan',
+        'in_progress' => 'Dalam pengerjaan',
+        'reviewed' => 'Ditinjau',
+        'needs_revision' => 'Perlu revisi',
+        'awaiting_info' => 'Menunggu informasi',
+        'awaiting_admin_approval' => 'Persetujuan admin',
+        'investigating' => 'Dalam investigasi',
+        'resolved' => 'Selesai',
+        'closed' => 'Ditutup',
+        'rejected' => 'Ditolak',
+    ];
+
+    public static function statusLabel(?string $status): string
+    {
+        return self::STATUS_LABELS[$status] ?? ucfirst(str_replace('_', ' ', (string) $status));
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -91,6 +135,14 @@ class Report extends Model
         });
 
         static::updating(function ($report) {
+            if ($report->isDirty('status')) {
+                $from = $report->getOriginal('status');
+
+                if (! in_array($report->status, self::STATUS_TRANSITIONS[$from] ?? [], true)) {
+                    throw new InvalidStatusTransition($from, $report->status);
+                }
+            }
+
             $report->last_activity_at = now();
 
             // Automatically recalculate SLA due date when priority changes
@@ -170,6 +222,14 @@ class Report extends Model
     public function isSLABreached()
     {
         return $this->sla_due_at && now()->isAfter($this->sla_due_at);
+    }
+
+    /**
+     * Statuses this report may be set to right now (its current status plus valid next steps).
+     */
+    public function allowedStatuses(): array
+    {
+        return array_merge([$this->status], self::STATUS_TRANSITIONS[$this->status] ?? []);
     }
 
     public function canBeReopened()

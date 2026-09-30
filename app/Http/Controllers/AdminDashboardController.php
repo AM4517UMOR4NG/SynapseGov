@@ -13,24 +13,28 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // Statistik umum - dioptimalkan via aggregate queries
-        $repStat = Report::selectRaw('
-            COUNT(*) as total_reports,
-            COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
-            COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
-            COALESCE(SUM(CASE WHEN status IN ("in_progress", "assigned", "verified") THEN 1 ELSE 0 END), 0) as in_progress_reports,
-            COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
-            COALESCE(SUM(CASE WHEN assigned_to IS NULL AND status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_assignments,
-            COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
-            COALESCE(SUM(CASE WHEN sla_due_at < datetime("now") AND status NOT IN ("resolved", "closed") THEN 1 ELSE 0 END), 0) as sla_breached,
-            COALESCE(SUM(CASE WHEN sla_due_at >= datetime("now") AND sla_due_at <= datetime("now", "+24 hours") AND status NOT IN ("resolved", "closed") THEN 1 ELSE 0 END), 0) as due_soon
-        ')->first();
+        // Statistik umum - dioptimalkan via aggregate queries.
+        // Waktu dikirim sebagai binding (bukan date('now') SQLite) agar portabel SQLite/MySQL dan mengikuti timezone aplikasi.
+        $now = now();
+        $today = $now->toDateString();
 
-        $compStat = Complaint::selectRaw('
+        $repStat = Report::selectRaw("
+            COUNT(*) as total_reports,
+            COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_reports,
+            COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_reports,
+            COALESCE(SUM(CASE WHEN status IN ('in_progress', 'assigned', 'verified') THEN 1 ELSE 0 END), 0) as in_progress_reports,
+            COALESCE(SUM(CASE WHEN DATE(created_at) = ? THEN 1 ELSE 0 END), 0) as today_reports,
+            COALESCE(SUM(CASE WHEN assigned_to IS NULL AND status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_assignments,
+            COALESCE(SUM(CASE WHEN DATE(resolved_at) = ? THEN 1 ELSE 0 END), 0) as completed_today,
+            COALESCE(SUM(CASE WHEN sla_due_at < ? AND status NOT IN ('resolved', 'closed', 'rejected') THEN 1 ELSE 0 END), 0) as sla_breached,
+            COALESCE(SUM(CASE WHEN sla_due_at >= ? AND sla_due_at <= ? AND status NOT IN ('resolved', 'closed', 'rejected') THEN 1 ELSE 0 END), 0) as due_soon
+        ", [$today, $today, $now, $now, $now->copy()->addDay()])->first();
+
+        $compStat = Complaint::selectRaw("
             COUNT(*) as total_complaints,
-            COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
-            COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
-        ')->first();
+            COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_complaints,
+            COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_complaints
+        ")->first();
 
         $stats = [
             'total_users' => User::count(),
@@ -238,7 +242,7 @@ class AdminDashboardController extends Controller
             'sla_breached' => Report::where('is_escalated', true)->count(),
             'sla_due_soon' => Report::where('sla_due_at', '<=', now()->addHours(24))
                 ->where('is_escalated', false)
-                ->whereNotIn('status', ['resolved', 'closed'])
+                ->whereNotIn('status', ['resolved', 'closed', 'rejected'])
                 ->count(),
         ];
 
@@ -265,43 +269,6 @@ class AdminDashboardController extends Controller
         ));
     }
 
-    public function confirmReport($id)
-    {
-        $report = Report::findOrFail($id);
-        $workflowService = app(\App\Services\WorkflowService::class);
-        $workflowService->verifyReport($report, Auth::user());
-
-        return redirect()->back()->with('success', 'Laporan berhasil dikonfirmasi (diverifikasi). Nomor antrian: '.($report->queue_no ?? '-'));
-    }
-
-    public function assignReport(Request $request, $id)
-    {
-        $request->validate([
-            'assigned_to' => 'required|exists:users,id',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $report = Report::findOrFail($id);
-        $assignedTo = User::findOrFail($request->assigned_to);
-
-        // Use WorkflowService for proper assignment
-        $workflowService = app(\App\Services\WorkflowService::class);
-        $workflowService->assignReport($report, $assignedTo, Auth::user(), $request->notes);
-
-        // Refresh report to get updated data
-        $report->refresh();
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Laporan berhasil ditugaskan ke '.$assignedTo->name.'.',
-                'report' => $report,
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Laporan berhasil ditugaskan ke '.$assignedTo->name.'.');
-    }
-
     public function editReport($id)
     {
         $report = Report::findOrFail($id);
@@ -319,7 +286,7 @@ class AdminDashboardController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|string|max:100',
-            'status' => 'required|in:submitted,pending,verified,assigned,in_progress,reviewed,awaiting_info,needs_revision,awaiting_admin_approval,resolved,closed,rejected',
+            'status' => ['required', \Illuminate\Validation\Rule::in($report->allowedStatuses())],
             'priority' => 'required|in:low,medium,high,urgent',
             'department_id' => 'nullable|exists:departments,id',
             'assigned_to' => 'nullable|exists:users,id',

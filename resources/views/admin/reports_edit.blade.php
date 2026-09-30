@@ -93,18 +93,10 @@
                             <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select class="form-select @error('status') is-invalid @enderror" 
                                     id="status" name="status" required>
-                                <option value="submitted" @selected(old('status', $report->status) === 'submitted')>Baru masuk</option>
-                                <option value="pending" @selected(old('status', $report->status) === 'pending')>Menunggu verifikasi</option>
-                                <option value="verified" @selected(old('status', $report->status) === 'verified')>Terverifikasi</option>
-                                <option value="assigned" @selected(old('status', $report->status) === 'assigned')>Ditugaskan</option>
-                                <option value="in_progress" @selected(old('status', $report->status) === 'in_progress')>Dalam pengerjaan</option>
-                                <option value="reviewed" @selected(old('status', $report->status) === 'reviewed')>Ditinjau</option>
-                                <option value="awaiting_info" @selected(old('status', $report->status) === 'awaiting_info')>Menunggu informasi</option>
-                                <option value="needs_revision" @selected(old('status', $report->status) === 'needs_revision')>Perlu revisi</option>
-                                <option value="awaiting_admin_approval" @selected(old('status', $report->status) === 'awaiting_admin_approval')>Menunggu persetujuan admin</option>
-                                <option value="resolved" @selected(old('status', $report->status) === 'resolved')>Selesai</option>
-                                <option value="closed" @selected(old('status', $report->status) === 'closed')>Ditutup</option>
-                                <option value="rejected" @selected(old('status', $report->status) === 'rejected')>Ditolak</option>
+                                {{-- Only the current status and valid next steps (Report::STATUS_TRANSITIONS) are offered --}}
+                                @foreach($report->allowedStatuses() as $status)
+                                    <option value="{{ $status }}" @selected(old('status', $report->status) === $status)>{{ \App\Models\Report::statusLabel($status) }}</option>
+                                @endforeach
                             </select>
                             @error('status')
                                 <div class="invalid-feedback">{{ $message }}</div>

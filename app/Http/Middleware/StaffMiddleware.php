@@ -20,7 +20,7 @@ class StaffMiddleware
         }
 
         if (! auth()->user()->isStaff()) {
-            abort(403, 'Access denied. Staff privileges required.');
+            abort(403, 'Akses ditolak. Halaman ini khusus staf lapangan.');
         }
 
         return $next($request);

@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::table('reports', function (Blueprint $table) {
             // Add workflow fields
             $table->string('ticket_no')->unique()->after('id');
-            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
-                $table->enum('status', ['pending', 'submitted', 'verified', 'rejected', 'assigned', 'in_progress', 'awaiting_info', 'resolved', 'pending_approval', 'closed', 'escalated'])->default('submitted')->change();
-            }
+            // The status enum is defined in create_reports_table; no ->change() here, because
+            // changing columns on Laravel 10 requires doctrine/dbal, which this project does not ship.
             $table->timestamp('sla_due_at')->nullable()->after('resolved_at');
             $table->boolean('is_escalated')->default(false)->after('sla_due_at');
             $table->integer('reassign_count')->default(0)->after('is_escalated');
@@ -31,7 +30,6 @@ return new class extends Migration
     {
         Schema::table('reports', function (Blueprint $table) {
             $table->dropColumn(['ticket_no', 'sla_due_at', 'is_escalated', 'reassign_count', 'last_activity_at']);
-            $table->enum('status', ['pending', 'in_progress', 'resolved', 'closed'])->default('pending')->change();
         });
     }
 };

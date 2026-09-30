@@ -76,7 +76,7 @@ class WorkflowController extends Controller
             'category', 'priority', 'department_id',
         ]));
 
-        return redirect()->back()->with('success', 'Report verified successfully.');
+        return redirect()->back()->with('success', 'Laporan berhasil diverifikasi.');
     }
 
     /**
@@ -101,47 +101,7 @@ class WorkflowController extends Controller
 
         $this->workflowService->rejectReport($report, $user, (string) $request->input('reason'));
 
-        return redirect()->back()->with('success', 'Report rejected successfully.');
-    }
-
-    /**
-     * Assign a report to staff (Admin or Department Head)
-     */
-    public function assignReport(Request $request, $id): RedirectResponse
-    {
-        $user = $this->user();
-        $report = Report::findOrFail($id);
-
-        if (! $this->canManageReport($user, $report)) {
-            abort(403, 'Akses ditolak. Hanya admin atau kepala departemen terkait yang dapat menugaskan laporan.');
-        }
-
-        if (in_array($report->status, ['closed', 'rejected'])) {
-            return redirect()->back()->with('error', 'Laporan yang telah ditutup atau ditolak tidak dapat ditugaskan.');
-        }
-
-        $request->validate([
-            'assigned_to' => 'required|exists:users,id',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $assignedTo = User::findOrFail($request->input('assigned_to'));
-
-        if (! ($assignedTo->isStaff() || $assignedTo->isDepartmentHead() || $assignedTo->isAdmin())) {
-            return redirect()->back()->with('error', 'Laporan hanya dapat ditugaskan kepada staf atau kepala departemen.');
-        }
-
-        if (! $assignedTo->is_active) {
-            return redirect()->back()->with('error', 'Petugas yang dipilih sedang tidak aktif.');
-        }
-
-        if ($report->department_id && $assignedTo->department_id && (int) $assignedTo->department_id !== (int) $report->department_id && ! $assignedTo->isAdmin()) {
-            return redirect()->back()->with('error', 'Petugas yang dipilih tidak berada di departemen yang sesuai dengan laporan.');
-        }
-
-        $this->workflowService->assignReport($report, $assignedTo, $user, $request->input('notes'));
-
-        return redirect()->back()->with('success', 'Report assigned successfully.');
+        return redirect()->back()->with('success', 'Laporan berhasil ditolak.');
     }
 
     /**
@@ -246,89 +206,7 @@ class WorkflowController extends Controller
 
         $this->workflowService->setAwaitingInfo($report, $user, (string) $request->input('reason'));
 
-        return redirect()->back()->with('success', 'Report set to awaiting information.');
-    }
-
-    /**
-     * Resolve a report
-     */
-    public function resolveReport(Request $request, $id): RedirectResponse
-    {
-        $user = $this->user();
-        $report = Report::findOrFail($id);
-
-        // Must be assigned staff, department head, or admin
-        if (! ($user->isAdmin() || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $user->department_id === (int) $report->department_id))) {
-            abort(403, 'Akses ditolak. Anda tidak berhak menyelesaikan laporan ini.');
-        }
-
-        if (! in_array($report->status, ['in_progress', 'assigned', 'needs_revision', 'awaiting_info'])) {
-            return redirect()->back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat diselesaikan.');
-        }
-
-        $request->validate([
-            'resolution_notes' => 'required|string|max:2000',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip|max:5120',
-        ]);
-
-        $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('public/attachments/resolutions');
-                $attachments[] = str_replace('public/', '', $path);
-            }
-        }
-
-        $this->workflowService->resolveReport($report, $user, (string) $request->input('resolution_notes'), $attachments);
-
-        return redirect()->back()->with('success', 'Report resolved successfully.');
-    }
-
-    /**
-     * Approve a resolved report (Admin or Department Head)
-     */
-    public function approveReport($id): RedirectResponse
-    {
-        $user = $this->user();
-        $report = Report::findOrFail($id);
-
-        if (! $this->canManageReport($user, $report)) {
-            abort(403, 'Hanya admin atau kepala departemen yang dapat menyetujui laporan.');
-        }
-
-        if (! in_array($report->status, ['resolved', 'awaiting_admin_approval'])) {
-            return redirect()->back()->with('error', 'Hanya laporan yang telah diselesaikan yang dapat disetujui.');
-        }
-
-        $this->workflowService->approveReport($report, $user);
-
-        return redirect()->back()->with('success', 'Report approved and closed.');
-    }
-
-    /**
-     * Request changes to a resolved report
-     */
-    public function requestChanges(Request $request, $id): RedirectResponse
-    {
-        $user = $this->user();
-        $report = Report::findOrFail($id);
-
-        if (! $this->canManageReport($user, $report)) {
-            abort(403, 'Akses ditolak.');
-        }
-
-        if (! in_array($report->status, ['resolved', 'awaiting_admin_approval'])) {
-            return redirect()->back()->with('error', 'Perubahan hanya dapat diminta pada laporan yang telah diselesaikan.');
-        }
-
-        $request->validate([
-            'reason' => 'required|string|max:1000',
-        ]);
-
-        $this->workflowService->requestChanges($report, $user, (string) $request->input('reason'));
-
-        return redirect()->back()->with('success', 'Changes requested successfully.');
+        return redirect()->back()->with('success', 'Permintaan informasi tambahan telah dikirim ke pelapor.');
     }
 
     /**
@@ -354,50 +232,10 @@ class WorkflowController extends Controller
         try {
             $this->workflowService->reopenReport($report, $user, (string) $request->input('reason'));
 
-            return redirect()->back()->with('success', 'Report reopened successfully.');
+            return redirect()->back()->with('success', 'Laporan berhasil dibuka kembali.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
-    }
-
-    /**
-     * Reassign a report (Admin or Department Head)
-     */
-    public function reassignReport(Request $request, $id): RedirectResponse
-    {
-        $user = $this->user();
-        $report = Report::findOrFail($id);
-
-        if (! $this->canManageReport($user, $report)) {
-            abort(403, 'Akses ditolak.');
-        }
-
-        if (in_array($report->status, ['closed', 'rejected'])) {
-            return redirect()->back()->with('error', 'Laporan yang telah ditutup atau ditolak tidak dapat dialihkan.');
-        }
-
-        $request->validate([
-            'assigned_to' => 'required|exists:users,id',
-            'reason' => 'nullable|string|max:1000',
-        ]);
-
-        $newAssignee = User::findOrFail($request->input('assigned_to'));
-
-        if (! ($newAssignee->isStaff() || $newAssignee->isDepartmentHead() || $newAssignee->isAdmin())) {
-            return redirect()->back()->with('error', 'Laporan hanya dapat dialihkan kepada staf atau kepala departemen.');
-        }
-
-        if (! $newAssignee->is_active) {
-            return redirect()->back()->with('error', 'Petugas yang dipilih sedang tidak aktif.');
-        }
-
-        if ($report->department_id && $newAssignee->department_id && (int) $newAssignee->department_id !== (int) $report->department_id && ! $newAssignee->isAdmin()) {
-            return redirect()->back()->with('error', 'Petugas yang dipilih tidak berada di departemen yang sesuai dengan laporan.');
-        }
-
-        $this->workflowService->reassignReport($report, $newAssignee, $user, $request->input('reason'));
-
-        return redirect()->back()->with('success', 'Report reassigned successfully.');
     }
 
     /**
@@ -408,25 +246,19 @@ class WorkflowController extends Controller
         $user = $this->user();
         $report = Report::findOrFail($id);
 
-        // Authorization check
-        if ($user->isCitizen() && (int) $report->user_id !== (int) $user->id) {
-            abort(403, 'Akses ditolak.');
-        }
+        $this->authorize('view', $report);
 
-        if (! $user->isCitizen() && ! $user->isAdmin()) {
-            if ($report->department_id && (int) $user->department_id !== (int) $report->department_id && (int) $report->assigned_to !== (int) $user->id) {
-                abort(403, 'Akses ditolak.');
-            }
-        }
+        // Only expose who acted, never their personal data
+        $actorColumns = 'id,name,role';
 
         $auditLogs = $report->auditLogs()
-            ->with('user')
+            ->with("user:{$actorColumns}")
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Privacy filter: Citizens must NEVER see internal comments
         $commentsQuery = $report->comments()
-            ->with('user')
+            ->with("user:{$actorColumns}")
             ->orderBy('created_at', 'desc');
 
         if ($user->isCitizen()) {
@@ -436,9 +268,20 @@ class WorkflowController extends Controller
         $comments = $commentsQuery->get();
 
         $assignments = $report->assignments()
-            ->with(['assignedTo', 'assignedBy'])
+            ->with(["assignedTo:{$actorColumns}", "assignedBy:{$actorColumns}"])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // Forensic fields (IP, user agent) are for admins only
+        if (! $user->isAdmin()) {
+            $auditLogs->makeHidden(['ip_address', 'user_agent']);
+        }
+
+        // Citizens get a timeline: no raw data snapshots and no internal disposition notes
+        if ($user->isCitizen()) {
+            $auditLogs->makeHidden(['old_values', 'new_values']);
+            $assignments->makeHidden('notes');
+        }
 
         return response()->json([
             'audit_logs' => $auditLogs,

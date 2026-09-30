@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Notifications\DatabaseNotification;
 
 class Kernel extends ConsoleKernel
 {
@@ -12,14 +13,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Check SLA breaches every hour
-        $schedule->command('sla:check')->hourly();
+        // Check SLA breaches every 5 minutes (the tightest SLA, urgent, is only 2 hours)
+        $schedule->command('sla:check')->everyFiveMinutes();
 
         // Check for spam reports every 6 hours
         $schedule->command('reports:check-spam')->everySixHours();
 
         // Clean up old notifications (older than 30 days)
-        $schedule->command('notifications:cleanup')->daily();
+        $schedule->call(function () {
+            DatabaseNotification::where('created_at', '<', now()->subDays(30))->delete();
+        })->daily()->name('notifications:cleanup');
 
         // Clean up temporary files every 6 hours
         $schedule->command('files:cleanup')->everySixHours();

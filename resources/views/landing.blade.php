@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/transparency.css') }}?v={{ filemtime(public_path('css/transparency.css')) }}">
 </head>
 <body class="landing-ui home-page">
     <a class="skip-link" href="#main">Lewati ke konten</a>
@@ -19,7 +20,7 @@
             <a href="{{ url('/') }}" class="home-brand"><span class="brand-mark" aria-hidden="true">S</span>SynapseGov<span class="brand-dot">.</span></a>
             <button class="site-menu-toggle" type="button" data-site-menu aria-controls="landingNavigation" aria-expanded="false" aria-label="Buka navigasi">☰ <span>Menu</span></button>
             <div id="landingNavigation" class="site-navigation">
-                <div class="home-links"><a href="#platform">Cara kerja</a><a href="#features">Layanan</a><a href="#questions">Pertanyaan</a></div>
+                <div class="home-links"><a href="#platform">Cara kerja</a><a href="#features">Layanan</a><a href="#transparansi">Transparansi</a><a href="{{ route('public.track') }}">Lacak tiket</a><a href="#questions">Pertanyaan</a></div>
                 <div class="home-actions">
                     @auth
                         <a href="{{ route('home') }}" class="home-button small">Buka dashboard <span aria-hidden="true">↗</span></a>
@@ -59,6 +60,48 @@
         <section id="features" class="home-section features-section"><div class="home-container">
             <div class="section-heading"><div><span class="home-eyebrow">LAYANAN UNTUK ANDA</span><h2>Lebih dekat dengan<br>solusi yang dibutuhkan.</h2></div><p>Tempat untuk menyampaikan persoalan, memberi masukan, dan melihat tindak lanjutnya.</p></div>
             <div class="features-grid"><article class="feature-featured"><span class="feature-symbol" aria-hidden="true">↗</span><h3>Laporan masyarakat</h3><p>Jalan rusak, fasilitas umum, atau persoalan lingkungan. Bantu dinas memahami kondisi di sekitar Anda.</p><a href="{{ auth()->check() ? route('home') : route('register') }}">Mulai buat laporan <span aria-hidden="true">→</span></a></article><article><span class="feature-symbol" aria-hidden="true">◎</span><h3>Keluhan & aspirasi</h3><p>Sampaikan pengalaman pelayanan dan masukan Anda untuk membantu perbaikan layanan publik.</p><a href="{{ auth()->check() ? route('home') : route('register') }}">Sampaikan aspirasi <span aria-hidden="true">→</span></a></article><article><span class="feature-symbol" aria-hidden="true">≡</span><h3>Riwayat dalam satu tempat</h3><p>Akses laporan, lampiran, dan status penanganan tanpa perlu mencatat prosesnya secara terpisah.</p><a href="{{ auth()->check() ? route('home') : route('login') }}">Lihat laporan saya <span aria-hidden="true">→</span></a></article></div>
+        </div></section>
+        @php $overall = $transparency['overall']; @endphp
+        <section id="transparansi" class="home-section tp-section" aria-labelledby="transparency-title"><div class="home-container">
+            <div class="section-heading"><div><span class="home-eyebrow">TRANSPARANSI LAYANAN</span><h2 id="transparency-title">Kinerja dinas,<br>terbuka untuk publik.</h2></div><p>Angka di bawah dihitung otomatis dari seluruh laporan warga, termasuk seberapa banyak yang tuntas sebelum tenggat SLA.</p></div>
+            <div class="tp-kpis">
+                <div class="tp-kpi"><span class="tp-kpi-label">Laporan diterima</span><span class="tp-kpi-value">{{ number_format($overall['total'], 0, ',', '.') }}</span><span class="tp-kpi-note">{{ number_format($overall['in_progress'], 0, ',', '.') }} sedang ditangani</span></div>
+                <div class="tp-kpi"><span class="tp-kpi-label">Tuntas ditangani</span><span class="tp-kpi-value">@if($overall['completion_rate'] !== null){{ $overall['completion_rate'] }}<small>%</small>@else<span class="tp-muted">–</span>@endif</span><span class="tp-kpi-note">{{ number_format($overall['completed'], 0, ',', '.') }} laporan selesai</span></div>
+                <div class="tp-kpi is-accent"><span class="tp-kpi-label">Selesai tepat waktu</span><span class="tp-kpi-value">@if($overall['on_time_rate'] !== null){{ $overall['on_time_rate'] }}<small>%</small>@else<span class="tp-muted">–</span>@endif</span><span class="tp-kpi-note">diselesaikan sebelum tenggat SLA</span></div>
+            </div>
+            <div class="tp-body">
+                <div class="tp-table">
+                    <div class="tp-row tp-head" aria-hidden="true"><span>Organisasi Perangkat Daerah</span><span class="tp-num">Laporan</span><span>Tuntas</span><span class="tp-num">Tepat waktu</span></div>
+                    @forelse($transparency['departments'] as $dept)
+                        <div class="tp-row">
+                            <span class="tp-dept">{{ $dept['name'] }}</span>
+                            <span class="tp-num" data-label="Laporan">{{ number_format($dept['total'], 0, ',', '.') }}</span>
+                            <span class="tp-bar" data-label="Tuntas">
+                                <span class="tp-bar-track" role="presentation"><span class="tp-bar-fill" style="width: {{ $dept['completion_rate'] ?? 0 }}%"></span></span>
+                                <span class="tp-bar-value">{{ $dept['completion_rate'] !== null ? $dept['completion_rate'].'%' : '–' }}</span>
+                            </span>
+                            <span class="tp-num tp-ontime" data-label="Tepat waktu">{{ $dept['on_time_rate'] !== null ? $dept['on_time_rate'].'%' : '–' }}</span>
+                        </div>
+                    @empty
+                        <p class="tp-empty">Belum ada OPD aktif.</p>
+                    @endforelse
+                    @if($overall['total'] === 0)
+                        <p class="tp-empty">Belum ada laporan yang masuk. Statistik akan terisi otomatis begitu warga mulai melapor.</p>
+                    @endif
+                    <p class="tp-foot">Diperbarui {{ $transparency['generated_at'] }} WIB · "Tuntas" tidak menghitung laporan yang ditolak.</p>
+                </div>
+                <div class="tp-track-card">
+                    <span class="home-eyebrow">LACAK TIKET</span>
+                    <h3>Sudah melapor? Cek statusnya di sini.</h3>
+                    <p>Masukkan nomor tiket yang Anda terima saat mengirim laporan atau keluhan.</p>
+                    <form class="tp-form" action="{{ route('public.track') }}" method="GET" role="search">
+                        <label for="landing-ticket" class="visually-hidden">Nomor tiket</label>
+                        <input id="landing-ticket" name="tiket" type="text" placeholder="RPT-20261001-AB12CD" autocomplete="off" required>
+                        <button type="submit">Lacak</button>
+                    </form>
+                    <span class="tp-privacy">Hanya status dan tahapan yang ditampilkan. Isi laporan dan identitas pelapor tetap terlindungi.</span>
+                </div>
+            </div>
         </div></section>
         <section id="questions" class="home-section home-container faq-section"><div><span class="home-eyebrow">SEBELUM MEMULAI</span><h2>Ada yang ingin<br>Anda ketahui?</h2><p>Beberapa hal untuk membantu Anda menyampaikan laporan.</p></div><div class="faq-list"><details><summary>Apa yang perlu disiapkan?</summary><p>Siapkan judul, penjelasan persoalan, lokasi jika relevan, serta lampiran pendukung. Pilih dinas yang sesuai dengan laporan Anda.</p></details><details><summary>Apakah saya perlu membuat akun?</summary><p>Ya. Akun digunakan untuk mengirim laporan dan melihat perkembangannya. Jika sudah memiliki akun, Anda dapat langsung masuk.</p></details><details><summary>Bagaimana cara melihat tindak lanjut?</summary><p>Masuk ke akun Anda, buka daftar laporan atau keluhan, lalu pilih detail untuk melihat status dan catatan penanganan yang tersedia.</p></details></div></section>
         <section class="home-container"><div class="closing-banner"><div><span class="home-eyebrow">BERSAMA, KITA MULAI.</span><h2>Lingkungan lebih baik.<br>Pelayanan lebih dekat.</h2></div><a href="{{ auth()->check() ? route('home') : route('register') }}" class="home-button light">{{ auth()->check() ? 'Ke dashboard Anda' : 'Sampaikan suara Anda' }} <span aria-hidden="true">↗</span></a></div></section>

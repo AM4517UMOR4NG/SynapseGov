@@ -20,7 +20,7 @@ class CitizenMiddleware
         }
 
         if (! auth()->user()->isCitizen()) {
-            abort(403, 'Access denied. Citizen privileges required.');
+            abort(403, 'Akses ditolak. Halaman ini khusus warga.');
         }
 
         return $next($request);

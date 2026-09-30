@@ -72,6 +72,14 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        // Personal data (NIK, contact, login trail) must never leak through JSON responses
+        'id_number',
+        'phone',
+        'address',
+        'birth_date',
+        'last_login_at',
+        'last_login_ip',
+        'settings',
     ];
 
     /**

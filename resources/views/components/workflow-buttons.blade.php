@@ -22,7 +22,7 @@
     }
 </style>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 compact-dropdown" style="border-radius: 12px; min-width: 180px; margin-top: 8px;">
-                <li class="dropdown-header text-uppercase fw-bold text-primary mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Status: {{ ucfirst(str_replace('_', ' ', $report->status)) }}</li>
+                <li class="dropdown-header text-uppercase fw-bold text-primary mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Status: {{ \App\Models\Report::statusLabel($report->status) }}</li>
                 
                 @if($user->isAdmin())
                     {{-- Admin Actions --}}
@@ -35,11 +35,13 @@
                                 </button>
                             </form>
                         </li>
+                        @if($report->status !== 'awaiting_info')
                         <li>
                             <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
                                 <i class="fas fa-question-circle w-20px me-2"></i> Minta Info Tambahan
                             </button>
                         </li>
+                        @endif
                         <li>
                             <button type="button" class="dropdown-item py-2 text-danger" data-bs-toggle="modal" data-bs-target="#rejectInitialModal{{ $report->id }}">
                                 <i class="fas fa-times w-20px me-2"></i> Tolak (Tidak Layak)
@@ -70,7 +72,7 @@
                     @elseif($report->status === 'awaiting_admin_approval')
                         <li>
                             <button type="button" class="dropdown-item py-2 text-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ $report->id }}">
-                                <i class="fas fa-check w-20px me-2"></i> Setujui (Selesai/Resolved)
+                                <i class="fas fa-check w-20px me-2"></i> Setujui (Selesai)
                             </button>
                         </li>
                         <li>
@@ -88,47 +90,42 @@
                         $isAssignedStaff = (int) $report->assigned_to === (int) $user->id;
                         $isInDept = (int) $report->department_id === (int) $user->department_id;
                         $canAct = $isAssignedStaff || $isInDept;
+                        // Mirror the controller guards so staff never see a button that would be rejected
+                        $canStart = $canAct && in_array($report->status, ['assigned', 'reviewed', 'needs_revision']); // WorkflowController::startWork
+                        $canAskInfo = $isAssignedStaff && in_array($report->status, ['assigned', 'in_progress']); // WorkflowController::setAwaitingInfo
+                        $canSubmitResult = $canAct && in_array($report->status, ['assigned', 'reviewed', 'in_progress', 'needs_revision']); // staffConfirmToAdmin
                     @endphp
-                    @if($canAct && in_array($report->status, ['assigned', 'verified']))
+                    @if($canStart || $canAskInfo || $canSubmitResult)
+                        @if($canStart)
                         <li>
                             <form action="{{ route('workflow.reports.start_work', $report->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="dropdown-item py-2 text-primary">
-                                    <i class="fas fa-play w-20px me-2"></i> Mulai Kerjakan
-                                </button>
-                            </form>
-                        </li>
-                        <li>
-                            <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
-                                <i class="fas fa-question-circle w-20px me-2"></i> Minta Info Tambahan
-                            </button>
-                        </li>
-                        <li>
-                            <button type="button" class="dropdown-item py-2 text-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
-                                <i class="fas fa-check-circle w-20px me-2"></i> Ajukan Hasil & Bukti
-                            </button>
-                        </li>
-                    @elseif($canAct && in_array($report->status, ['reviewed', 'in_progress', 'needs_revision']))
-                        @if($report->status === 'needs_revision')
-                        <li>
-                            <form action="{{ route('workflow.reports.start_work', $report->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="dropdown-item py-2 text-warning">
-                                    <i class="fas fa-tools w-20px me-2"></i> Kerjakan Revisi
-                                </button>
+                                @if($report->status === 'needs_revision')
+                                    <button type="submit" class="dropdown-item py-2 text-warning">
+                                        <i class="fas fa-tools w-20px me-2"></i> Kerjakan Revisi
+                                    </button>
+                                @else
+                                    <button type="submit" class="dropdown-item py-2 text-primary">
+                                        <i class="fas fa-play w-20px me-2"></i> Mulai Kerjakan
+                                    </button>
+                                @endif
                             </form>
                         </li>
                         @endif
+                        @if($canAskInfo)
                         <li>
                             <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
                                 <i class="fas fa-question-circle w-20px me-2"></i> Minta Info Tambahan
                             </button>
                         </li>
+                        @endif
+                        @if($canSubmitResult)
                         <li>
                             <button type="button" class="dropdown-item py-2 text-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                                 <i class="fas fa-check-circle w-20px me-2"></i> Ajukan Hasil & Bukti
                             </button>
                         </li>
+                        @endif
                     @else
                         <li><span class="dropdown-item text-muted"><i class="fas fa-info-circle me-2"></i>Tidak ada aksi</span></li>
                     @endif
@@ -193,9 +190,11 @@
                             <i class="fas fa-check me-1"></i> Verifikasi (Layak)
                         </button>
                     </form>
+                    @if($report->status !== 'awaiting_info')
                     <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
                         <i class="fas fa-question-circle me-1"></i> Minta Info
                     </button>
+                    @endif
                     <button type="button" class="btn btn-danger btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#rejectInitialModal{{ $report->id }}">
                         <i class="fas fa-times me-1"></i> Tolak (Tidak Layak)
                     </button>
@@ -214,7 +213,7 @@
                     </button>
                 @elseif($report->status === 'awaiting_admin_approval')
                     <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ $report->id }}">
-                        <i class="fas fa-check me-1"></i> Setujui (Resolved)
+                        <i class="fas fa-check me-1"></i> Setujui (Selesai)
                     </button>
                     <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $report->id }}">
                         <i class="fas fa-undo me-1"></i> Perlu Revisi
@@ -225,32 +224,31 @@
                     $isAssignedStaff = (int) $report->assigned_to === (int) $user->id;
                     $isInDept = (int) $report->department_id === (int) $user->department_id;
                     $canAct = $isAssignedStaff || $isInDept;
+                    // Same guards as the dropdown mode above
+                    $canStart = $canAct && in_array($report->status, ['assigned', 'reviewed', 'needs_revision']);
+                    $canAskInfo = $isAssignedStaff && in_array($report->status, ['assigned', 'in_progress']);
+                    $canSubmitResult = $canAct && in_array($report->status, ['assigned', 'reviewed', 'in_progress', 'needs_revision']);
                 @endphp
-                @if($canAct && in_array($report->status, ['assigned', 'verified']))
+                @if($canStart)
                     <form action="{{ route('workflow.reports.start_work', $report->id) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-primary btn-sm shadow-sm">
-                            <i class="fas fa-play me-1"></i> Mulai Kerjakan
-                        </button>
+                        @if($report->status === 'needs_revision')
+                            <button type="submit" class="btn btn-warning btn-sm text-dark shadow-sm">
+                                <i class="fas fa-tools me-1"></i> Kerjakan Revisi
+                            </button>
+                        @else
+                            <button type="submit" class="btn btn-primary btn-sm shadow-sm">
+                                <i class="fas fa-play me-1"></i> Mulai Kerjakan
+                            </button>
+                        @endif
                     </form>
+                @endif
+                @if($canAskInfo)
                     <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
                         <i class="fas fa-question-circle me-1"></i> Minta Info
                     </button>
-                    <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
-                        <i class="fas fa-check-circle me-1"></i> Ajukan Hasil
-                    </button>
-                @elseif($canAct && in_array($report->status, ['reviewed', 'in_progress', 'needs_revision']))
-                    @if($report->status === 'needs_revision')
-                    <form action="{{ route('workflow.reports.start_work', $report->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-warning btn-sm text-dark shadow-sm">
-                            <i class="fas fa-tools me-1"></i> Kerjakan Revisi
-                        </button>
-                    </form>
-                    @endif
-                    <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
-                        <i class="fas fa-question-circle me-1"></i> Minta Info
-                    </button>
+                @endif
+                @if($canSubmitResult)
                     <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                         <i class="fas fa-check-circle me-1"></i> Ajukan Hasil & Bukti
                     </button>

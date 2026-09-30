@@ -115,7 +115,7 @@ class DownloadController extends Controller
         $attachments = $report->attachments ?? [];
 
         if (empty($attachments)) {
-            return redirect()->back()->with('error', 'No attachments to download.');
+            return redirect()->back()->with('error', 'Tidak ada lampiran untuk diunduh.');
         }
 
         $safeTicket = htmlspecialchars($report->ticket_no, ENT_QUOTES, 'UTF-8');

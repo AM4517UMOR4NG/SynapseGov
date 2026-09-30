@@ -25,46 +25,48 @@ class AdministrationDashboardController extends Controller
             return redirect()->route('home')->with('error', 'Akun Anda belum terhubung dengan departemen manapun.');
         }
 
+        $today = now()->toDateString(); // dikirim sebagai binding agar portabel SQLite/MySQL
+
         // Statistik departemen
         if ($user->role === 'department_head') {
             $repStat = Report::where('department_id', $department->id)
-                ->selectRaw('
+                ->selectRaw("
                     COUNT(*) as total_reports,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
-                    COALESCE(SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END), 0) as in_progress_reports,
-                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
-                    COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
-                    COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending", "verified") THEN 1 ELSE 0 END), 0) as pending_action
-                ')->first();
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_reports,
+                    COALESCE(SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END), 0) as in_progress_reports,
+                    COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_reports,
+                    COALESCE(SUM(CASE WHEN DATE(created_at) = ? THEN 1 ELSE 0 END), 0) as today_reports,
+                    COALESCE(SUM(CASE WHEN DATE(resolved_at) = ? THEN 1 ELSE 0 END), 0) as completed_today,
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending', 'verified') THEN 1 ELSE 0 END), 0) as pending_action
+                ", [$today, $today])->first();
 
             $compStat = Complaint::where('department_id', $department->id)
-                ->selectRaw('
+                ->selectRaw("
                     COUNT(*) as total_complaints,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
-                    COALESCE(SUM(CASE WHEN status = "investigating" THEN 1 ELSE 0 END), 0) as investigating_complaints,
-                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
-                ')->first();
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_complaints,
+                    COALESCE(SUM(CASE WHEN status = 'investigating' THEN 1 ELSE 0 END), 0) as investigating_complaints,
+                    COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_complaints
+                ")->first();
         } else {
             // Statistik untuk staff - hanya laporan yang ditugaskan kepada mereka
             $repStat = Report::where('assigned_to', $user->id)
-                ->selectRaw('
+                ->selectRaw("
                     COUNT(*) as total_reports,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_reports,
-                    COALESCE(SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END), 0) as in_progress_reports,
-                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports,
-                    COALESCE(SUM(CASE WHEN date(created_at) = date("now") THEN 1 ELSE 0 END), 0) as today_reports,
-                    COALESCE(SUM(CASE WHEN date(resolved_at) = date("now") THEN 1 ELSE 0 END), 0) as completed_today,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending", "verified") THEN 1 ELSE 0 END), 0) as pending_action
-                ')->first();
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_reports,
+                    COALESCE(SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END), 0) as in_progress_reports,
+                    COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_reports,
+                    COALESCE(SUM(CASE WHEN DATE(created_at) = ? THEN 1 ELSE 0 END), 0) as today_reports,
+                    COALESCE(SUM(CASE WHEN DATE(resolved_at) = ? THEN 1 ELSE 0 END), 0) as completed_today,
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending', 'verified') THEN 1 ELSE 0 END), 0) as pending_action
+                ", [$today, $today])->first();
 
             $compStat = Complaint::where('assigned_to', $user->id)
-                ->selectRaw('
+                ->selectRaw("
                     COUNT(*) as total_complaints,
-                    COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
-                    COALESCE(SUM(CASE WHEN status = "investigating" THEN 1 ELSE 0 END), 0) as investigating_complaints,
-                    COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
-                ')->first();
+                    COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_complaints,
+                    COALESCE(SUM(CASE WHEN status = 'investigating' THEN 1 ELSE 0 END), 0) as investigating_complaints,
+                    COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_complaints
+                ")->first();
         }
 
         $stats = [
@@ -388,196 +390,6 @@ class AdministrationDashboardController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    public function confirmReport($id)
-    {
-        $user = Auth::user();
-        // Hanya Kepala Departemen atau Staff terkait yang boleh konfirmasi
-        if (!in_array($user->role, ['department_head', 'staff'])) {
-            abort(403);
-        }
-
-        return DB::transaction(function () use ($id, $user) {
-            $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
-                    ->orWhere('assigned_to', $user->id);
-            })->lockForUpdate()->findOrFail($id);
-
-            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-                abort(403);
-            }
-
-            // Gunakan WorkflowService agar: set status, generate queue_no (jika belum), dan trigger event/notification
-            $workflow = app(\App\Services\WorkflowService::class);
-            $workflow->verifyReport($report, $user);
-
-            return back()->with('success', 'Laporan berhasil dikonfirmasi. Nomor antrian: ' . ($report->queue_no ?? '-'));
-        });
-    }
-
-    public function sendReportToHead($id)
-    {
-        $user = Auth::user();
-
-        return DB::transaction(function () use ($id, $user) {
-            $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
-                    ->orWhere('assigned_to', $user->id);
-            })->lockForUpdate()->findOrFail($id);
-
-            // Pastikan laporan sudah dikonfirmasi terlebih dahulu
-            if (!in_array($report->status, ['verified', 'in_progress', 'assigned', 'needs_revision'])) {
-                return back()->with('error', 'Laporan harus dikonfirmasi terlebih dahulu sebelum diteruskan ke Kepala Departemen.');
-            }
-
-            // Hanya staff yang ditugaskan ATAU kepala departemen yang boleh meneruskan
-            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-                return back()->with('error', 'Anda tidak berhak meneruskan laporan ini.');
-            }
-
-            $targetDeptId = $report->department_id ?: $user->department_id;
-            $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
-            if (!$head) {
-                return back()->with('error', 'Tidak ditemukan kepala departemen.');
-            }
-
-            // Gunakan WorkflowService agar Assignment dibuat dan event ditrigger
-            $workflow = app(\App\Services\WorkflowService::class);
-            $workflow->assignReport($report, $head, $user, 'Diteruskan ke Kepala Departemen');
-
-            // Log audit
-            AuditLog::create([
-                'auditable_type' => Report::class,
-                'auditable_id' => $report->id,
-                'user_id' => $user->id,
-                'event' => 'forwarded_to_head',
-                'old_values' => null,
-                'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            return back()->with('success', 'Laporan berhasil diteruskan ke Kepala Departemen.');
-        });
-    }
-
-    /**
-     * Confirm (if needed) and forward the report to the head in one step.
-     */
-    public function confirmAndSend($id)
-    {
-        $user = Auth::user();
-
-        return DB::transaction(function () use ($id, $user) {
-            $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
-                    ->orWhere('assigned_to', $user->id);
-            })->lockForUpdate()->findOrFail($id);
-
-            // Authorization: assigned staff or department head
-            if ($user->role === 'staff' && (int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-                return back()->with('error', 'Anda tidak berhak mengirim laporan ini.');
-            }
-
-            // Status guard
-            $allowedStatuses = ['submitted', 'pending', 'verified', 'assigned', 'needs_revision'];
-            if (!in_array($report->status, $allowedStatuses)) {
-                return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikirim ke Kepala Departemen.');
-            }
-
-            $workflow = app(\App\Services\WorkflowService::class);
-
-            // If still submitted/pending, mark as verified first via WorkflowService
-            if (in_array($report->status, ['submitted', 'pending'])) {
-                $workflow->verifyReport($report, $user);
-
-                // Audit: confirmed by staff/head
-                AuditLog::create([
-                    'auditable_type' => Report::class,
-                    'auditable_id' => $report->id,
-                    'user_id' => $user->id,
-                    'event' => 'confirmed',
-                    'old_values' => null,
-                    'new_values' => ['status' => 'verified'],
-                    'ip_address' => request()->ip(),
-                    'user_agent' => request()->userAgent(),
-                ]);
-            }
-
-            $targetDeptId = $report->department_id ?: $user->department_id;
-            $head = User::where('role', 'department_head')->where('department_id', $targetDeptId)->first();
-            if (!$head) {
-                return back()->with('error', 'Tidak ditemukan kepala departemen.');
-            }
-
-            // Gunakan WorkflowService agar Assignment dibuat dan event ditrigger
-            $workflow->assignReport($report, $head, $user, 'Dikonfirmasi dan dikirim ke Kepala Departemen');
-
-            // Audit: forwarded to head
-            AuditLog::create([
-                'auditable_type' => Report::class,
-                'auditable_id' => $report->id,
-                'user_id' => $user->id,
-                'event' => 'forwarded_to_head',
-                'old_values' => null,
-                'new_values' => ['assigned_to' => $head->id, 'status' => 'assigned'],
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            return back()->with('success', 'Laporan dikonfirmasi dan dikirim ke Kepala Departemen.');
-        });
-    }
-
-    /**
-     * Head returns a report to a selected staff after review.
-     */
-    public function returnToStaff(Request $request, $id)
-    {
-        $user = Auth::user();
-        if ($user->role !== 'department_head') {
-            return back()->with('error', 'Hanya Kepala Departemen yang dapat mengembalikan laporan ke staff.');
-        }
-
-        $request->validate(['assigned_to' => 'required|integer|exists:users,id']);
-
-        $assignedTo = User::findOrFail($request->assigned_to);
-        if (!$assignedTo->isStaff()) {
-            return back()->with('error', 'User yang dipilih bukan staff.');
-        }
-
-        return DB::transaction(function () use ($id, $user, $request, $assignedTo) {
-            $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
-                    ->orWhere('assigned_to', $user->id);
-            })->lockForUpdate()->findOrFail($id);
-
-            // Status guard
-            if (!in_array($report->status, ['assigned', 'in_progress', 'verified', 'reviewed', 'awaiting_admin_approval', 'needs_revision'])) {
-                return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikembalikan ke staff.');
-            }
-
-            $oldStatus = $report->status;
-            $newStatus = in_array($oldStatus, ['awaiting_admin_approval', 'reviewed']) ? 'needs_revision' : 'reviewed';
-
-            // Gunakan WorkflowService agar assignment ditutup dan assignment baru dibuat
-            $workflow = app(\App\Services\WorkflowService::class);
-            $workflow->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', $newStatus);
-
-            AuditLog::create([
-                'auditable_type' => Report::class,
-                'auditable_id' => $report->id,
-                'user_id' => $user->id,
-                'event' => 'returned_to_staff',
-                'old_values' => ['status' => $oldStatus],
-                'new_values' => ['assigned_to' => $assignedTo->id, 'status' => $newStatus],
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-
-            return back()->with('success', 'Laporan dikembalikan ke staff untuk tindak lanjut.');
-        });
-    }
-
     /**
      * Staff or Department Head confirms back to admin after completing actions or reviewing.
      */
@@ -685,70 +497,5 @@ class AdministrationDashboardController extends Controller
 
             return redirect()->back()->with('success', 'Keluhan berhasil diselesaikan.');
         });
-    }
-
-    /**
-     * Update report status (for staff and department head)
-     */
-    public function updateReport(Request $request, $id)
-    {
-        $user = Auth::user();
-        $report = Report::findOrFail($id);
-
-        // Authorization check
-        if ($user->role === 'staff') {
-            // Staff can update reports assigned to them or in their department
-            if ((int) $report->assigned_to !== (int) $user->id && (int) $report->department_id !== (int) $user->department_id) {
-                abort(403, 'Unauthorized');
-            }
-        } elseif ($user->role === 'department_head') {
-            // Department head can update reports in their department or assigned to them
-            if ((int) $report->department_id !== (int) $user->department_id && (int) $report->assigned_to !== (int) $user->id) {
-                abort(403, 'Unauthorized');
-            }
-        } else {
-            abort(403, 'Unauthorized');
-        }
-
-        $request->validate([
-            'status' => 'required|in:submitted,pending,verified,assigned,in_progress,awaiting_info,resolved,closed,rejected,awaiting_admin_approval',
-            'resolution_notes' => 'nullable|string|max:2000',
-        ]);
-
-        // Update status
-        $oldStatus = $report->status;
-        $report->update([
-            'status' => $request->status,
-            'resolution_notes' => $request->resolution_notes ?? $report->resolution_notes,
-            'last_activity_at' => now(),
-        ]);
-
-        // Mark as resolved if status is resolved
-        if ($request->status === 'resolved' && !$report->resolved_at) {
-            $report->update(['resolved_at' => now()]);
-        }
-
-        // Create audit log
-        AuditLog::create([
-            'auditable_type' => Report::class,
-            'auditable_id' => $report->id,
-            'user_id' => $user->id,
-            'event' => 'status_updated',
-            'old_values' => ['status' => $oldStatus],
-            'new_values' => ['status' => $request->status],
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        // Fire status changed event
-        if ($oldStatus !== $request->status) {
-            event(new \App\Events\ReportStatusChanged($report, $oldStatus, $request->status, $user));
-        }
-
-        if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'report' => $report]);
-        }
-
-        return back()->with('success', 'Status laporan berhasil diperbarui.');
     }
 }

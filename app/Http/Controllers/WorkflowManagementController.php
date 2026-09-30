@@ -315,8 +315,8 @@ class WorkflowManagementController extends Controller
         return DB::transaction(function () use ($id, $user, $request) {
             $report = Report::lockForUpdate()->findOrFail($id);
 
-            // Status guard
-            if (! in_array($report->status, ['awaiting_admin_approval', 'reviewed', 'in_progress', 'verified', 'assigned'])) {
+            // Status guard: only work submitted by staff can be approved (see Report::STATUS_TRANSITIONS)
+            if ($report->status !== 'awaiting_admin_approval') {
                 return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat disetujui.');
             }
 

@@ -16,10 +16,13 @@ use Illuminate\Support\Facades\Storage;
 |
 */
 
-// Landing Page
-Route::get('/', function () {
-    return view('landing');
-})->name('landing');
+// Landing Page (includes public service-performance stats)
+Route::get('/', [App\Http\Controllers\PublicTransparencyController::class, 'landing'])->name('landing');
+
+// Public ticket tracking (no login); throttled to make ticket-number guessing impractical
+Route::get('/lacak', [App\Http\Controllers\PublicTransparencyController::class, 'track'])
+    ->middleware('throttle:30,1')
+    ->name('public.track');
 
 // Authentication Routes
 Auth::routes();
@@ -52,9 +55,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/{id}/download-csv', [App\Http\Controllers\DownloadController::class, 'downloadReportAsCsv'])->name('reports.download_csv');
         Route::get('/reports/{id}/download-attachments', [App\Http\Controllers\DownloadController::class, 'downloadReportAttachments'])->name('reports.download_attachments');
         Route::post('/reports/{id}/send-to-head', [App\Http\Controllers\AdminDashboardController::class, 'sendReportToHead'])->name('reports.send_to_head');
-        // Tambahan fitur admin
-        Route::post('/reports/{id}/confirm', [App\Http\Controllers\AdminDashboardController::class, 'confirmReport'])->name('reports.confirm');
-        Route::post('/reports/{id}/assign', [App\Http\Controllers\AdminDashboardController::class, 'assignReport'])->name('reports.assign');
         Route::get('/reports/{id}/edit', [App\Http\Controllers\AdminDashboardController::class, 'editReport'])->name('reports.edit');
         Route::put('/reports/{id}', [App\Http\Controllers\AdminDashboardController::class, 'updateReport'])->name('reports.update');
         Route::delete('/reports/{id}', [App\Http\Controllers\AdminDashboardController::class, 'deleteReport'])->name('reports.delete');
@@ -81,10 +81,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/{id}/download', [App\Http\Controllers\AdministrationDashboardController::class, 'downloadReport'])->name('reports.download');
         Route::get('/complaints', [App\Http\Controllers\AdministrationDashboardController::class, 'complaints'])->name('complaints');
         Route::get('/staff', [App\Http\Controllers\AdministrationDashboardController::class, 'staff'])->name('staff');
-        Route::post('/reports/{id}/confirm', [App\Http\Controllers\AdministrationDashboardController::class, 'confirmReport'])->name('reports.confirm');
-        Route::post('/reports/{id}/send-to-head', [App\Http\Controllers\AdministrationDashboardController::class, 'sendReportToHead'])->name('reports.send_to_head');
-        Route::post('/reports/{id}/confirm-and-send', [App\Http\Controllers\AdministrationDashboardController::class, 'confirmAndSend'])->name('reports.confirm_and_send');
-        Route::post('/reports/{id}/return-to-staff', [App\Http\Controllers\AdministrationDashboardController::class, 'returnToStaff'])->name('reports.return_to_staff');
         Route::post('/reports/{id}/confirm-to-admin', [App\Http\Controllers\AdministrationDashboardController::class, 'confirmToAdmin'])->name('reports.confirm_to_admin');
         Route::post('/reports/{id}/assign', [App\Http\Controllers\AdministrationDashboardController::class, 'assignReport'])->name('reports.assign');
         Route::post('/complaints/{id}/assign', [App\Http\Controllers\AdministrationDashboardController::class, 'assignComplaint'])->name('complaints.assign');
@@ -95,14 +91,12 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['staff'])->prefix('staff')->name('staff.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\AdministrationDashboardController::class, 'index'])->name('dashboard');
         Route::get('/reports', [App\Http\Controllers\AdministrationDashboardController::class, 'reports'])->name('reports.index');
-        Route::put('/reports/{id}', [App\Http\Controllers\AdministrationDashboardController::class, 'updateReport'])->name('reports.update');
     });
 
     // Department Head Routes (alias to administration for testing compatibility)
     Route::middleware(['department_head'])->prefix('department')->name('department.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\AdministrationDashboardController::class, 'index'])->name('dashboard');
         Route::get('/reports', [App\Http\Controllers\AdministrationDashboardController::class, 'reports'])->name('reports.index');
-        Route::put('/reports/{id}', [App\Http\Controllers\AdministrationDashboardController::class, 'updateReport'])->name('reports.update');
     });
 
     // Citizen Dashboard Routes
@@ -183,14 +177,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['administration_access'])->group(function () {
         Route::post('/workflow/reports/{id}/verify', [App\Http\Controllers\WorkflowController::class, 'verifyReport'])->name('workflow.reports.verify');
         Route::post('/workflow/reports/{id}/reject', [App\Http\Controllers\WorkflowController::class, 'rejectReport'])->name('workflow.reports.reject');
-        Route::post('/workflow/reports/{id}/assign', [App\Http\Controllers\WorkflowController::class, 'assignReport'])->name('workflow.reports.assign');
         Route::post('/workflow/reports/{id}/start-work', [App\Http\Controllers\WorkflowController::class, 'startWork'])->name('workflow.reports.start_work');
         Route::post('/workflow/reports/{id}/awaiting-info', [App\Http\Controllers\WorkflowController::class, 'setAwaitingInfo'])->name('workflow.reports.awaiting_info');
-        Route::post('/workflow/reports/{id}/resolve', [App\Http\Controllers\WorkflowController::class, 'resolveReport'])
-            ->middleware(['validate_upload'])
-            ->name('workflow.reports.resolve');
-        Route::post('/workflow/reports/{id}/approve', [App\Http\Controllers\WorkflowController::class, 'approveReport'])->name('workflow.reports.approve');
-        Route::post('/workflow/reports/{id}/reassign', [App\Http\Controllers\WorkflowController::class, 'reassignReport'])->name('workflow.reports.reassign');
     });
 
     // Admin-only workflow management routes
@@ -228,8 +216,4 @@ Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
         Route::get('/reports/export', [App\Http\Controllers\ReportController::class, 'export'])->name('reports.export');
         Route::get('/complaints/stats', [App\Http\Controllers\ComplaintController::class, 'stats'])->name('complaints.stats');
     });
-
-    Route::post('/workflow/reports/{id}/reopen', [App\Http\Controllers\WorkflowController::class, 'reopenReport'])->name('reports.reopen');
-    Route::post('/workflow/reports/{id}/reassign', [App\Http\Controllers\WorkflowController::class, 'reassignReport'])->name('reports.reassign');
-    Route::get('/workflow/reports/{id}/history', [App\Http\Controllers\WorkflowController::class, 'getWorkflowHistory'])->name('reports.history');
 });

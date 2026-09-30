@@ -38,7 +38,7 @@
                                 <td>{{ $complaint->department ? $complaint->department->name : 'N/A' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $complaint->status == 'pending' ? 'warning' : ($complaint->status == 'resolved' ? 'success' : 'info') }}">
-                                        {{ ucfirst($complaint->status) }}
+                                        {{ \App\Models\Report::statusLabel($complaint->status) }}
                                     </span>
                                 </td>
                                 <td>
@@ -116,7 +116,7 @@
                         </p>
                         <p><strong>Status:</strong> 
                             <span class="badge bg-{{ $complaint->status == 'pending' ? 'warning' : ($complaint->status == 'resolved' ? 'success' : 'info') }}">
-                                {{ ucfirst($complaint->status) }}
+                                {{ \App\Models\Report::statusLabel($complaint->status) }}
                             </span>
                         </p>
                     </div>

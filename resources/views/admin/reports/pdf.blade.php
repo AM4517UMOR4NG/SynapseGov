@@ -57,7 +57,7 @@
         
         <div class="field">
             <span class="label">Status:</span>
-            <span class="status-badge status-{{ $report->status }}">{{ ucfirst(str_replace('_', ' ', $report->status)) }}</span>
+            <span class="status-badge status-{{ $report->status }}">{{ \App\Models\Report::statusLabel($report->status) }}</span>
         </div>
         
         <div class="field">

@@ -19,20 +19,20 @@ class CitizenDashboardController extends Controller
 
         // Statistik warga - dioptimalkan via aggregate query
         $repStat = Report::where('user_id', $user->id)
-            ->selectRaw('
+            ->selectRaw("
                 COUNT(*) as my_reports,
-                COALESCE(SUM(CASE WHEN status IN ("submitted", "pending", "verified") THEN 1 ELSE 0 END), 0) as pending_reports,
-                COALESCE(SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END), 0) as in_progress_reports,
-                COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_reports
-            ')->first();
+                COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending', 'verified') THEN 1 ELSE 0 END), 0) as pending_reports,
+                COALESCE(SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END), 0) as in_progress_reports,
+                COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_reports
+            ")->first();
 
         $compStat = Complaint::where('user_id', $user->id)
-            ->selectRaw('
+            ->selectRaw("
                 COUNT(*) as my_complaints,
-                COALESCE(SUM(CASE WHEN status IN ("submitted", "pending") THEN 1 ELSE 0 END), 0) as pending_complaints,
-                COALESCE(SUM(CASE WHEN status = "investigating" THEN 1 ELSE 0 END), 0) as investigating_complaints,
-                COALESCE(SUM(CASE WHEN status = "resolved" THEN 1 ELSE 0 END), 0) as resolved_complaints
-            ')->first();
+                COALESCE(SUM(CASE WHEN status IN ('submitted', 'pending') THEN 1 ELSE 0 END), 0) as pending_complaints,
+                COALESCE(SUM(CASE WHEN status = 'investigating' THEN 1 ELSE 0 END), 0) as investigating_complaints,
+                COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) as resolved_complaints
+            ")->first();
 
         $stats = [
             'my_reports' => (int) ($repStat->my_reports ?? 0),

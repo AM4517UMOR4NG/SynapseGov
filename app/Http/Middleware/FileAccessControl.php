@@ -17,7 +17,7 @@ class FileAccessControl
 
         // Check if user has file access permissions
         if (! in_array($user->role, ['admin', 'staff', 'department_head'])) {
-            abort(403, 'You do not have permission to access files.');
+            abort(403, 'Akses ditolak. Anda tidak berhak membuka berkas ini.');
         }
 
         return $next($request);

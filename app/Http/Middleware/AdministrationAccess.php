@@ -20,7 +20,7 @@ class AdministrationAccess
 
         $user = auth()->user();
         if (! ($user->isDepartmentHead() || $user->isStaff() || $user->isAdmin())) {
-            abort(403, 'Access denied. Administration privileges required.');
+            abort(403, 'Akses ditolak. Halaman ini khusus petugas dinas dan admin.');
         }
 
         return $next($request);

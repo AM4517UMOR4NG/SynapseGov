@@ -93,7 +93,7 @@
                                 <label class="detail-label"><i class="fas fa-circle-notch me-2"></i>Status</label>
                                 <div class="detail-value">
                                     <span class="badge badge-status-{{ $report->status }}">
-                                        {{ ucfirst($report->status) }}
+                                        {{ \App\Models\Report::statusLabel($report->status) }}
                                     </span>
                                 </div>
                             </div>

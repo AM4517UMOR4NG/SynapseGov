@@ -20,7 +20,7 @@ class AdminMiddleware
         }
 
         if (! auth()->user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
+            abort(403, 'Akses ditolak. Halaman ini khusus admin.');
         }
 
         return $next($request);

@@ -288,7 +288,7 @@
 @endpush
 @section('content')
 @php
-    $statusLabels = ['submitted' => 'Baru masuk', 'pending' => 'Menunggu verifikasi', 'verified' => 'Siap ditugaskan', 'assigned' => 'Ditugaskan', 'in_progress' => 'Dalam pengerjaan', 'reviewed' => 'Ditinjau', 'needs_revision' => 'Perlu revisi', 'awaiting_info' => 'Menunggu informasi', 'awaiting_admin_approval' => 'Persetujuan admin', 'investigating' => 'Dalam investigasi', 'resolved' => 'Selesai', 'closed' => 'Ditutup', 'rejected' => 'Ditolak'];
+    $statusLabels = \App\Models\Report::STATUS_LABELS;
     $badgeClass = function($status) {
         if (in_array($status, ['submitted','pending','verified','awaiting_info','awaiting_admin_approval'])) return 'cz-badge-new';
         if (in_array($status, ['assigned','in_progress','investigating','reviewed','needs_revision'])) return 'cz-badge-progress';

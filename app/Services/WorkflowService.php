@@ -266,7 +266,7 @@ class WorkflowService
             ]);
 
             // Add comment explaining what information is needed (visible to citizen)
-            $this->addComment($lockedReport, $staff, "Information needed: {$reason}", false);
+            $this->addComment($lockedReport, $staff, "Informasi yang dibutuhkan: {$reason}", false);
 
             $report->refresh();
 
@@ -281,113 +281,12 @@ class WorkflowService
     }
 
     /**
-     * Resolve a report
-     */
-    public function resolveReport(Report $report, User $staff, ?string $resolutionNotes = null, array $attachments = []): Report
-    {
-        return DB::transaction(function () use ($report, $staff, $resolutionNotes, $attachments) {
-            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
-
-            $oldStatus = $lockedReport->status;
-            $oldData = $lockedReport->toArray();
-
-            $lockedReport->update([
-                'status' => 'resolved',
-                'resolution_notes' => $resolutionNotes,
-                'resolved_at' => now(),
-                'last_activity_at' => now(),
-            ]);
-
-            // Add public comment with resolution details and evidence so citizen can see them
-            if ($resolutionNotes) {
-                $this->addComment($lockedReport, $staff, "Report resolved: {$resolutionNotes}", false, $attachments);
-            }
-
-            // Complete assignment
-            $lockedReport->assignments()->where('status', 'active')->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-            ]);
-
-            $report->refresh();
-
-            // Log the change
-            $this->logAudit($lockedReport, 'resolved', $oldData, $lockedReport->toArray(), $staff);
-
-            // Fire event
-            event(new ReportStatusChanged($lockedReport, $oldStatus, 'resolved', $staff));
-
-            return $lockedReport;
-        });
-    }
-
-    /**
-     * Approve a resolved report (head department / admin action)
-     */
-    public function approveReport(Report $report, User $approver): Report
-    {
-        return DB::transaction(function () use ($report, $approver) {
-            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
-
-            $oldStatus = $lockedReport->status;
-            $oldData = $lockedReport->toArray();
-
-            $lockedReport->update([
-                'status' => 'closed',
-                'resolved_at' => $lockedReport->resolved_at ?? now(),
-                'last_activity_at' => now(),
-            ]);
-
-            $report->refresh();
-
-            // Log the change
-            $this->logAudit($lockedReport, 'approved', $oldData, $lockedReport->toArray(), $approver);
-
-            // Fire event
-            event(new ReportStatusChanged($lockedReport, $oldStatus, 'closed', $approver));
-
-            return $lockedReport;
-        });
-    }
-
-    /**
-     * Request changes to a resolved report
-     */
-    public function requestChanges(Report $report, User $requester, string $reason): Report
-    {
-        return DB::transaction(function () use ($report, $requester, $reason) {
-            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
-
-            $oldStatus = $lockedReport->status;
-            $oldData = $lockedReport->toArray();
-
-            $lockedReport->update([
-                'status' => 'in_progress',
-                'last_activity_at' => now(),
-            ]);
-
-            // Add comment with change request
-            $this->addComment($lockedReport, $requester, "Changes requested: {$reason}", true);
-
-            $report->refresh();
-
-            // Log the change
-            $this->logAudit($lockedReport, 'changes_requested', $oldData, $lockedReport->toArray(), $requester);
-
-            // Fire event
-            event(new ReportStatusChanged($lockedReport, $oldStatus, 'in_progress', $requester));
-
-            return $lockedReport;
-        });
-    }
-
-    /**
      * Reopen a closed report
      */
     public function reopenReport(Report $report, User $user, string $reason): Report
     {
         if (! $report->canBeReopened()) {
-            throw new \Exception('This report cannot be reopened.');
+            throw new \Exception('Laporan ini tidak dapat dibuka kembali (hanya laporan selesai/ditutup maksimal 30 hari).');
         }
 
         return DB::transaction(function () use ($report, $user, $reason) {
@@ -513,57 +412,6 @@ class WorkflowService
             event(new ReportStatusChanged($lockedReport, $oldStatus, 'closed', $citizen));
 
             return $lockedReport;
-        });
-    }
-
-    /**
-     * Reassign a report
-     */
-    public function reassignReport(Report $report, User $newAssignee, User $reassigner, ?string $reason = null): Assignment
-    {
-        return DB::transaction(function () use ($report, $newAssignee, $reassigner, $reason) {
-            $lockedReport = Report::where('id', $report->id)->lockForUpdate()->first() ?? $report;
-            $oldData = $lockedReport->toArray();
-
-            // Complete current assignment
-            $lockedReport->assignments()->where('status', 'active')->update([
-                'status' => 'reassigned',
-                'completed_at' => now(),
-            ]);
-
-            // Create new assignment
-            $assignment = Assignment::create([
-                'assignable_id' => $lockedReport->id,
-                'assignable_type' => Report::class,
-                'assigned_to' => $newAssignee->id,
-                'assigned_by' => $reassigner->id,
-                'notes' => $reason,
-                'assigned_at' => now(),
-                'status' => 'active',
-            ]);
-
-            // Update report
-            $lockedReport->update([
-                'assigned_to' => $newAssignee->id,
-                'status' => 'assigned',
-                'reassign_count' => ($lockedReport->reassign_count ?? 0) + 1,
-                'last_activity_at' => now(),
-            ]);
-
-            // Add comment about reassignment
-            if ($reason) {
-                $this->addComment($lockedReport, $reassigner, "Report reassigned: {$reason}", true);
-            }
-
-            $report->refresh();
-
-            // Log the change
-            $this->logAudit($lockedReport, 'reassigned', $oldData, $lockedReport->toArray(), $reassigner);
-
-            // Fire event
-            event(new ReportAssigned($lockedReport, $newAssignee, $reassigner));
-
-            return $assignment;
         });
     }
 

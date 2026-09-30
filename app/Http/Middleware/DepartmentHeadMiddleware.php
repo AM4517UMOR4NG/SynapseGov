@@ -20,7 +20,7 @@ class DepartmentHeadMiddleware
         }
 
         if (! auth()->user()->isDepartmentHead()) {
-            abort(403, 'Access denied. Department head privileges required.');
+            abort(403, 'Akses ditolak. Halaman ini khusus kepala dinas.');
         }
 
         return $next($request);

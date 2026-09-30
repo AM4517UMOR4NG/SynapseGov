@@ -390,7 +390,7 @@
                                             };
                                         @endphp
                                         <span
-                                            class="badge rounded-pill {{ $statusClass }} px-2 py-1" style="font-size: 0.7rem;">{{ ucfirst(str_replace('_', ' ', $report->status)) }}</span>
+                                            class="badge rounded-pill {{ $statusClass }} px-2 py-1" style="font-size: 0.7rem;">{{ \App\Models\Report::statusLabel($report->status) }}</span>
                                     </div>
                                 </div>
                             </div>

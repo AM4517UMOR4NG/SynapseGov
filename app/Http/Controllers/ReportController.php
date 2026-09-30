@@ -399,7 +399,7 @@ class ReportController extends Controller
         $dateExpression = match ($driver) {
             'sqlite' => "strftime('%Y-%m', created_at)",
             'pgsql' => "to_char(created_at, 'YYYY-MM')",
-            default => 'DATE_FORMAT(created_at, "%Y-%m")',
+            default => "DATE_FORMAT(created_at, '%Y-%m')",
         };
 
         return Report::selectRaw("{$dateExpression} as month, COUNT(*) as count")
