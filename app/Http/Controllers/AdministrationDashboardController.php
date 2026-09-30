@@ -166,7 +166,7 @@ class AdministrationDashboardController extends Controller
             $query->where('priority', $request->input('priority'));
         }
 
-        $reports = $query->latest()->paginate($perPage)->withQueryString();
+        $reports = $query->latest()->paginate($perPage)->appends(request()->query());
 
         // Ambil daftar staff untuk assignment dropdown
         $staffList = User::where('department_id', $user->department_id)
@@ -210,7 +210,7 @@ class AdministrationDashboardController extends Controller
             $query->where('priority', $request->input('priority'));
         }
 
-        $complaints = $query->latest()->paginate($perPage)->withQueryString();
+        $complaints = $query->latest()->paginate($perPage)->appends(request()->query());
 
         $staffList = User::where('department_id', $user->department_id)
             ->where('role', 'staff')

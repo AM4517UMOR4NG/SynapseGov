@@ -68,7 +68,7 @@ class DepartmentHeadWorkspaceController extends Controller
         })->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->when($request->filled('priority'), fn ($q) => $q->where('priority', $request->input('priority')))
             ->when($request->boolean('overdue'), fn ($q) => $q->whereNotIn('status', ['resolved', 'closed', 'rejected'])->where('sla_due_at', '<', now()));
-        $tickets = $query->with(['user', 'assignedUser', 'department'])->latest()->paginate($this->perPage())->withQueryString();
+        $tickets = $query->with(['user', 'assignedUser', 'department'])->latest()->paginate($this->perPage())->appends(request()->query());
         $staffList = $this->teamQuery()->where('role', 'staff')->where('is_active', true)->orderBy('name')->get();
 
         return view('administration.head.tickets', compact('tickets', 'type', 'isReport', 'statusCounts', 'staffList'));
@@ -87,7 +87,7 @@ class DepartmentHeadWorkspaceController extends Controller
             $term = '%'.$request->input('q').'%';
             $q->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('email', 'like', $term));
         })->when($request->filled('active'), fn ($q) => $q->where('is_active', $request->input('active')))
-            ->orderBy('name')->paginate($this->perPage())->withQueryString();
+            ->orderBy('name')->paginate($this->perPage())->appends(request()->query());
 
         return view('administration.head.staff', compact('staff', 'total', 'active'));
     }

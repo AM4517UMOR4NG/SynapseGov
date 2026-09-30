@@ -98,7 +98,7 @@ class AdminDashboardController extends Controller
         $reports = Report::with(['user', 'department', 'assignedUser'])
             ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('ticket_no', 'like', '%'.$search.'%')))
             ->latest()
-            ->paginate($perPage)->withQueryString();
+            ->paginate($perPage)->appends(request()->query());
 
         // Get all staff for assignment dropdown
         $staffList = User::where('role', 'staff')->get();
@@ -113,7 +113,7 @@ class AdminDashboardController extends Controller
         $complaints = Complaint::with(['user', 'department', 'assignedUser'])
             ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('ticket_no', 'like', '%'.$search.'%')))
             ->latest()
-            ->paginate($perPage)->withQueryString();
+            ->paginate($perPage)->appends(request()->query());
 
         return view('admin.complaints', compact('complaints'));
     }
@@ -127,7 +127,7 @@ class AdminDashboardController extends Controller
             $users = User::with('department')
                 ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%')))
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage)->withQueryString();
+                ->paginate($perPage)->appends(request()->query());
 
             // Get all departments for filters
             $departments = Department::all();
