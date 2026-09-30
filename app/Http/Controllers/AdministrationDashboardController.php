@@ -124,16 +124,16 @@ class AdministrationDashboardController extends Controller
         ));
     }
 
-    public function reports()
+    public function reports(Request $request)
     {
         if (Auth::user()->isDepartmentHead()) {
-            return app(DepartmentHeadWorkspaceController::class)->tickets(request(), 'reports');
+            return app(DepartmentHeadWorkspaceController::class)->tickets($request, 'reports');
         }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
 
-        // Laporan yang dapat diakses oleh Kepala Departemen atau Staff
-        $reports = Report::with(['user', 'assignedUser'])
+        // Laporan yang dapat diakses oleh Staff
+        $query = Report::with(['user', 'assignedUser', 'department'])
             ->where(function ($q) use ($user) {
                 if ($user->department_id) {
                     $q->where('department_id', $user->department_id)
@@ -141,9 +141,32 @@ class AdministrationDashboardController extends Controller
                 } else {
                     $q->where('assigned_to', $user->id);
                 }
-            })
-            ->latest()
-            ->paginate($perPage);
+            });
+
+        // Filter pencarian
+        if ($request->filled('q')) {
+            $term = '%' . $request->input('q') . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                    ->orWhere('ticket_no', 'like', $term)
+                    ->orWhere('description', 'like', $term)
+                    ->orWhereHas('user', function ($u) use ($term) {
+                        $u->where('name', 'like', $term);
+                    });
+            });
+        }
+
+        // Filter status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filter prioritas
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->input('priority'));
+        }
+
+        $reports = $query->latest()->paginate($perPage)->withQueryString();
 
         // Ambil daftar staff untuk assignment dropdown
         $staffList = User::where('department_id', $user->department_id)
@@ -154,17 +177,40 @@ class AdministrationDashboardController extends Controller
         return view('administration.reports', compact('reports', 'staffList'));
     }
 
-    public function complaints()
+    public function complaints(Request $request)
     {
         if (Auth::user()->isDepartmentHead()) {
-            return app(DepartmentHeadWorkspaceController::class)->tickets(request(), 'complaints');
+            return app(DepartmentHeadWorkspaceController::class)->tickets($request, 'complaints');
         }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
-        $complaints = Complaint::with(['user', 'assignedUser'])
-            ->where('department_id', $user->department_id)
-            ->latest()
-            ->paginate($perPage);
+        $query = Complaint::with(['user', 'assignedUser', 'department'])
+            ->where('department_id', $user->department_id);
+
+        // Filter pencarian
+        if ($request->filled('q')) {
+            $term = '%' . $request->input('q') . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                    ->orWhere('ticket_no', 'like', $term)
+                    ->orWhere('description', 'like', $term)
+                    ->orWhereHas('user', function ($u) use ($term) {
+                        $u->where('name', 'like', $term);
+                    });
+            });
+        }
+
+        // Filter status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filter prioritas
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->input('priority'));
+        }
+
+        $complaints = $query->latest()->paginate($perPage)->withQueryString();
 
         $staffList = User::where('department_id', $user->department_id)
             ->where('role', 'staff')
@@ -506,15 +552,16 @@ class AdministrationDashboardController extends Controller
             })->lockForUpdate()->findOrFail($id);
 
             // Status guard
-            if (!in_array($report->status, ['assigned', 'in_progress', 'verified'])) {
+            if (!in_array($report->status, ['assigned', 'in_progress', 'verified', 'reviewed', 'awaiting_admin_approval', 'needs_revision'])) {
                 return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikembalikan ke staff.');
             }
 
             $oldStatus = $report->status;
+            $newStatus = in_array($oldStatus, ['awaiting_admin_approval', 'reviewed']) ? 'needs_revision' : 'reviewed';
 
             // Gunakan WorkflowService agar assignment ditutup dan assignment baru dibuat
             $workflow = app(\App\Services\WorkflowService::class);
-            $workflow->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', 'reviewed');
+            $workflow->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', $newStatus);
 
             AuditLog::create([
                 'auditable_type' => Report::class,
@@ -522,7 +569,7 @@ class AdministrationDashboardController extends Controller
                 'user_id' => $user->id,
                 'event' => 'returned_to_staff',
                 'old_values' => ['status' => $oldStatus],
-                'new_values' => ['assigned_to' => $assignedTo->id, 'status' => 'reviewed'],
+                'new_values' => ['assigned_to' => $assignedTo->id, 'status' => $newStatus],
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
@@ -532,13 +579,13 @@ class AdministrationDashboardController extends Controller
     }
 
     /**
-     * Staff confirms back to admin after completing actions.
+     * Staff or Department Head confirms back to admin after completing actions or reviewing.
      */
     public function confirmToAdmin($id)
     {
         $user = Auth::user();
-        if ($user->role !== 'staff') {
-            return back()->with('error', 'Hanya staff yang berhak mengonfirmasi laporan ini ke admin.');
+        if (!in_array($user->role, ['staff', 'department_head'])) {
+            return back()->with('error', 'Hanya staff atau Kepala Departemen yang berhak mengonfirmasi laporan ini ke admin.');
         }
 
         return DB::transaction(function () use ($id, $user) {
@@ -551,8 +598,8 @@ class AdministrationDashboardController extends Controller
                 return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
             }
 
-            // Status guard: only allow valid active statuses
-            $allowedStatuses = ['reviewed', 'in_progress', 'assigned', 'needs_revision', 'verified'];
+            // Status guard: allow valid active and approval statuses
+            $allowedStatuses = ['reviewed', 'in_progress', 'assigned', 'needs_revision', 'verified', 'awaiting_admin_approval'];
             if (!in_array($report->status, $allowedStatuses)) {
                 return back()->with('error', 'Laporan dengan status "' . $report->status . '" tidak dapat dikonfirmasi ke admin.');
             }
@@ -589,6 +636,54 @@ class AdministrationDashboardController extends Controller
             event(new \App\Events\ReportStatusChanged($report, $oldStatus, 'awaiting_admin_approval', $user));
 
             return back()->with('success', 'Laporan telah dikonfirmasi ke admin untuk persetujuan akhir.');
+        });
+    }
+
+    /**
+     * Resolve a complaint (for department head or staff)
+     */
+    public function resolveComplaint(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['department_head', 'staff'])) {
+            abort(403, 'Anda tidak berhak menyelesaikan keluhan ini.');
+        }
+
+        $request->validate([
+            'resolution_notes' => 'required|string|max:1000',
+        ]);
+
+        return DB::transaction(function () use ($id, $request, $user) {
+            $complaint = Complaint::where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
+
+            $oldStatus = $complaint->status;
+            $complaint->update([
+                'status' => 'resolved',
+                'resolution_notes' => $request->resolution_notes,
+                'resolved_at' => now(),
+                'last_activity_at' => now(),
+            ]);
+
+            \App\Models\Assignment::where('assignable_type', Complaint::class)
+                ->where('assignable_id', $complaint->id)
+                ->where('status', 'active')
+                ->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+
+            AuditLog::create([
+                'auditable_type' => Complaint::class,
+                'auditable_id' => $complaint->id,
+                'user_id' => $user->id,
+                'event' => 'complaint_resolved',
+                'old_values' => ['status' => $oldStatus],
+                'new_values' => ['status' => 'resolved', 'resolution_notes' => $request->resolution_notes],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return redirect()->back()->with('success', 'Keluhan berhasil diselesaikan.');
         });
     }
 

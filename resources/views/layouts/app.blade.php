@@ -124,8 +124,9 @@
     <link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
 </head>
-<body class="public-ui">
+<body class="public-ui {{ request()->routeIs('login', 'register') ? 'auth-page' : '' }}">
     <div id="app">
+        @unless(request()->routeIs('login', 'register'))
         <nav class="navbar navbar-expand-md navbar-dark shadow-sm">
             <div class="container">
                 <!-- compact brand: icon only, title available on hover -->
@@ -194,6 +195,7 @@
                 </div>
             </div>
         </nav>
+        @endunless
 
         <main class="py-4">
             @if(session('success'))

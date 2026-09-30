@@ -3,6 +3,7 @@
 @section('title', 'Admin Command Center')
 
 @section('content')
+@include('admin.heading')
     <style>
         .admin-grid-top {
             display: grid;
@@ -159,10 +160,10 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div class="d-flex flex-column">
                 <div class="dashboard-header-title mb-2">
-                    <i class="fas fa-shield-halved me-2"></i>Pusat Komando Eksekutif
+                    <i class="fas fa-shield-halved me-2"></i>Selamat datang di pusat layanan.
                 </div>
                 <div class="dashboard-header-desc mb-3 opacity-75">
-                    Pusat orkestrasi pengaduan publik, monitoring kepatuhan SLA antar-OPD, dan audit sistem SynapseGov.
+                    Satu tempat untuk mengatur laporan, membantu tim, dan menjaga layanan tetap berjalan.
                 </div>
                 <div class="dashboard-header-time">
                     <i class="fas fa-clock me-2"></i>{{ now()->translatedFormat('l, d F Y — H:i') }} WIB
@@ -170,7 +171,7 @@
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.monitoring') }}" class="btn-back">
-                    <i class="fas fa-chart-line"></i>Live SLA Monitor
+                    <i class="fas fa-chart-line"></i>Pantau SLA
                 </a>
                 <a href="{{ route('admin.reports') }}" class="btn-modern">
                     <i class="fas fa-file-export"></i>Kelola Laporan
@@ -193,7 +194,7 @@
             <div class="quick-stat-box">
                 <div class="quick-stat-icon"><i class="fas fa-users-gear"></i></div>
                 <div class="quick-stat-number">{{ $stats['total_users'] ?? 0 }}</div>
-                <div class="quick-stat-label">Pengguna Aktif</div>
+                <div class="quick-stat-label">Total Pengguna</div>
             </div>
             <div class="quick-stat-box">
                 <div class="quick-stat-icon"><i class="fas fa-hourglass-half"></i></div>
@@ -247,11 +248,11 @@
                 <div class="stats-grid mb-4 gap-4">
                     <div class="stat-item rounded-4 shadow-sm border-0 {{ $slaBreached > 0 ? 'bg-danger bg-opacity-10' : 'bg-success bg-opacity-10' }}">
                         <div class="stat-number {{ $slaBreached > 0 ? 'text-danger' : 'text-success' }}">{{ $slaBreached }}</div>
-                        <div class="stat-label">SLA Breached</div>
+                        <div class="stat-label">Melewati SLA</div>
                     </div>
                     <div class="stat-item rounded-4 shadow-sm border-0 {{ $dueSoon > 0 ? 'bg-warning bg-opacity-10' : 'bg-success bg-opacity-10' }}">
                         <div class="stat-number {{ $dueSoon > 0 ? 'text-warning' : 'text-success' }}">{{ $dueSoon }}</div>
-                        <div class="stat-label">Mendekati Deadline</div>
+                        <div class="stat-label">Mendekati batas waktu</div>
                     </div>
                 </div>
 

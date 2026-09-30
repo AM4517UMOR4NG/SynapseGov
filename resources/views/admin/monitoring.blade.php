@@ -1,23 +1,9 @@
 @extends('layouts.dashboard')
 
-@section('title', 'System Monitoring')
+@section('title', 'Monitoring & SLA')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-chart-line me-2"></i>System Monitoring
-            </h1>
-            <div class="text-muted">
-                <i class="fas fa-calendar me-1"></i>
-                {{ now()->format('d F Y, H:i') }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Real-time Statistics -->
+@include('admin.heading')<!-- Real-time Statistics -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
@@ -43,7 +29,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Pending
+                            Menunggu
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['pending_reports'] }}</div>
                     </div>
@@ -61,7 +47,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            In Progress
+                            Sedang ditangani
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['in_progress_reports'] }}</div>
                     </div>
@@ -79,7 +65,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Resolved
+                            Selesai
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['resolved_reports'] }}</div>
                     </div>
@@ -100,7 +86,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            SLA Breached
+                            Melewati SLA
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $slaStats['sla_breached'] }}</div>
                     </div>
@@ -118,7 +104,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            SLA Due Soon
+                            Mendekati batas waktu
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $slaStats['sla_due_soon'] }}</div>
                     </div>
@@ -136,7 +122,7 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Total with SLA
+                            Laporan dengan SLA
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $slaStats['total_with_sla'] }}</div>
                     </div>
@@ -149,23 +135,23 @@
     </div>
 </div>
 
-<!-- Department Performance -->
+<!-- Kinerja departemen -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Department Performance</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Kinerja departemen</h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>Department</th>
-                                <th class="text-center">Total Reports</th>
-                                <th class="text-center">Resolved</th>
-                                <th class="text-center">Resolution Rate</th>
-                                <th class="text-center">Staff Count</th>
+                                <th>Departemen</th>
+                                <th class="text-center">Total laporan</th>
+                                <th class="text-center">Selesai</th>
+                                <th class="text-center">Tingkat penyelesaian</th>
+                                <th class="text-center">Jumlah pengguna</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -196,12 +182,12 @@
     </div>
 </div>
 
-<!-- Recent Activity -->
+<!-- Aktivitas terbaru -->
 <div class="row">
     <div class="col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Aktivitas terbaru</h6>
             </div>
             <div class="card-body">
                 @if($recentActivity->count() > 0)
@@ -235,7 +221,7 @@
     <div class="col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Monthly Trends (30 Days)</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Tren laporan (30 hari)</h6>
             </div>
             <div class="card-body">
                 <canvas id="monthlyTrendsChart" height="200"></canvas>
@@ -279,3 +265,5 @@ const monthlyTrendsChart = new Chart(ctx, {
 });
 </script>
 @endsection
+
+

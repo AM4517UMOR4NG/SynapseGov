@@ -93,10 +93,12 @@ class AdminDashboardController extends Controller
 
     public function reports()
     {
+        $search = $this->adminSearch();
         $perPage = Auth::user()->getSettings('items_per_page', 15);
         $reports = Report::with(['user', 'department', 'assignedUser'])
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('ticket_no', 'like', '%'.$search.'%')))
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage)->withQueryString();
 
         // Get all staff for assignment dropdown
         $staffList = User::where('role', 'staff')->get();
@@ -106,22 +108,26 @@ class AdminDashboardController extends Controller
 
     public function complaints()
     {
+        $search = $this->adminSearch();
         $perPage = Auth::user()->getSettings('items_per_page', 15);
         $complaints = Complaint::with(['user', 'department', 'assignedUser'])
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('ticket_no', 'like', '%'.$search.'%')))
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage)->withQueryString();
 
         return view('admin.complaints', compact('complaints'));
     }
 
     public function users()
     {
+        $search = $this->adminSearch();
         try {
             $perPage = Auth::user()->getSettings('items_per_page', 15);
             // Get users with department relationship, paginate per page
             $users = User::with('department')
+                ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%')))
                 ->orderBy('created_at', 'desc')
-                ->paginate($perPage);
+                ->paginate($perPage)->withQueryString();
 
             // Get all departments for filters
             $departments = Department::all();
@@ -136,9 +142,19 @@ class AdminDashboardController extends Controller
 
     public function departments()
     {
-        $departments = Department::withCount(['users', 'reports', 'complaints'])->get();
+        $search = $this->adminSearch();
+        $departments = Department::withCount(['users', 'reports', 'complaints'])
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query->where('name', 'like', '%'.$search.'%')->orWhere('code', 'like', '%'.$search.'%')))
+            ->orderBy('name')->get();
 
         return view('admin.departments', compact('departments'));
+    }
+
+    private function adminSearch(): string
+    {
+        $validated = request()->validate(['q' => 'nullable|string|max:100']);
+
+        return trim($validated['q'] ?? '');
     }
 
     /**

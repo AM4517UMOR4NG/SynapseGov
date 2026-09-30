@@ -3,21 +3,7 @@
 @section('title', 'Manajemen Departemen')
 
 @section('content')
-<!-- Header -->
-<div class="departments-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h1>
-                <i class="fas fa-sitemap me-2"></i>Manajemen Departemen
-            </h1>
-            <p class="mb-0 opacity-90">Kelola master data dinas, kementerian, dan instansi dinas pelayanan publik</p>
-        </div>
-        <button type="button" class="btn btn-light fw-bold text-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createDepartmentModal">
-            <i class="fas fa-plus me-1"></i> Tambah Departemen
-        </button>
-    </div>
-</div>
-
+@include('admin.heading')
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -369,3 +355,4 @@
 </div>
 @endforeach
 @endsection
+

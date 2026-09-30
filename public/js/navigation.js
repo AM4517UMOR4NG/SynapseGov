@@ -5,6 +5,8 @@
         const mobile = matchMedia('(max-width: 991px)');
         const backdrop = document.querySelector('.workspace-backdrop');
         const close = panel.querySelector('.workspace-menu-close');
+        const content = document.querySelector('main.content');
+        const account = document.getElementById('workspaceAccountToggle');
         const key = 'synapsegov.sidebar.collapsed';
         let collapsed = false;
         try { collapsed = localStorage.getItem(key) === '1'; } catch (_) {}
@@ -18,6 +20,7 @@
             button.setAttribute('aria-expanded', String(open));
             button.setAttribute('aria-label', open ? 'Tutup menu navigasi' : 'Buka menu navigasi');
             backdrop.hidden = !(mobile.matches && open);
+            if (content) content.inert = mobile.matches && open;
         };
         const setOpen = (value, restoreFocus = false) => {
             open = value;
@@ -32,20 +35,30 @@
         button.addEventListener('click', () => setOpen(!open));
         close.addEventListener('click', () => setOpen(false, true));
         backdrop.addEventListener('click', () => setOpen(false, true));
+        account?.addEventListener('click', () => {
+            if (mobile.matches && open) setOpen(false);
+        });
         document.addEventListener('keydown', event => {
-            if (!open || !mobile.matches) return;
+            if (!open) return;
+            if (document.querySelector('.modal.show, .dropdown-menu.show')) return;
             if (event.key === 'Escape') { event.preventDefault(); setOpen(false, true); }
-            if (event.key === 'Tab') {
+            if (event.key === 'Tab' && mobile.matches) {
                 const controls = [...panel.querySelectorAll('a[href],button:not([disabled])')].filter(el => el.getClientRects().length);
                 const first = controls[0], last = controls[controls.length - 1];
-                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+                if (!panel.contains(document.activeElement)) { event.preventDefault(); first?.focus(); }
+                else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
                 else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
             }
         });
         panel.querySelectorAll('a[href]').forEach(link => link.addEventListener('click', () => {
             if (mobile.matches) setOpen(false);
         }));
-        mobile.addEventListener('change', () => { open = !mobile.matches && !collapsed; render(); });
+        mobile.addEventListener('change', () => {
+            const focusWasInPanel = panel.contains(document.activeElement);
+            open = !mobile.matches && !collapsed;
+            render();
+            if (!open && focusWasInPanel) button.focus();
+        });
         render();
     }
     document.querySelectorAll('[data-site-menu]').forEach(toggle => {

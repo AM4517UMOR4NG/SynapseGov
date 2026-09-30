@@ -1360,11 +1360,12 @@
             text-decoration: none !important;
         }
     </style>
+@if(auth()->check() && auth()->user()->isAdmin())<link rel="stylesheet" href="{{ asset('css/admin-workspace.css') }}?v={{ filemtime(public_path('css/admin-workspace.css')) }}">@endif
 </head>
-<body class="workspace-ui {{ auth()->check() && auth()->user()->isDepartmentHead() ? 'department-head' : '' }}">
+<body class="workspace-ui {{ auth()->check() && auth()->user()->isAdmin() ? 'admin-ui' : '' }} {{ auth()->check() && auth()->user()->isDepartmentHead() ? 'department-head' : '' }}">
     <div id="app">
         <!-- Top Navigation Bar -->
-        <nav class="navbar navbar-expand-lg">
+        <nav class="navbar navbar-expand-lg workspace-topbar" aria-label="Navigasi akun">
             <div class="container-fluid">
 
 
@@ -1374,7 +1375,7 @@
                 </button>
 
                 @if(auth()->check())
-                    <a class="dh-brand" href="{{ route('home') }}"><span class="dh-brand-symbol"><i class="fas fa-layer-group" aria-hidden="true"></i></span>SynapseGov<span style="color:#9f2434">.</span></a>
+                    <a class="dh-brand" href="{{ route('home') }}" aria-label="SynapseGov — Dashboard"><span class="dh-brand-symbol"><i class="fas fa-layer-group" aria-hidden="true"></i></span><span class="workspace-brand-name">SynapseGov</span></a>
                     <span class="dh-top-context">{{ auth()->user()->getRoleDisplayName() }}</span>
                 @endif
 
@@ -1386,11 +1387,12 @@
                         @auth
                             <!-- User Account Dropdown -->
                             <li class="nav-item dropdown">
-                                <button class="btn border-0 p-0 d-flex align-items-center dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; box-shadow: none;">
-                                    <span class="navbar-role-badge">{{ auth()->user()->isDepartmentHead() ? auth()->user()->name.' · Kepala Dinas' : auth()->user()->role }}</span>
+                                <button id="workspaceAccountToggle" class="workspace-account-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu akun {{ auth()->user()->name }}">
+                                    <span class="workspace-account-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                                    <span class="workspace-account-copy"><span class="workspace-account-name">{{ auth()->user()->name }}</span><span class="workspace-account-role">{{ auth()->user()->getRoleDisplayName() }}</span></span>
                                 </button>
 
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-end workspace-account-menu" aria-labelledby="workspaceAccountToggle">
                                     <li class="dropdown-header">
                                         <div class="fw-bold text-decoration-none" style="color: var(--text-main); text-decoration: none !important; white-space: normal; overflow-wrap: anywhere;">{{ auth()->user()->name }}</div>
                                         <div class="text-muted small text-decoration-none" style="text-decoration: none !important; white-space: normal; overflow-wrap: anywhere;">{{ auth()->user()->email }}</div>
@@ -1579,3 +1581,4 @@
     @stack('scripts')
 </body>
 </html>
+

@@ -6,3 +6,6 @@ body.public-ui{background:#f6f7f9!important;background-image:none!important;colo
 @media(max-width:600px){.public-ui .auth-container{padding:20px 14px}.public-ui .auth-card{width:100%;min-width:0}.public-ui .auth-form{padding:26px 20px!important}}
 .public-ui .auth-brand{background:transparent!important}.public-ui .auth-left{background:#852735!important;background-image:none!important}.public-ui .auth-right{padding:36px!important}.public-ui .auth-title{color:#852735!important}.public-ui .auth-container .auth-card{padding:0!important}.public-ui .auth-container .form-control{font-size:13px}
 @media(max-width:600px){.public-ui .auth-right{padding:25px 20px!important}}
+/* Login and registration use the full viewport without a top navigation bar. */
+.public-ui.auth-page main.py-4{padding:0!important}
+.public-ui.auth-page .auth-container{min-height:100vh;min-height:100dvh}

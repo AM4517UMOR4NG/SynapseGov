@@ -3,6 +3,7 @@
 @section('title', 'Pengguna Admin')
 
 @section('content')
+@include('admin.heading')
 <!-- Error Messages -->
 @if ($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -30,18 +31,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
-
-<!-- Header -->
-<div class="users-header">
-    <h1>
-        <i class="fas fa-users me-2"></i>Manajemen Pengguna
-    </h1>
-    <p>Kelola semua pengguna dan hak akses platform SynapseGov</p>
-    <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9;">
-        <i class="fas fa-calendar me-1"></i>
-        {{ now()->format('d F Y, H:i') }}
-    </div>
-</div>
 
 <!-- Users Table -->
 <div class="users-card">
@@ -222,3 +211,4 @@
 </div>
 @endforeach
 @endsection
+

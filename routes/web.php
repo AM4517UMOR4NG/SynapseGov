@@ -88,6 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/{id}/confirm-to-admin', [App\Http\Controllers\AdministrationDashboardController::class, 'confirmToAdmin'])->name('reports.confirm_to_admin');
         Route::post('/reports/{id}/assign', [App\Http\Controllers\AdministrationDashboardController::class, 'assignReport'])->name('reports.assign');
         Route::post('/complaints/{id}/assign', [App\Http\Controllers\AdministrationDashboardController::class, 'assignComplaint'])->name('complaints.assign');
+        Route::post('/complaints/{id}/resolve', [App\Http\Controllers\AdministrationDashboardController::class, 'resolveComplaint'])->name('complaints.resolve');
     });
 
     // Staff Routes (alias to administration for testing compatibility)

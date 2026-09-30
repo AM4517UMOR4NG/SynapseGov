@@ -185,13 +185,14 @@ class WorkflowManagementController extends Controller
             })->lockForUpdate()->findOrFail($id);
 
             // Status guard
-            if (! in_array($report->status, ['assigned', 'in_progress', 'verified'])) {
+            if (! in_array($report->status, ['assigned', 'in_progress', 'verified', 'reviewed', 'awaiting_admin_approval', 'needs_revision'])) {
                 return back()->with('error', 'Laporan dengan status "'.$report->status.'" tidak dapat dikembalikan ke staff.');
             }
 
             $oldStatus = $report->status;
+            $newStatus = in_array($oldStatus, ['awaiting_admin_approval', 'reviewed']) ? 'needs_revision' : 'reviewed';
 
-            $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', 'reviewed');
+            $this->workflowService->assignReport($report, $assignedTo, $user, $request->notes ?: 'Dikembalikan ke staff untuk tindak lanjut', $newStatus);
 
             // Audit: reviewed by head
             AuditLog::create([
@@ -200,7 +201,7 @@ class WorkflowManagementController extends Controller
                 'user_id' => $user->id,
                 'event' => 'reviewed_by_head',
                 'old_values' => ['status' => $oldStatus],
-                'new_values' => ['status' => 'reviewed', 'assigned_to' => $assignedTo->id],
+                'new_values' => ['status' => $newStatus, 'assigned_to' => $assignedTo->id],
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);

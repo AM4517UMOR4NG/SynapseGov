@@ -80,7 +80,10 @@
                         <small class="dh-muted">{{ $ticket->created_at->format('H:i') }} WIB</small>
                     </td>
                     <td>
-                        <button class="dh-button dh-button-outline" data-bs-toggle="modal" data-bs-target="#ticketDetail{{ $ticket->id }}">Lihat detail <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <x-workflow-buttons :report="$ticket" :user="auth()->user()" :staff-list="$staffList" mode="buttons" />
+                            <button class="dh-button dh-button-outline" data-bs-toggle="modal" data-bs-target="#ticketDetail{{ $ticket->id }}">Lihat detail <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                        </div>
                     </td>
                 </tr>
                 @empty
@@ -118,10 +121,24 @@
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body">
-                <div class="d-flex gap-2 mb-4">
+                <div class="d-flex gap-2 mb-3">
                     <span class="dh-status dh-status-{{ $ticket->status }}">{{ $statusLabels[$ticket->status] ?? $ticket->status }}</span>
                     <span class="dh-status">Prioritas {{ $priorityLabels[$ticket->priority] ?? $ticket->priority }}</span>
                 </div>
+
+                {{-- Prominent Action Banner at Top of Modal Body --}}
+                <div class="dh-action-box mb-4" style="background: rgba(159, 36, 52, 0.08); border: 2px solid rgba(159, 36, 52, 0.35); border-radius: 12px; padding: 16px 20px;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <h3 class="fs-6 mb-1 text-main font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-bolt text-danger me-2"></i>Tindak Lanjut Petugas</h3>
+                            <p class="dh-muted mb-0" style="font-size: 0.8rem;">Aksi penanganan untuk status: <strong class="badge bg-secondary text-uppercase">{{ $statusLabels[$ticket->status] ?? $ticket->status }}</strong></p>
+                        </div>
+                        <div>
+                            <x-workflow-buttons :report="$ticket" :user="auth()->user()" :staff-list="$staffList" mode="buttons" />
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dh-detail-grid">
                     <div><small>PELAPOR</small><p>{{ $ticket->user?->name ?? 'Pengguna dihapus' }}</p></div>
                     <div><small>PENANGGUNG JAWAB</small><p>{{ $ticket->assignedUser?->name ?? 'Belum ditugaskan' }}</p></div>
@@ -150,7 +167,10 @@
                     <x-workflow-buttons :report="$ticket" :user="auth()->user()" :staff-list="$staffList" mode="buttons" />
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <x-workflow-buttons :report="$ticket" :user="auth()->user()" :staff-list="$staffList" mode="buttons" />
+                </div>
                 <button type="button" class="dh-button dh-button-outline" data-bs-dismiss="modal">Tutup detail</button>
             </div>
         </div>

@@ -3,21 +3,7 @@
 @section('title', 'Laporan Admin')
 
 @section('content')
-<!-- Header -->
-<div class="reports-header mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h1>
-                <i class="fas fa-file-alt me-2"></i> Manajemen Laporan
-            </h1>
-            <p class="mb-0 opacity-90">Kelola semua laporan dari masyarakat</p>
-        </div>
-        <div class="text-end">
-            <div class="text-white small bg-white bg-opacity-25 px-3 py-2 rounded-pill shadow-sm border border-light border-opacity-25"><i class="fas fa-calendar me-2 text-white"></i>{{ now()->format('d F Y, H:i') }}</div>
-        </div>
-    </div>
-</div>
-
+@include('admin.heading')
 <!-- Reports Container -->
 <div class="card border-0 shadow-sm rounded-4 mb-4" style="overflow: visible !important;">
     <div class="card-header bg-white py-4 px-4 d-flex justify-content-between align-items-center border-bottom-0 rounded-top-4">
@@ -323,3 +309,4 @@
     }
 </style>
 @endsection
+

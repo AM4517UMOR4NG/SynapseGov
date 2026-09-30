@@ -1,522 +1,69 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynapseGov — Platform Aspirasi Publik</title>
-
+    <meta name="description" content="Sampaikan laporan dan aspirasi masyarakat, lalu pantau tindak lanjutnya melalui SynapseGov.">
+    <title>SynapseGov — Suara Warga, Aksi Nyata</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-
-    <style>
-        :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --border-color: #e2e8f0;
-            --text-main: #000000;
-            --text-muted: #334155;
-            --accent-glow: rgba(183, 28, 28, 0.05);
-            --font-main: 'Plus Jakarta Sans', sans-serif;
-            --accent: #b71c1c;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            line-height: 1.5;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            font-weight: 500;
-        }
-
-        /* Mesh Gradient Background */
-        .ambient-light {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background:
-                radial-gradient(at 0% 0%, rgba(183, 28, 28, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(211, 47, 47, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.15) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(153, 27, 27, 0.1) 0px, transparent 50%);
-            pointer-events: none;
-            z-index: -1;
-            filter: blur(40px);
-            animation: pulse-ambient 15s ease-in-out infinite alternate;
-            will-change: transform, opacity;
-            transform: translateZ(0);
-        }
-
-        @keyframes pulse-ambient {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-
-            100% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-        }
-
-        /* Navbar */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1.5rem 4rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom: 1px solid var(--border-color);
-            transform: translateZ(0);
-        }
-
-        .logo {
-            font-weight: 700;
-            font-size: 1.2rem;
-            letter-spacing: -0.02em;
-            color: var(--text-main);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo::before {
-            content: '';
-            display: block;
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            border-radius: 3px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-main);
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .btn-text {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .btn-text:hover {
-            color: var(--accent);
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: #ffffff;
-            padding: 0.75rem 1.75rem;
-            border-radius: 100px;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(183, 28, 28, 0.25);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            background: #991b1b;
-            box-shadow: 0 6px 20px rgba(183, 28, 28, 0.4);
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1.25rem;
-            border: 1px solid rgba(183, 28, 28, 0.2);
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 1.5rem;
-            background: rgba(183, 28, 28, 0.05);
-        }
-
-        .hero-badge::before {
-            content: '';
-            display: block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent);
-            border-radius: 50%;
-        }
-
-        .hero h1 {
-            font-size: clamp(3.5rem, 7vw, 6.5rem);
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            line-height: 1.1;
-            padding-bottom: 0.1em;
-            /* Fix text clipping for background clip */
-            margin-bottom: 1.5rem;
-            max-width: 900px;
-            background: linear-gradient(135deg, #0f172a 0%, #b71c1c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            /* standard fallback */
-            animation: slideUp 1s ease-out forwards;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero p {
-            font-size: clamp(1rem, 1.5vw, 1.15rem);
-            color: #475569;
-            max-width: 650px;
-            margin-bottom: 3rem;
-            font-weight: 400;
-            line-height: 1.7;
-        }
-
-        /* Bento Grid Section */
-        .bento-section {
-            padding: 8rem 4rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            margin-bottom: 4rem;
-            text-align: center;
-        }
-
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 300px);
-            gap: 1.5rem;
-        }
-
-        .bento-card {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-            will-change: transform, box-shadow;
-        }
-
-        .bento-card:hover {
-            border-color: rgba(183, 28, 28, 0.3);
-            box-shadow: 0 20px 40px -10px rgba(183, 28, 28, 0.15);
-            transform: translateY(-8px) scale(1.02);
-        }
-
-        .bento-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(183, 28, 28, 0.02) 0%, transparent 100%);
-            pointer-events: none;
-        }
-
-        .bento-large {
-            grid-column: span 2;
-        }
-
-        .bento-card h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-            color: var(--text-main);
-        }
-
-        .bento-card p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            max-width: 80%;
-            font-weight: 500;
-        }
-
-        .bento-visual {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex-direction: column;
-        }
-
-        .metric-value {
-            font-size: 4rem;
-            font-weight: 700;
-            letter-spacing: -0.04em;
-            line-height: 1;
-        }
-
-        @media (max-width: 900px) {
-            nav {
-                padding: 1.5rem 2rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .bento-section {
-                padding: 4rem 2rem;
-            }
-
-            .bento-grid {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto;
-            }
-
-            .bento-large,
-            .bento-full {
-                grid-column: span 1 !important;
-            }
-
-            .bento-card {
-                min-height: 280px;
-            }
-
-            footer {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 2rem;
-                text-align: center;
-            }
-        }
-
-        /* Minimal Footer */
-        footer {
-            border-top: 1px solid var(--border-color);
-            padding: 3rem 4rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-    </style>
-<link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
-<link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/navigation.css') }}?v={{ filemtime(public_path('css/navigation.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/public-ui.css') }}?v={{ filemtime(public_path('css/public-ui.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
 </head>
-
-<body class="landing-ui">
-    <div class="ambient-light"></div>
-
-    <nav>
-        <a href="/" class="logo">SynapseGov</a>
-        <button class="site-menu-toggle" type="button" data-site-menu aria-controls="landingNavigation" aria-expanded="false" aria-label="Buka navigasi">☰ Menu</button>
-        <div id="landingNavigation" class="site-navigation">
-        <div class="nav-links">
-            <a href="#platform">Platform</a>
-            <a href="#features">Keunggulan</a>
-        </div>
-        <div class="nav-actions">
-            <a href="{{ route('login') }}" class="btn-text">Masuk</a>
-            <a href="{{ route('register') }}" class="btn-primary">Mulai Lapor</a>
-        </div>
-        </div>
-    </nav>
-
-    <section class="hero">
-        <h1>Suara warga.<br>Aksi nyata.</h1>
-        <p>Platform e-Government minimalis yang menghubungkan aspirasi masyarakat dengan Organisasi Perangkat Daerah
-            melalui sistem penanganan yang terukur dan transparan.</p>
-        <div style="display: flex; gap: 1rem;">
-            <a href="{{ route('register') }}" class="btn-primary">Buat Laporan</a>
-        </div>
-    </section>
-
-    <section class="bento-section" id="platform">
-        <h2 class="section-title">Arsitektur Digital Terpadu</h2>
-
-        <div class="bento-grid">
-            <div class="bento-card bento-large">
-                <div>
-                    <h3>Automasi Resolusi</h3>
-                    <p>Sistem secara mandiri memantau durasi penanganan (SLA) dan mengaktifkan protokol eskalasi jika
-                        tenggat terlewati.</p>
-                </div>
-                <div class="bento-visual">
-                    <!-- Abstract representation -->
-                    <div
-                        style="width: 100%; height: 2px; background: rgba(0,0,0,0.1); margin-top: 2rem; position: relative;">
-                        <div
-                            style="position: absolute; top: 0; left: 0; height: 100%; width: 60%; background: var(--accent);">
-                        </div>
-                    </div>
+<body class="landing-ui home-page">
+    <a class="skip-link" href="#main">Lewati ke konten</a>
+    <header class="home-header">
+        <nav aria-label="Navigasi utama">
+            <a href="{{ url('/') }}" class="home-brand"><span class="brand-mark" aria-hidden="true">S</span>SynapseGov<span class="brand-dot">.</span></a>
+            <button class="site-menu-toggle" type="button" data-site-menu aria-controls="landingNavigation" aria-expanded="false" aria-label="Buka navigasi">☰ <span>Menu</span></button>
+            <div id="landingNavigation" class="site-navigation">
+                <div class="home-links"><a href="#platform">Cara kerja</a><a href="#features">Layanan</a><a href="#questions">Pertanyaan</a></div>
+                <div class="home-actions">
+                    @auth
+                        <a href="{{ route('home') }}" class="home-button small">Buka dashboard <span aria-hidden="true">↗</span></a>
+                    @else
+                        <a href="{{ route('login') }}" class="home-login">Masuk</a><a href="{{ route('register') }}" class="home-button small">Daftar akun <span aria-hidden="true">↗</span></a>
+                    @endauth
                 </div>
             </div>
-
-            <div class="bento-card">
-                <div>
-                    <h3>Isolasi Data</h3>
-                    <p>Batas privasi antar Organisasi Perangkat Daerah dijaga ketat tanpa intervensi data silang.</p>
-                </div>
-                <div class="bento-visual">
-                    <div style="width: 40px; height: 40px; border: 2px solid var(--accent); border-radius: 8px;"></div>
-                </div>
+        </nav>
+    </header>
+    <main id="main">
+        <section class="home-hero home-container" aria-labelledby="hero-title">
+            <div class="hero-copy">
+                <span class="home-eyebrow"><span class="live-dot"></span> RUANG ASPIRASI MASYARAKAT</span>
+                <h1 id="hero-title">Perubahan baik,<br>dimulai dari<br><em>suara Anda.</em></h1>
+                <p>Sampaikan persoalan di sekitar Anda. Terhubung dengan dinas terkait, dan ikuti perkembangan laporan dalam satu tempat.</p>
+                <div class="hero-actions"><a href="{{ auth()->check() ? route('home') : route('register') }}" class="home-button">{{ auth()->check() ? 'Buka dashboard' : 'Mulai sampaikan laporan' }} <span aria-hidden="true">↗</span></a><a href="#platform" class="home-secondary">Lihat cara kerja <span aria-hidden="true">↓</span></a></div>
+                <div class="hero-note"><span aria-hidden="true">✓</span> Laporan tersimpan <span aria-hidden="true">✓</span> Progres dapat dipantau</div>
             </div>
-
-            <div class="bento-card">
-                <div>
-                    <h3>Jejak Forensik</h3>
-                    <p>Setiap mutasi laporan direkam mutlak. Audit transparan meminimalkan manipulasi data.</p>
+            <div class="hero-art" aria-label="Ilustrasi perjalanan laporan warga">
+                <div class="art-grid" aria-hidden="true"></div>
+                <span class="art-caption">WARGA TERHUBUNG. LAYANAN BERGERAK.</span>
+                <div class="report-preview">
+                    <div class="preview-top"><span><span class="preview-icon" aria-hidden="true">↗</span> Aspirasi warga</span><span class="example-label">CONTOH</span></div>
+                    <div class="preview-body"><span class="preview-category">INFRASTRUKTUR</span><h2>Jalan yang lebih baik<br>untuk semua.</h2><p>Perbaikan fasilitas umum di lingkungan warga.</p><div class="preview-meta"><span>◎ &nbsp; Lingkungan sekitar</span><span class="preview-status">Sedang ditangani</span></div></div>
+                    <ol class="preview-progress"><li class="done"><span>✓</span>Diterima</li><li class="current"><span>2</span>Ditangani</li><li><span>3</span>Selesai</li></ol>
                 </div>
-                <div class="bento-visual">
-                    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-                        <div style="width: 6px; height: 16px; background: rgba(183,28,28,0.2); border-radius: 2px;">
-                        </div>
-                        <div style="width: 6px; height: 32px; background: rgba(183,28,28,0.5); border-radius: 2px;">
-                        </div>
-                        <div style="width: 6px; height: 24px; background: var(--accent); border-radius: 2px;"></div>
-                    </div>
-                </div>
+                <div class="art-note"><span class="note-icon" aria-hidden="true">✓</span><div><strong>Setiap suara berarti.</strong><span>Langkah kecil untuk layanan yang lebih baik.</span></div></div>
+                <span class="art-bottom">DARI ASPIRASI MENJADI AKSI <span aria-hidden="true">↗</span></span>
             </div>
-
-            <div class="bento-card bento-large">
-                <div>
-                    <h3>Standar Keamanan</h3>
-                    <p>Implementasi protokol OWASP untuk menangkal injeksi berbahaya, divalidasi dengan inspeksi MIME
-                        komprehensif.</p>
-                </div>
-                <div class="bento-visual" style="align-items: flex-start; justify-content: flex-end;">
-                    <div class="metric-value">100%</div>
-                    <div style="color: var(--text-muted); font-size: 0.9rem;">Sistem terlindungi</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="bento-section" id="features" style="padding-top: 4rem;">
-        <h2 class="section-title">Kenapa Memilih Kami?</h2>
-
-        <div class="bento-grid">
-            <div class="bento-card bento-large">
-                <div>
-                    <h3 style="color: var(--text-main);">Respon Instan</h3>
-                    <p>Laporan langsung didistribusikan ke dinas terkait dalam hitungan detik secara otomatis
-                        menggunakan sistem routing pintar tanpa jeda birokrasi.</p>
-                </div>
-                <div class="bento-visual" style="align-items: flex-end;">
-                    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: flex-end;">
-                        <div style="height: 4px; width: 40%; background: rgba(0,0,0,0.1); border-radius: 2px;"></div>
-                        <div style="height: 4px; width: 80%; background: var(--text-main); border-radius: 2px;"></div>
-                        <div style="height: 4px; width: 20%; background: rgba(0,0,0,0.4); border-radius: 2px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bento-card">
-                <div>
-                    <h3 style="color: var(--text-main);">Transparansi Penuh</h3>
-                    <p>Pantau setiap pergerakan dan mutasi laporan Anda secara real-time. Tidak ada yang disembunyikan.
-                    </p>
-                </div>
-                <div class="bento-visual">
-                    <div
-                        style="width: 48px; height: 48px; border-radius: 50%; border: 4px dashed var(--text-main); opacity: 0.8;">
-                    </div>
-                </div>
-            </div>
-
-            <div class="bento-card bento-full"
-                style="grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <h3 style="color: var(--text-main);">Akurasi Data</h3>
-                    <p>Validasi ketat dengan integrasi NIK memastikan integritas pelapor, menjaga sistem dari spamming
-                        dan meningkatkan kualitas penanganan masalah.</p>
-                </div>
-                <div class="bento-visual"
-                    style="align-items: center; justify-content: center; flex-direction: row; gap: 1rem;">
-                    <div style="width: 24px; height: 24px; background: var(--text-main); border-radius: 4px;"></div>
-                    <div style="width: 100px; height: 8px; background: rgba(0, 0, 0, 0.1); border-radius: 4px;"></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div>&copy; {{ date('Y') }} SynapseGov. Hak cipta dilindungi.</div>
-        <div>Dikembangkan untuk IT Days 2026.</div>
-    </footer>
-<script src="{{ asset('js/navigation.js') }}?v={{ filemtime(public_path('js/navigation.js')) }}" defer></script>
+        </section>
+        <div class="service-strip"><div class="home-container"><span>Satu ruang untuk<br><strong>layanan yang lebih dekat.</strong></span><span>01 &nbsp; Sampaikan laporan</span><span>02 &nbsp; Terhubung ke dinas</span><span>03 &nbsp; Pantau tindak lanjut</span></div></div>
+        <section id="platform" class="home-section home-container">
+            <div class="section-heading"><div><span class="home-eyebrow">CARA KERJA</span><h2>Mudah disampaikan.<br>Jelas perkembangannya.</h2></div><p>Dari laporan pertama hingga tindak lanjut, Anda dapat mengikuti prosesnya melalui akun Anda.</p></div>
+            <div class="steps-grid"><article><span class="step-number">01</span><h3>Ceritakan persoalannya</h3><p>Tulis laporan atau keluhan, tentukan lokasi dan dinas tujuan, lalu tambahkan lampiran yang relevan.</p></article><article><span class="step-number">02</span><h3>Laporan ditindaklanjuti</h3><p>Laporan ditinjau dan diteruskan kepada petugas untuk proses penanganan sesuai kebutuhan.</p></article><article><span class="step-number">03</span><h3>Ikuti perkembangannya</h3><p>Lihat status dan catatan penanganan. Lengkapi informasi ketika petugas memerlukan detail tambahan.</p></article></div>
+        </section>
+        <section id="features" class="home-section features-section"><div class="home-container">
+            <div class="section-heading"><div><span class="home-eyebrow">LAYANAN UNTUK ANDA</span><h2>Lebih dekat dengan<br>solusi yang dibutuhkan.</h2></div><p>Tempat untuk menyampaikan persoalan, memberi masukan, dan melihat tindak lanjutnya.</p></div>
+            <div class="features-grid"><article class="feature-featured"><span class="feature-symbol" aria-hidden="true">↗</span><h3>Laporan masyarakat</h3><p>Jalan rusak, fasilitas umum, atau persoalan lingkungan. Bantu dinas memahami kondisi di sekitar Anda.</p><a href="{{ auth()->check() ? route('home') : route('register') }}">Mulai buat laporan <span aria-hidden="true">→</span></a></article><article><span class="feature-symbol" aria-hidden="true">◎</span><h3>Keluhan & aspirasi</h3><p>Sampaikan pengalaman pelayanan dan masukan Anda untuk membantu perbaikan layanan publik.</p><a href="{{ auth()->check() ? route('home') : route('register') }}">Sampaikan aspirasi <span aria-hidden="true">→</span></a></article><article><span class="feature-symbol" aria-hidden="true">≡</span><h3>Riwayat dalam satu tempat</h3><p>Akses laporan, lampiran, dan status penanganan tanpa perlu mencatat prosesnya secara terpisah.</p><a href="{{ auth()->check() ? route('home') : route('login') }}">Lihat laporan saya <span aria-hidden="true">→</span></a></article></div>
+        </div></section>
+        <section id="questions" class="home-section home-container faq-section"><div><span class="home-eyebrow">SEBELUM MEMULAI</span><h2>Ada yang ingin<br>Anda ketahui?</h2><p>Beberapa hal untuk membantu Anda menyampaikan laporan.</p></div><div class="faq-list"><details><summary>Apa yang perlu disiapkan?</summary><p>Siapkan judul, penjelasan persoalan, lokasi jika relevan, serta lampiran pendukung. Pilih dinas yang sesuai dengan laporan Anda.</p></details><details><summary>Apakah saya perlu membuat akun?</summary><p>Ya. Akun digunakan untuk mengirim laporan dan melihat perkembangannya. Jika sudah memiliki akun, Anda dapat langsung masuk.</p></details><details><summary>Bagaimana cara melihat tindak lanjut?</summary><p>Masuk ke akun Anda, buka daftar laporan atau keluhan, lalu pilih detail untuk melihat status dan catatan penanganan yang tersedia.</p></details></div></section>
+        <section class="home-container"><div class="closing-banner"><div><span class="home-eyebrow">BERSAMA, KITA MULAI.</span><h2>Lingkungan lebih baik.<br>Pelayanan lebih dekat.</h2></div><a href="{{ auth()->check() ? route('home') : route('register') }}" class="home-button light">{{ auth()->check() ? 'Ke dashboard Anda' : 'Sampaikan suara Anda' }} <span aria-hidden="true">↗</span></a></div></section>
+    </main>
+    <footer class="home-footer home-container"><a href="{{ url('/') }}" class="home-brand"><span class="brand-mark" aria-hidden="true">S</span>SynapseGov.</a><span>© {{ date('Y') }} SynapseGov · IT Days 2026</span><a href="#main">Kembali ke atas ↑</a></footer>
+    <script src="{{ asset('js/navigation.js') }}?v={{ filemtime(public_path('js/navigation.js')) }}" defer></script>
 </body>
-
 </html>

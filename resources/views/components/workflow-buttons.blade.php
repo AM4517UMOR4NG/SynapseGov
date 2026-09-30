@@ -99,6 +99,11 @@
                             </form>
                         </li>
                         <li>
+                            <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
+                                <i class="fas fa-question-circle w-20px me-2"></i> Minta Info Tambahan
+                            </button>
+                        </li>
+                        <li>
                             <button type="button" class="dropdown-item py-2 text-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                                 <i class="fas fa-check-circle w-20px me-2"></i> Ajukan Hasil & Bukti
                             </button>
@@ -115,6 +120,11 @@
                         </li>
                         @endif
                         <li>
+                            <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
+                                <i class="fas fa-question-circle w-20px me-2"></i> Minta Info Tambahan
+                            </button>
+                        </li>
+                        <li>
                             <button type="button" class="dropdown-item py-2 text-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                                 <i class="fas fa-check-circle w-20px me-2"></i> Ajukan Hasil & Bukti
                             </button>
@@ -128,21 +138,42 @@
                     @php
                         $canHeadAct = ((int) $report->assigned_to === (int) $user->id) || ((int) $report->department_id === (int) $user->department_id);
                     @endphp
-                    @if($canHeadAct && in_array($report->status, ['verified', 'assigned']))
+                    @if($canHeadAct && in_array($report->status, ['submitted', 'pending', 'verified', 'assigned']))
                         <li>
                             <button type="button" class="dropdown-item py-2 text-primary" data-bs-toggle="modal" data-bs-target="#assignStaffModal{{ $report->id }}">
-                                <i class="fas fa-user-plus w-20px me-2"></i> Tugaskan Staf Lapangan
+                                <i class="fas fa-user-plus w-20px me-2"></i> Disposisi ke Staf
                             </button>
                         </li>
+                        @if(in_array($report->status, ['verified', 'assigned']))
                         <li>
-                            <button type="button" class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
+                            <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
                                 <i class="fas fa-undo w-20px me-2 text-secondary"></i> Review / Kembalikan
                             </button>
                         </li>
-                    @elseif($canHeadAct && in_array($report->status, ['in_progress', 'reviewed']))
+                        @endif
+                    @elseif($canHeadAct && in_array($report->status, ['in_progress', 'reviewed', 'needs_revision']))
                         <li>
-                            <button type="button" class="dropdown-item py-2 text-primary" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
+                            <button type="button" class="dropdown-item py-2 text-primary" data-bs-toggle="modal" data-bs-target="#assignStaffModal{{ $report->id }}">
+                                <i class="fas fa-user-plus w-20px me-2"></i> Alihkan ke Staf Lain
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item py-2 text-warning" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
                                 <i class="fas fa-undo w-20px me-2"></i> Review & Kembalikan ke Staf
+                            </button>
+                        </li>
+                    @elseif($canHeadAct && $report->status === 'awaiting_admin_approval')
+                        <li>
+                            <form action="{{ route('administration.reports.confirm_to_admin', $report->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item py-2 text-success" onclick="return confirm('Konfirmasi dan rekomendasikan penyelesaian laporan ini ke Admin Utama?')">
+                                    <i class="fas fa-check-circle w-20px me-2"></i> Rekomendasikan ke Admin
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item py-2 text-danger" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
+                                <i class="fas fa-undo w-20px me-2"></i> Kembalikan untuk Revisi Staf
                             </button>
                         </li>
                     @else
@@ -202,8 +233,11 @@
                             <i class="fas fa-play me-1"></i> Mulai Kerjakan
                         </button>
                     </form>
+                    <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
+                        <i class="fas fa-question-circle me-1"></i> Minta Info
+                    </button>
                     <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
-                        <i class="fas fa-check-circle me-1"></i> Ajukan Hasil & Bukti
+                        <i class="fas fa-check-circle me-1"></i> Ajukan Hasil
                     </button>
                 @elseif($canAct && in_array($report->status, ['reviewed', 'in_progress', 'needs_revision']))
                     @if($report->status === 'needs_revision')
@@ -214,6 +248,9 @@
                         </button>
                     </form>
                     @endif
+                    <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#awaitingInfoModal{{ $report->id }}">
+                        <i class="fas fa-question-circle me-1"></i> Minta Info
+                    </button>
                     <button type="button" class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#completeModal{{ $report->id }}">
                         <i class="fas fa-check-circle me-1"></i> Ajukan Hasil & Bukti
                     </button>
@@ -222,16 +259,31 @@
                 @php
                     $canHeadAct = ((int) $report->assigned_to === (int) $user->id) || ((int) $report->department_id === (int) $user->department_id);
                 @endphp
-                @if($canHeadAct && in_array($report->status, ['verified', 'assigned']))
+                @if($canHeadAct && in_array($report->status, ['submitted', 'pending', 'verified', 'assigned']))
                     <button type="button" class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#assignStaffModal{{ $report->id }}">
-                        <i class="fas fa-user-plus me-1"></i> Tugaskan Staf
+                        <i class="fas fa-user-plus me-1"></i> Disposisi ke Staf
                     </button>
+                    @if(in_array($report->status, ['verified', 'assigned']))
                     <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
                         <i class="fas fa-undo me-1"></i> Kembalikan
                     </button>
-                @elseif($canHeadAct && in_array($report->status, ['in_progress', 'reviewed']))
-                    <button type="button" class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
-                        <i class="fas fa-undo me-1"></i> Review & Kembalikan ke Staf
+                    @endif
+                @elseif($canHeadAct && in_array($report->status, ['in_progress', 'reviewed', 'needs_revision']))
+                    <button type="button" class="btn btn-outline-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#assignStaffModal{{ $report->id }}">
+                        <i class="fas fa-user-plus me-1"></i> Alihkan Staf
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
+                        <i class="fas fa-undo me-1"></i> Review & Kembalikan
+                    </button>
+                @elseif($canHeadAct && $report->status === 'awaiting_admin_approval')
+                    <form action="{{ route('administration.reports.confirm_to_admin', $report->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-success btn-sm shadow-sm" onclick="return confirm('Konfirmasi dan rekomendasikan laporan ini ke Admin Utama?')">
+                            <i class="fas fa-check-circle me-1"></i> Rekomendasikan ke Admin
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-warning btn-sm text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#reviewReturnModal{{ $report->id }}">
+                        <i class="fas fa-undo me-1"></i> Minta Revisi Staf
                     </button>
                 @endif
             @endif
@@ -256,6 +308,7 @@
     @push('modals')
         @include('components.modals.confirm-forward', ['report' => $report])
         @include('components.modals.complete-report', ['report' => $report])
+        @include('components.modals.awaiting-info', ['report' => $report])
     @endpush
 @endif
 

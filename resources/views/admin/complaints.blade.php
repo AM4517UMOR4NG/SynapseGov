@@ -3,18 +3,7 @@
 @section('title', 'Keluhan Admin')
 
 @section('content')
-<!-- Header -->
-<div class="complaints-header">
-    <h1>
-        <i class="fas fa-exclamation-triangle me-2"></i>Manajemen Keluhan
-    </h1>
-    <p>Kelola semua keluhan dari masyarakat</p>
-    <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9;">
-        <i class="fas fa-calendar me-1"></i>
-        {{ now()->format('d F Y, H:i') }}
-    </div>
-</div>
-
+@include('admin.heading')
 <!-- Complaints Table -->
 <div class="complaints-card">
     <div class="complaints-card-header">
@@ -194,3 +183,4 @@
 </div>
 @endforeach
 @endsection
+
