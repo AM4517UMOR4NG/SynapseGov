@@ -154,6 +154,7 @@ graph TD
   * Memblokir ekstensi berbahaya (`.php`, `.phtml`, `.phar`, `.sh`, `.exe`, `.bat`, `.js`, `.svg`, `.html`, dll).
   * Menangkal teknik pemalsuan *double extension* (seperti `bukti.php.png`).
   * Memverifikasi MIME Type dari isi berkas di sisi server dan membatasi ukuran maksimal **5MB** per berkas.
+* Lampiran disimpan di penyimpanan privat (`storage/app/attachments`), bukan di folder publik. Berkas hanya dapat dibuka melalui aplikasi setelah lolos pemeriksaan hak akses; akses langsung lewat URL `/storage/...` menghasilkan 404.
 
 ### 7. 📄 Tri-Format Document Export
 * Dilengkapi generator dokumen terintegrasi:
