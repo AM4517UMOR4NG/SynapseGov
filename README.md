@@ -322,8 +322,8 @@ Konfigurasi bawaan memakai **SQLite**, jadi tidak perlu server database (MySQL/X
 
 1. **Clone Repositori:**
    ```bash
-   git clone https://github.com/wilfrydo/SynapseGov.git
-   cd SynapseGov
+   git clone https://github.com/wilfrydo/SynapseGov-ITDays2026.git
+   cd SynapseGov-ITDays2026
    ```
 
 2. **Instalasi Dependensi PHP & JavaScript:**
