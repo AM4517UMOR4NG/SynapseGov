@@ -26,7 +26,8 @@ class PublicTransparencyController extends Controller
 
     public function track(Request $request)
     {
-        $ticketNo = strtoupper(trim((string) $request->query('tiket', '')));
+        $validated = $request->validate(['tiket' => 'nullable|string|max:64']);
+        $ticketNo = strtoupper(trim($validated['tiket'] ?? ''));
         $ticket = null;
         $error = null;
 
