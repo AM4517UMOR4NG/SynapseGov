@@ -139,7 +139,7 @@ class AdministrationDashboardController extends Controller
         $query = Report::with(['user', 'assignedUser', 'department'])
             ->where(function ($q) use ($user) {
                 if ($user->department_id) {
-                    $q->where('department_id', $user->department_id)
+                    $q->whereNotNull('department_id')->where('department_id', $user->department_id)
                         ->orWhere('assigned_to', $user->id);
                 } else {
                     $q->where('assigned_to', $user->id);
@@ -172,7 +172,7 @@ class AdministrationDashboardController extends Controller
         $reports = $query->latest()->paginate($perPage)->appends(request()->query());
 
         // Ambil daftar staff untuk assignment dropdown
-        $staffList = User::where('department_id', $user->department_id)
+        $staffList = User::whereNotNull('department_id')->where('department_id', $user->department_id)
             ->where('role', 'staff')
             ->where('id', '!=', $user->id)
             ->get();
@@ -188,7 +188,7 @@ class AdministrationDashboardController extends Controller
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
         $query = Complaint::with(['user', 'assignedUser', 'department'])
-            ->where('department_id', $user->department_id);
+            ->whereNotNull('department_id')->where('department_id', $user->department_id);
 
         // Filter pencarian
         if ($request->filled('q')) {
@@ -215,7 +215,7 @@ class AdministrationDashboardController extends Controller
 
         $complaints = $query->latest()->paginate($perPage)->appends(request()->query());
 
-        $staffList = User::where('department_id', $user->department_id)
+        $staffList = User::whereNotNull('department_id')->where('department_id', $user->department_id)
             ->where('role', 'staff')
             ->where('is_active', true)
             ->get();
@@ -230,7 +230,7 @@ class AdministrationDashboardController extends Controller
         }
         $user = Auth::user();
         $perPage = $user->getSettings('items_per_page', 15);
-        $staff = User::where('department_id', $user->department_id)
+        $staff = User::whereNotNull('department_id')->where('department_id', $user->department_id)
             ->where('role', '!=', 'citizen')
             ->paginate($perPage);
 
@@ -249,7 +249,7 @@ class AdministrationDashboardController extends Controller
                 'required',
                 'exists:users,id',
                 \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) use ($user) {
-                    $query->where('department_id', $user->department_id)->where('is_active', true);
+                    $query->whereNotNull('department_id')->where('department_id', $user->department_id)->where('is_active', true);
                 }),
             ],
             'notes' => 'nullable|string|max:1000',
@@ -257,7 +257,7 @@ class AdministrationDashboardController extends Controller
 
         return DB::transaction(function () use ($id, $request, $user) {
             $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
+                $q->whereNotNull('department_id')->where('department_id', $user->department_id)
                     ->orWhere('assigned_to', $user->id);
             })->lockForUpdate()->findOrFail($id);
 
@@ -282,14 +282,14 @@ class AdministrationDashboardController extends Controller
                 'required',
                 'exists:users,id',
                 \Illuminate\Validation\Rule::exists('users', 'id')->where(function ($query) use ($user) {
-                    $query->where('department_id', $user->department_id)->where('is_active', true);
+                    $query->whereNotNull('department_id')->where('department_id', $user->department_id)->where('is_active', true);
                 }),
             ],
             'notes' => 'nullable|string|max:1000',
         ]);
 
         return DB::transaction(function () use ($id, $request, $user) {
-            $complaint = Complaint::where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
+            $complaint = Complaint::whereNotNull('department_id')->where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
 
             $assignedTo = User::findOrFail($request->assigned_to);
 
@@ -329,7 +329,7 @@ class AdministrationDashboardController extends Controller
         $user = Auth::user();
         $report = Report::with(['user', 'department', 'assignedUser'])
             ->where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
+                $q->whereNotNull('department_id')->where('department_id', $user->department_id)
                     ->orWhere('assigned_to', $user->id);
             })
             ->findOrFail($id);
@@ -389,7 +389,7 @@ class AdministrationDashboardController extends Controller
 
         return DB::transaction(function () use ($id, $user) {
             $report = Report::where(function ($q) use ($user) {
-                $q->where('department_id', $user->department_id)
+                $q->whereNotNull('department_id')->where('department_id', $user->department_id)
                     ->orWhere('assigned_to', $user->id);
             })->lockForUpdate()->findOrFail($id);
 
@@ -425,7 +425,7 @@ class AdministrationDashboardController extends Controller
         ]);
 
         return DB::transaction(function () use ($id, $request, $user) {
-            $complaint = Complaint::where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
+            $complaint = Complaint::whereNotNull('department_id')->where('department_id', $user->department_id)->lockForUpdate()->findOrFail($id);
 
             // Only a complaint that is being handled can be closed out (see Complaint::STATUS_TRANSITIONS)
             if (! $complaint->canBeResolved()) {
@@ -454,3 +454,4 @@ class AdministrationDashboardController extends Controller
         });
     }
 }
+
