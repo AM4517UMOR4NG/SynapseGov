@@ -18,7 +18,7 @@ class DownloadController extends Controller
         $user = Auth::user();
         $isOwner = (int) $report->user_id === (int) $user->id;
         $isAssigned = (int) $report->assigned_to === (int) $user->id;
-        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
 
         if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
@@ -66,7 +66,7 @@ class DownloadController extends Controller
         $user = Auth::user();
         $isOwner = (int) $report->user_id === (int) $user->id;
         $isAssigned = (int) $report->assigned_to === (int) $user->id;
-        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
 
         if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
@@ -108,7 +108,7 @@ class DownloadController extends Controller
         $user = Auth::user();
         $isOwner = (int) $report->user_id === (int) $user->id;
         $isAssigned = (int) $report->assigned_to === (int) $user->id;
-        $isInDept = in_array($user->role, ['department_head', 'staff']) && (int) $report->department_id === (int) $user->department_id;
+        $isInDept = in_array($user->role, ['department_head', 'staff']) && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
 
         if (! ($user->isAdmin() || $isOwner || $isAssigned || $isInDept)) {
             abort(403, 'Akses ditolak.');
@@ -186,3 +186,4 @@ class DownloadController extends Controller
         return $csv;
     }
 }
+
