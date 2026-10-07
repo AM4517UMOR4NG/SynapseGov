@@ -58,7 +58,7 @@ class ProfileController extends Controller
             ]);
 
             if (! Hash::check($request->current_password, $user->password)) {
-                return back()->withInput()->withErrors([
+                return back()->withInput($request->except(['current_password', 'password', 'password_confirmation']))->withErrors([
                     'current_password' => 'Password saat ini salah. Perubahan email dibatalkan.',
                 ]);
             }
