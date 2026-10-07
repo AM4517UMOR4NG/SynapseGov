@@ -114,7 +114,7 @@ class WorkflowManagementController extends Controller
 
             // Authorization: the assigned staff member, or department staff for an unassigned report
             $isAssigned = (int) $report->assigned_to === (int) $user->id;
-            $isUnassignedInDept = ! $report->assigned_to && (int) $report->department_id === (int) $user->department_id;
+            $isUnassignedInDept = ! $report->assigned_to && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
             if ($user->role === 'staff' && ! $isAssigned && ! $isUnassignedInDept) {
                 return back()->with('error', 'Anda tidak berhak mengirim laporan ini. Laporan belum ditugaskan kepada Anda.');
             }
@@ -225,7 +225,7 @@ class WorkflowManagementController extends Controller
 
             // Only the assigned officer submits results; an unassigned report may be closed out by its department's staff
             $isAssigned = (int) $report->assigned_to === (int) $user->id;
-            $isUnassignedInDept = ! $report->assigned_to && (int) $report->department_id === (int) $user->department_id;
+            $isUnassignedInDept = ! $report->assigned_to && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
             if ($user->role !== 'staff' || (! $isAssigned && ! $isUnassignedInDept)) {
                 return back()->with('error', 'Anda tidak berhak mengonfirmasi laporan ini ke admin.');
             }
@@ -361,3 +361,4 @@ class WorkflowManagementController extends Controller
         });
     }
 }
+
