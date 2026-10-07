@@ -34,12 +34,12 @@ class ReportPolicy
         }
 
         // Department head can view reports in their department or assigned to them
-        if ($user->role === 'department_head' && ((int) $report->department_id === (int) $user->department_id || (int) $report->assigned_to === (int) $user->id)) {
+        if ($user->role === 'department_head' && (($user->department_id !== null && (int) $report->department_id === (int) $user->department_id) || (int) $report->assigned_to === (int) $user->id)) {
             return true;
         }
 
         // Staff can view reports in their department or assigned to them
-        if ($user->role === 'staff' && ((int) $report->department_id === (int) $user->department_id || (int) $report->assigned_to === (int) $user->id)) {
+        if ($user->role === 'staff' && (($user->department_id !== null && (int) $report->department_id === (int) $user->department_id) || (int) $report->assigned_to === (int) $user->id)) {
             return true;
         }
 
@@ -70,7 +70,7 @@ class ReportPolicy
         }
 
         // Department head can update reports in their department
-        if ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) {
+        if ($user->role === 'department_head' && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id)) {
             return true;
         }
 
@@ -114,7 +114,7 @@ class ReportPolicy
     public function resolve(User $user, Report $report)
     {
         return ($user->role === 'staff' && (int) $report->assigned_to === (int) $user->id) ||
-               ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) ||
+               ($user->role === 'department_head' && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id)) ||
                $user->role === 'admin';
     }
 
@@ -123,7 +123,7 @@ class ReportPolicy
      */
     public function approve(User $user, Report $report)
     {
-        return ($user->role === 'department_head' && (int) $report->department_id === (int) $user->department_id) ||
+        return ($user->role === 'department_head' && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id)) ||
                $user->role === 'admin';
     }
 
@@ -136,3 +136,4 @@ class ReportPolicy
                ((int) $report->user_id === (int) $user->id || in_array($user->role, ['admin', 'department_head']));
     }
 }
+
