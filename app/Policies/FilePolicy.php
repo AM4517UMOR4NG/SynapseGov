@@ -27,7 +27,7 @@ class FilePolicy
 
         // Department head can view files in their department OR if assigned to them
         if ($user->role === 'department_head') {
-            if ((int) $reportable->department_id === (int) $user->department_id || (int) $reportable->assigned_to === (int) $user->id) {
+            if (($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id) || (int) $reportable->assigned_to === (int) $user->id) {
                 return true;
             }
         }
@@ -37,9 +37,9 @@ class FilePolicy
         // 2. Report is assigned to them, OR
         // 3. Report is in an active status in their department
         if ($user->role === 'staff') {
-            if ((int) $reportable->department_id === (int) $user->department_id ||
+            if (($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id) ||
                 (int) $reportable->assigned_to === (int) $user->id ||
-                (in_array($reportable->status, ['submitted', 'pending', 'verified', 'assigned', 'in_progress', 'reviewed', 'awaiting_admin_approval']) && (int) $reportable->department_id === (int) $user->department_id)) {
+                (in_array($reportable->status, ['submitted', 'pending', 'verified', 'assigned', 'in_progress', 'reviewed', 'awaiting_admin_approval']) && ($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id))) {
                 return true;
             }
         }
@@ -64,7 +64,7 @@ class FilePolicy
 
         // Department head can download files in their department OR if assigned to them
         if ($user->role === 'department_head') {
-            if ((int) $reportable->department_id === (int) $user->department_id || (int) $reportable->assigned_to === (int) $user->id) {
+            if (($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id) || (int) $reportable->assigned_to === (int) $user->id) {
                 return true;
             }
         }
@@ -74,9 +74,9 @@ class FilePolicy
         // 2. Report is assigned to them, OR
         // 3. Report is in an active status in their department
         if ($user->role === 'staff') {
-            if ((int) $reportable->department_id === (int) $user->department_id ||
+            if (($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id) ||
                 (int) $reportable->assigned_to === (int) $user->id ||
-                (in_array($reportable->status, ['submitted', 'pending', 'verified', 'assigned', 'in_progress', 'reviewed', 'awaiting_admin_approval']) && (int) $reportable->department_id === (int) $user->department_id)) {
+                (in_array($reportable->status, ['submitted', 'pending', 'verified', 'assigned', 'in_progress', 'reviewed', 'awaiting_admin_approval']) && ($user->department_id !== null && (int) $reportable->department_id === (int) $user->department_id))) {
                 return true;
             }
         }
@@ -96,3 +96,4 @@ class FilePolicy
         return $this->view($user, $reportable);
     }
 }
+
