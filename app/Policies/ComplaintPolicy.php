@@ -34,12 +34,12 @@ class ComplaintPolicy
         }
 
         // Department head can view complaints in their department or assigned to them
-        if ($user->role === 'department_head' && ((int) $complaint->department_id === (int) $user->department_id || (int) $complaint->assigned_to === (int) $user->id)) {
+        if ($user->role === 'department_head' && (($user->department_id !== null && (int) $complaint->department_id === (int) $user->department_id) || (int) $complaint->assigned_to === (int) $user->id)) {
             return true;
         }
 
         // Staff can view complaints in their department or assigned to them
-        if ($user->role === 'staff' && ((int) $complaint->department_id === (int) $user->department_id || (int) $complaint->assigned_to === (int) $user->id)) {
+        if ($user->role === 'staff' && (($user->department_id !== null && (int) $complaint->department_id === (int) $user->department_id) || (int) $complaint->assigned_to === (int) $user->id)) {
             return true;
         }
 
@@ -70,7 +70,7 @@ class ComplaintPolicy
         }
 
         // Department head can update complaints in their department
-        if ($user->role === 'department_head' && (int) $complaint->department_id === (int) $user->department_id) {
+        if ($user->role === 'department_head' && ($user->department_id !== null && (int) $complaint->department_id === (int) $user->department_id)) {
             return true;
         }
 
@@ -90,3 +90,4 @@ class ComplaintPolicy
         return $user->role === 'admin';
     }
 }
+
