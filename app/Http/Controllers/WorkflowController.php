@@ -44,7 +44,7 @@ class WorkflowController extends Controller
             return true;
         }
 
-        if ($user->isDepartmentHead() && (int) $user->department_id === (int) $report->department_id) {
+        if ($user->isDepartmentHead() && ($user->department_id !== null && (int) $user->department_id === (int) $report->department_id)) {
             return true;
         }
 
@@ -115,7 +115,7 @@ class WorkflowController extends Controller
 
         $isAssignedStaff = (int) $report->assigned_to === (int) $user->id;
         // Staff of the report's department may pick up a report nobody is working on, but never a colleague's
-        $canClaim = $user->isStaff() && ! $report->assigned_to && (int) $report->department_id === (int) $user->department_id;
+        $canClaim = $user->isStaff() && ! $report->assigned_to && ($user->department_id !== null && (int) $report->department_id === (int) $user->department_id);
 
         if (! $isAssignedStaff && ! $canClaim && ! $user->isAdmin()) {
             abort(403, 'Akses ditolak. Laporan ini ditugaskan kepada petugas lain.');
@@ -194,7 +194,7 @@ class WorkflowController extends Controller
         $report = Report::findOrFail($id);
 
         // Must be assigned staff, department head, or admin
-        if (! ($user->isAdmin() || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && (int) $user->department_id === (int) $report->department_id))) {
+        if (! ($user->isAdmin() || (int) $report->assigned_to === (int) $user->id || ($user->isDepartmentHead() && ($user->department_id !== null && (int) $user->department_id === (int) $report->department_id)))) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -351,3 +351,4 @@ class WorkflowController extends Controller
         return redirect()->back()->with('success', 'Terima kasih! Laporan telah dikonfirmasi selesai dan resmi diarsipkan.');
     }
 }
+
