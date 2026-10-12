@@ -1,4 +1,4 @@
-# ⚡ SynapseGov — Intelligent e-Government Public Report & Complaint System
+# SynapseGov — Intelligent e-Government Public Report & Complaint System
 ### *Sistem Terpadu Penanganan Laporan & Aspirasi Masyarakat Berbasis e-Government dengan Penegakan SLA dan Isolasi Keamanan Multi-OPD*
 
 [![Laravel](https://img.shields.io/badge/Laravel-10.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
@@ -10,7 +10,7 @@
 
 ---
 
-## 📌 Ringkasan Proyek
+## Ringkasan Proyek
 
 **SynapseGov** adalah platform tata kelola pemerintahan digital (*e-Government*) modern yang mentransformasikan penanganan laporan pengaduan infrastruktur, fasilitas umum, dan aspirasi pelayanan masyarakat secara terstruktur, transparan, akuntabel, dan terikat waktu (*Service Level Agreement / SLA-enforced*).
 
@@ -20,7 +20,7 @@ Aplikasi ini mengatasi kendala laten birokrasi pemerintahan konvensional: lapora
 
 ---
 
-## 👥 Matriks Akun Demo untuk Pengujian Juri
+## Matriks Akun Demo untuk Pengujian Juri
 
 Seeder (`php artisan migrate:fresh --seed`) membuat 5 OPD contoh dan akun untuk 4 peran (*Multi-Role Hierarchy*). Juri dan penguji dapat langsung masuk menggunakan akun-akun berikut:
 
@@ -119,9 +119,9 @@ graph TD
 
 ---
 
-## 🌟 Fitur Unggulan & Inovasi Teknologi
+## Fitur Unggulan & Inovasi Teknologi
 
-### 1. ⏱️ Automated Service Level Agreement (SLA) Engine
+### 1. Automated Service Level Agreement (SLA) Engine
 * Setiap tiket yang masuk secara otomatis dihitung tenggat waktunya (`sla_due_at`) berdasarkan tingkat urgensi:
   * **Urgent:** 2 Jam
   * **High:** 8 Jam
@@ -130,44 +130,44 @@ graph TD
 * Scheduler Laravel (`php artisan schedule:work`) menjalankan `php artisan sla:check` **setiap 5 menit**. Tiket yang melewati tenggat (dan belum selesai/ditolak) ditandai `is_escalated`, prioritasnya dinaikkan ke *urgent* **tanpa memundurkan tenggat awal**, lalu event `SLABreached` mengirim notifikasi eskalasi ke Super Admin, Kepala Dinas terkait, dan petugas yang ditugaskan.
 * Setiap eskalasi tercatat di audit log sebagai aksi sistem.
 
-### 2. 🔐 Department Boundary Isolation (Proteksi Multi-OPD)
+### 2. Department Boundary Isolation (Proteksi Multi-OPD)
 * Mengimplementasikan pembatasan akses data antar instansi (*multi-tenant departmental boundary*) di level Controller dan Model Policy (`ReportPolicy`).
 * Petugas Lapangan (*Staff*) dan Kepala Dinas (*Department Head*) dari OPD tertentu (misal: Dinas PUPR) **dibatasi secara ketat dan tidak dapat mengintip, menyunting, maupun memanipulasi** data dinas lain (misal: Dinas Lingkungan Hidup).
 
-### 3. 🔁 State Machine Terpusat & Anti-Bypass Alur
+### 3. State Machine Terpusat & Anti-Bypass Alur
 * Seluruh perpindahan status laporan diatur oleh satu tabel aturan, `Report::STATUS_TRANSITIONS`, yang dicek otomatis setiap kali laporan disimpan (model event `updating`).
 * Akibatnya tidak ada jalan pintas: staf tidak bisa langsung menandai laporan selesai tanpa persetujuan admin, laporan yang sudah ditolak/ditutup tidak bisa dihidupkan kembali secara sembarangan, dan form edit admin hanya menawarkan status lanjutan yang sah.
 
-### 4. 🛡️ Catatan Publik vs Internal & Perlindungan Data Pribadi
+### 4. Catatan Publik vs Internal & Perlindungan Data Pribadi
 * Setiap komentar/catatan tiket memiliki penanda `is_internal`. Endpoint riwayat tiket (`/workflow/reports/{id}/history`) dan *event listener* notifikasi menyaring catatan internal sehingga **tidak pernah terlihat** oleh masyarakat pelapor.
 * Data pribadi pengguna (NIK, nomor HP, alamat, tanggal lahir, jejak login) disembunyikan dari seluruh respons JSON. Warga hanya melihat linimasa tiket (siapa, kapan, apa), tanpa IP, *user-agent*, atau salinan data internal.
 
-### 5. 📜 Forensic Audit Logging
+### 5. Forensic Audit Logging
 * Setiap perubahan data penting (pergantian status tiket, penugasan staf, instruksi revisi, pengesahan, dan pengembalian berkas) direkam otomatis pada tabel `audit_logs` dengan menyimpan:
   * ID pengguna pelaku (atau `null` untuk aksi sistem seperti eskalasi SLA)
   * Nilai data sebelum (*old values*) & sesudah (*new values*)
   * Alamat IP & spesifikasi peramban (*User-Agent*), hanya dapat dilihat Admin
   * Stempel waktu (*timestamp*)
 
-### 6. 🛡️ Strict Anti-Malware & File Upload Guard
+### 6. Strict Anti-Malware & File Upload Guard
 * Middleware [`ValidateFileUpload`](app/Http/Middleware/ValidateFileUpload.php) memeriksa setiap berkas lampiran warga:
   * Memblokir ekstensi berbahaya (`.php`, `.phtml`, `.phar`, `.sh`, `.exe`, `.bat`, `.js`, `.svg`, `.html`, dll).
   * Menangkal teknik pemalsuan *double extension* (seperti `bukti.php.png`).
   * Memverifikasi MIME Type dari isi berkas di sisi server dan membatasi ukuran maksimal **5MB** per berkas.
 * Lampiran disimpan di penyimpanan privat (`storage/app/attachments`), bukan di folder publik. Berkas hanya dapat dibuka melalui aplikasi setelah lolos pemeriksaan hak akses; akses langsung lewat URL `/storage/...` menghasilkan 404.
 
-### 7. 📄 Tri-Format Document Export
+### 7. Tri-Format Document Export
 * Dilengkapi generator dokumen terintegrasi:
   * **PDF:** Ringkasan laporan (detail tiket, status, prioritas, tenggat SLA) yang dibuat dengan *DomPDF*.
   * **Analitik CSV:** Ekspor data laporan untuk diolah di spreadsheet, dengan sanitasi *formula injection*.
   * **Paket Arsip ZIP:** Mengemas seluruh berkas lampiran beserta metadata terstruktur dalam format `report.json`.
 
-### 8. 📊 Transparansi Publik & Lacak Tiket Tanpa Login
+### 8. Transparansi Publik & Lacak Tiket Tanpa Login
 * **Dashboard kinerja OPD di halaman utama:** jumlah laporan, persentase laporan tuntas, dan persentase yang **selesai sebelum tenggat SLA**, per OPD maupun total kota. Angka dihitung otomatis dari data laporan (di-*cache* 1 menit).
 * **Lacak tiket (`/lacak`):** siapa pun yang memegang nomor tiket dapat melihat status, tahapan (Diterima → Diverifikasi → Ditangani → Selesai), OPD tujuan, dan status SLA tanpa perlu masuk.
 * **Privasi tetap terjaga:** judul, isi laporan, lokasi, lampiran, catatan petugas, dan identitas pelapor tidak pernah ditampilkan di halaman publik. Endpoint dibatasi 30 permintaan/menit per IP sehingga menebak nomor tiket tidak praktis.
 
-### 9. 🌐 Pengalaman Pengguna (*Modern UX*)
+### 9. Pengalaman Pengguna (*Modern UX*)
 * **Pilihan Bahasa ID/EN:** Menu navigasi dasbor dapat dialihkan ke Bahasa Inggris; konten dan pesan sistem menggunakan Bahasa Indonesia.
 * **Mode Gelap / Terang (*Dark/Light Mode*):** Tampilan adaptif yang tersimpan otomatis di preferensi profil pengguna.
 * **Responsive Layout & Mobile Drawer:** Navigasi responsif pada perangkat layar sentuh dengan penanganan *keyboard accessibility* (Escape key, backdrop auto-dismiss).
@@ -176,7 +176,7 @@ graph TD
 
 ---
 
-## 🗄️ Diagram Relasi Data (*Entity Relationship Diagram / ERD*)
+## Diagram Relasi Data (*Entity Relationship Diagram / ERD*)
 
 ```mermaid
 erDiagram
@@ -263,7 +263,7 @@ erDiagram
 
 ---
 
-## 🎯 Panduan Skenario Pengujian Juri (*Step-by-Step Walkthrough*)
+## Panduan Skenario Pengujian Juri (*Step-by-Step Walkthrough*)
 
 Untuk mempermudah dewan juri dalam memverifikasi keutuhan logika alur kerja secara langsung melalui peramban. Tombol aksi petugas ada di menu **Laporan Publik**, pada baris tiket (tombol **Tindak Lanjut** atau deretan tombol aksi). Tombol yang tampil selalu menyesuaikan status tiket dan peran pengguna.
 
@@ -307,7 +307,7 @@ Untuk mempermudah dewan juri dalam memverifikasi keutuhan logika alur kerja seca
 
 ---
 
-## 💻 Panduan Instalasi & Menjalankan (*Quick Start*)
+## Panduan Instalasi & Menjalankan (*Quick Start*)
 
 Konfigurasi bawaan memakai **SQLite**, jadi tidak perlu server database (MySQL/XAMPP). Server email juga tidak diperlukan: pada mode `local` pengiriman email dinonaktifkan, sedangkan notifikasi tetap tampil di dasbor.
 
@@ -401,7 +401,7 @@ Alur lengkap antar-peran (disposisi, revisi, persetujuan, isolasi antar-OPD) diu
 
 ---
 
-## 📁 Struktur Direktori Utama
+## Struktur Direktori Utama
 
 ```text
 ├── app/
@@ -438,7 +438,7 @@ Alur lengkap antar-peran (disposisi, revisi, persetujuan, isolasi antar-OPD) diu
 
 ---
 
-## 📄 Lisensi & Tim Pengembang
+## Lisensi & Tim Pengembang
 
 Karya ini dikembangkan dengan penuh integritas dan komitmen keunggulan teknis untuk **Lomba Web Development IT Days 2026 — Himpunan Mahasiswa Informatika (HMIF) Universitas Sanata Dharma, Yogyakarta**.
 
